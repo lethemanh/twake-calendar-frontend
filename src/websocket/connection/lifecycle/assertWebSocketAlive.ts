@@ -41,7 +41,7 @@ export function assertWebSocketAlive(): Promise<void> {
       cleanup()
       console.warn('[WS] Pong not received — triggering reconnect')
       triggerReconnect()
-      waitForSocketOpen(socketRef).then(resolve, reject)
+      waitForSocketOpen(socketRef).then(resolve, reject).catch(reject)
     }, TIMEOUT_MS)
 
     const handlePong = (event: MessageEvent) => {

@@ -29,7 +29,7 @@ export function TempCalendarsInput({
     new Map<string, { light: string; dark: string }>()
   )
 
-  const handleUserChange = async (_: React.SyntheticEvent, users: User[]) => {
+  const handleUserChange = (_: React.SyntheticEvent, users: User[]) => {
     setTempUsers(users)
 
     const prevUsers = prevUsersRef.current

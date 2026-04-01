@@ -83,7 +83,7 @@ async function handleSoloRSVP(
   calendar: Calendar,
   event: CalendarEvent
 ) {
-  dispatch(updateEventInstanceAsync({ cal: calendar, event }))
+  await dispatch(updateEventInstanceAsync({ cal: calendar, event }))
 }
 
 async function handleAllRSVP(
@@ -99,7 +99,7 @@ async function handleDefaultRSVP(
   calendar: Calendar,
   newEvent: CalendarEvent
 ) {
-  dispatch(putEventAsync({ cal: calendar, newEvent }))
+  await dispatch(putEventAsync({ cal: calendar, newEvent }))
 }
 
 export async function handleRSVP(

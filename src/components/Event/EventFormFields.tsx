@@ -872,10 +872,7 @@ export default function EventFormFields({
                 objectTypes={['resource']}
                 selectedResources={selectedResources}
                 inputSlot={params => <TextField {...params} size="small" />}
-                onChange={async (
-                  _event: React.SyntheticEvent,
-                  value: Resource[]
-                ) => {
+                onChange={(_event: React.SyntheticEvent, value: Resource[]) => {
                   handleResourceChange(value)
                 }}
                 hideLabel={true}

@@ -193,10 +193,15 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
     // Notify other pickers to close
     window.dispatchEvent(new CustomEvent('close-other-time-pickers'))
     // Reset flags in next microtask to ensure event is processed first
-    Promise.resolve().then(() => {
-      isDispatchingCloseEventRef.current = false
-      hasDispatchedInMicrotaskRef.current = false
-    })
+    Promise.resolve()
+      .then(() => {
+        isDispatchingCloseEventRef.current = false
+        hasDispatchedInMicrotaskRef.current = false
+        return
+      })
+      .catch(error => {
+        console.error('Error resetting picker close flags:', error)
+      })
   }, [])
 
   const handleClick = (e: React.MouseEvent) => {

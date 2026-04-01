@@ -158,7 +158,10 @@ export function useAttendeesFreeBusy({
       ).then(toFreeBusyMap(resolved))
     )
       .then(updates => {
-        if (!cancelled) setStatusMap(prev => ({ ...prev, ...updates }))
+        if (!cancelled) {
+          setStatusMap(prev => ({ ...prev, ...updates }))
+        }
+        return
       })
       .catch(() => {
         if (!cancelled)
@@ -224,6 +227,7 @@ export function useAttendeesFreeBusy({
           })
           setStatusMap(prev => ({ ...prev, ...updates }))
         }
+        return
       })
       .catch(() => {
         if (!cancelled) {

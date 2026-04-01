@@ -25,7 +25,7 @@ export function EditModeDialog({
   const [typeOfAction, setTypeOfAction] = useState<'solo' | 'all' | undefined>(
     'solo'
   )
-  const handleEvent = async () => {
+  const handleEvent = () => {
     eventAction(typeOfAction)
     handleClose()
   }

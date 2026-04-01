@@ -292,6 +292,7 @@ export function useCalendarDataLoader({
             fetchedIntervalsRef.current[id] ?? [],
             { start: visibleStart, end: visibleEnd }
           )
+          return
         })
         .catch(() => {
           /* leave unrecorded for retry */

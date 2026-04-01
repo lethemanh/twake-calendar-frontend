@@ -170,7 +170,7 @@ export default function SearchBar() {
   ) => {
     const cleanedQuery = buildQuery(searchQuery, filters)
     if (cleanedQuery) {
-      dispatch(searchEventsAsync(cleanedQuery))
+      await dispatch(searchEventsAsync(cleanedQuery))
       dispatch(setView('search'))
       setAnchorEl(null)
     } else {

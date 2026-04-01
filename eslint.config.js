@@ -92,11 +92,6 @@ export default [
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/require-await': 'off',
 
-      // TO DO: Remove these exceptions in the commit to fix promise rules
-      /* Promise */
-      'promise/catch-or-return': 'off',
-      'promise/always-return': 'off',
-
       /* Jest */
       'jest/no-disabled-tests': 'warn',
       'jest/no-focused-tests': 'error',
