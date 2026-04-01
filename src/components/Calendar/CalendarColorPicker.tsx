@@ -8,7 +8,7 @@ import {
   Typography,
   useTheme
 } from '@linagora/twake-mui'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { HexColorPicker } from 'react-colorful'
 import { useI18n } from 'twake-i18n'
 import { getAccessiblePair } from '@/utils/getAccessiblePair'
@@ -23,19 +23,9 @@ export function ColorPicker({
   colors?: Record<string, string>[]
   onChange: (color: Record<string, string>) => void
 }) {
-  const [customColor, setCustomColor] = useState(
-    !colors.find(c => c.light === selectedColor?.light)
-      ? selectedColor
-      : undefined
-  )
-
-  useEffect(() => {
-    if (!colors.find(c => c.light === selectedColor?.light)) {
-      setCustomColor(selectedColor)
-    } else {
-      setCustomColor(undefined)
-    }
-  }, [selectedColor, colors])
+  const customColor = !colors.find(c => c.light === selectedColor?.light)
+    ? selectedColor
+    : undefined
 
   return (
     <Box display="flex" alignItems="center" gap={1}>
@@ -58,7 +48,6 @@ export function ColorPicker({
       <ColorPickerBox
         onChange={c => {
           onChange(c)
-          setCustomColor(c)
         }}
         selectedColor={selectedColor}
       />

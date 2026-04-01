@@ -1,3 +1,5 @@
+// ReadOnlyPickerField
+
 import { TextField } from '@linagora/twake-mui'
 import { DatePickerFieldProps } from '@mui/x-date-pickers/DatePicker'
 import {
@@ -36,26 +38,34 @@ function ReadOnlyPickerField(props: GenericPickerFieldProps) {
     fieldType
   )
 
-  const pickerContext = usePickerContext()
+  const {
+    value,
+    timezone,
+    fieldFormat,
+    open,
+    setOpen,
+    triggerRef,
+    rootClassName,
+    rootSx,
+    rootRef,
+    name: pickerName
+  } = usePickerContext()
+
   const parsedFormat = useParsedFormat()
 
   const { hasValidationError } = useValidation({
     validator,
-    value: pickerContext.value,
-    timezone: pickerContext.timezone,
+    value: value,
+    timezone: timezone,
     props: internalProps
   })
 
   const valueToDisplay =
-    pickerContext.value == null
-      ? ''
-      : pickerContext.value.isValid()
-        ? pickerContext.value.format(pickerContext.fieldFormat)
-        : ''
+    value == null ? '' : value.isValid() ? value.format(fieldFormat) : ''
 
   const mergedInputProps = {
     ...forwardedProps.InputProps,
-    ref: pickerContext.triggerRef,
+    ref: triggerRef,
     readOnly: true,
     sx: {
       cursor: 'pointer',
@@ -71,12 +81,12 @@ function ReadOnlyPickerField(props: GenericPickerFieldProps) {
       placeholder={parsedFormat}
       InputProps={mergedInputProps}
       error={hasValidationError}
-      focused={pickerContext.open}
-      onClick={() => pickerContext.setOpen(prev => !prev)}
-      className={pickerContext.rootClassName}
-      sx={pickerContext.rootSx}
-      ref={pickerContext.rootRef}
-      name={pickerContext.name}
+      focused={open}
+      onClick={() => setOpen((prev: boolean) => !prev)}
+      className={rootClassName}
+      sx={rootSx}
+      ref={rootRef}
+      name={pickerName}
     />
   )
 }

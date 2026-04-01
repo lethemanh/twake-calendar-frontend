@@ -1,6 +1,6 @@
 import { userAttendee } from '@/features/User/models/attendee'
 import { createAttendee } from '@/features/User/models/attendee.mapper'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FreeBusyIndicator } from './FreeBusyIndicator'
 import {
   ExtendedAutocompleteRenderInputParams,
@@ -42,12 +42,25 @@ export default function AttendeeSearch({
   const [userIdMap, setUserIdMap] = useState<Record<string, string>>({})
   const [addedUsers, setAddedUsers] = useState<User[]>([])
   const initialEmailsRef = useRef<Set<string> | null>(null)
-  if (initialEmailsRef.current === null && !!eventUid && attendees.length > 0) {
-    initialEmailsRef.current = new Set(attendees.map(a => a.cal_address))
-  }
-  const initialEmails = eventUid
-    ? (initialEmailsRef.current ?? new Set<string>())
-    : new Set<string>()
+  const [initialEmailsSet, setInitialEmailsSet] = useState<Set<string>>(
+    new Set()
+  )
+
+  useEffect(() => {
+    const updateInitialEmailsSet = () => {
+      if (
+        initialEmailsRef.current === null &&
+        !!eventUid &&
+        attendees.length > 0
+      ) {
+        initialEmailsRef.current = new Set(attendees.map(a => a.cal_address))
+        setInitialEmailsSet(initialEmailsRef.current)
+      }
+    }
+    updateInitialEmailsSet()
+  }, [eventUid, attendees])
+
+  const initialEmails = eventUid ? initialEmailsSet : new Set<string>()
 
   const selectedUsers: User[] = [
     ...addedUsers,

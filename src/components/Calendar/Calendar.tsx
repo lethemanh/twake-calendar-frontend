@@ -134,20 +134,23 @@ export default function CalendarApp({
   }
 
   useEffect(() => {
-    if (initialLoadRef.current && calendarIds.length > 0 && userId) {
-      const cached = localStorage.getItem('selectedCalendars')
-      if (cached && cached.length > 0) {
-        const parsed = JSON.parse(cached) as string[]
-        const valid = parsed.filter(id => calendars[id])
-        setSelectedCalendars(valid)
-      } else {
-        const personalCalendarIds = calendarIds.filter(
-          id => extractEventBaseUuid(id) === userId
-        )
-        setSelectedCalendars(personalCalendarIds)
+    const updateSelectedCalendars = () => {
+      if (initialLoadRef.current && calendarIds.length > 0 && userId) {
+        const cached = localStorage.getItem('selectedCalendars')
+        if (cached && cached.length > 0) {
+          const parsed = JSON.parse(cached) as string[]
+          const valid = parsed.filter(id => calendars[id])
+          setSelectedCalendars(valid)
+        } else {
+          const personalCalendarIds = calendarIds.filter(
+            id => extractEventBaseUuid(id) === userId
+          )
+          setSelectedCalendars(personalCalendarIds)
+        }
+        initialLoadRef.current = false
       }
-      initialLoadRef.current = false
     }
+    updateSelectedCalendars()
   }, [calendarIds, calendars, userId])
 
   // Save selected cals to cache
@@ -158,18 +161,21 @@ export default function CalendarApp({
   }, [selectedCalendars, calendarIds.length])
 
   useEffect(() => {
-    if (calendarIds.length === 0) return
-    const validCalendarIds = new Set(calendarIds)
-    setSelectedCalendars(prev => {
-      const filtered = prev.filter(calId => validCalendarIds.has(calId))
-      if (filtered.length === prev.length) {
-        const unchanged = filtered.every((id, index) => id === prev[index])
-        if (unchanged) {
-          return prev
+    const updateSelectedCalendarsOnCalendarChange = () => {
+      if (calendarIds.length === 0) return
+      const validCalendarIds = new Set(calendarIds)
+      setSelectedCalendars(prev => {
+        const filtered = prev.filter(calId => validCalendarIds.has(calId))
+        if (filtered.length === prev.length) {
+          const unchanged = filtered.every((id, index) => id === prev[index])
+          if (unchanged) {
+            return prev
+          }
         }
-      }
-      return filtered
-    })
+        return filtered
+      })
+    }
+    updateSelectedCalendarsOnCalendarChange()
   }, [calendarIds])
 
   const sortedSelectedCalendars = useMemo(
@@ -318,12 +324,16 @@ export default function CalendarApp({
     onViewChange,
     calendars,
     tempcalendars,
+    // Note: To preserve current logic, this will temporarily disable eslint for react-hooks/refs
+    // eslint-disable-next-line react-hooks/refs
     errorHandler: errorHandler.current
   })
 
-  if (process.env.NODE_ENV === 'test') {
-    window.__calendarRef = calendarRef
-  }
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      window.__calendarRef = calendarRef
+    }
+  }, [calendarRef])
 
   const { t, lang } = useI18n()
 

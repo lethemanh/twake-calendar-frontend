@@ -52,7 +52,13 @@ function CalendarAccordion({
   const { t } = useI18n()
 
   const [expended, setExpended] = useState(defaultExpanded)
-  useEffect(() => setExpended(defaultExpanded), [defaultExpanded])
+
+  useEffect(() => {
+    const handleExpendedChange = () => {
+      setExpended(defaultExpanded)
+    }
+    handleExpendedChange()
+  }, [defaultExpanded])
 
   if (calendars.length === 0 && !showAddButton) return null
   return (

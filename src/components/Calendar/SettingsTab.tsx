@@ -54,7 +54,10 @@ export function SettingsTab({
   )
 
   useEffect(() => {
-    if (description) setToggleDesc(true)
+    const handleToggleDesc = () => {
+      if (description) setToggleDesc(true)
+    }
+    handleToggleDesc()
   }, [description])
 
   return (

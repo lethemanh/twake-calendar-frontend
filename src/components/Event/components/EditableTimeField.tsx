@@ -1,3 +1,5 @@
+// EditableTimeField
+
 import { TextField } from '@linagora/twake-mui'
 import {
   useParsedFormat,
@@ -41,16 +43,26 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
     fieldType
   )
 
-  const pickerContext = usePickerContext()
+  const {
+    value: pickerValue,
+    open,
+    setOpen,
+    timezone,
+    triggerRef,
+    rootClassName,
+    rootSx,
+    rootRef,
+    name: pickerName
+  } = usePickerContext()
   const pickerActions = usePickerActionsContext()
   const parsedFormat = useParsedFormat()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const getFormattedValue = useCallback(() => {
-    if (pickerContext.value == null) return ''
-    if (!pickerContext.value.isValid()) return ''
-    return pickerContext.value.format(TIME_DISPLAY_FORMAT)
-  }, [pickerContext.value])
+    if (pickerValue == null) return ''
+    if (!pickerValue.isValid()) return ''
+    return pickerValue.format(TIME_DISPLAY_FORMAT)
+  }, [pickerValue])
 
   const [inputValue, setInputValue] = useState(getFormattedValue)
   const [isFocused, setIsFocused] = useState(false)
@@ -63,64 +75,70 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
 
   // Sync input value when picker value changes from dropdown selection or external
   useEffect(() => {
-    const newFormattedValue = getFormattedValue()
-    const valueChanged = newFormattedValue !== prevFormattedValueRef.current
+    const updateInputValue = () => {
+      const newFormattedValue = getFormattedValue()
+      const valueChanged = newFormattedValue !== prevFormattedValueRef.current
 
-    // Sync when:
-    // 1. Value changed (from dropdown selection or external)
-    // 2. Not focused (external change)
-    if (valueChanged || !isFocused) {
-      setInputValue(newFormattedValue)
+      // Sync when:
+      // 1. Value changed (from dropdown selection or external)
+      // 2. Not focused (external change)
+      if (valueChanged || !isFocused) {
+        setInputValue(newFormattedValue)
+      }
+
+      // Close dropdown after selection (value changed while dropdown is open)
+      if (valueChanged && open) {
+        setOpen(false)
+        // Clear focus after dropdown selection
+        setIsFocused(false)
+        inputRef.current?.blur()
+      }
+
+      prevFormattedValueRef.current = newFormattedValue
     }
+    updateInputValue()
+  }, [getFormattedValue, isFocused, open, setOpen])
 
-    // Close dropdown after selection (value changed while dropdown is open)
-    if (valueChanged && pickerContext.open) {
-      pickerContext.setOpen(false)
-      // Clear focus after dropdown selection
-      setIsFocused(false)
-      inputRef.current?.blur()
-    }
-
-    prevFormattedValueRef.current = newFormattedValue
-  }, [getFormattedValue, isFocused, pickerContext])
-
-  const wasOpenRef = useRef(pickerContext.open)
+  const wasOpenRef = useRef(open)
 
   // Handle dropdown open/close
   useEffect(() => {
-    const wasOpen = wasOpenRef.current
-    const isOpen = pickerContext.open
+    const handleDropdown = () => {
+      const wasOpen = wasOpenRef.current
+      const isOpen = open
 
-    if (isOpen && !wasOpen && inputRef.current) {
-      // Dropdown just opened - refocus input to allow typing
-      const timer = setTimeout(() => {
-        inputRef.current?.focus()
-      }, 10)
-      wasOpenRef.current = isOpen
-      return () => clearTimeout(timer)
-    }
-
-    if (!isOpen && wasOpen) {
-      // Dropdown just closed - check if we need to commit user input
-      const current = getFormattedValue()
-      if (isFocused && inputValue.trim() && inputValue !== current) {
-        // Store input value to commit later (after parseAndUpdateTime is defined)
-        setPendingCommitValue(inputValue)
-      } else {
-        setInputValue(current)
+      if (isOpen && !wasOpen && inputRef.current) {
+        // Dropdown just opened - refocus input to allow typing
+        const timer = setTimeout(() => {
+          inputRef.current?.focus()
+        }, 10)
+        wasOpenRef.current = isOpen
+        return () => clearTimeout(timer)
       }
-      setIsFocused(false)
-      // Blur input to clear DOM focus (removes Mui-focused class)
-      inputRef.current?.blur()
-    }
 
-    wasOpenRef.current = isOpen
-  }, [pickerContext.open, getFormattedValue, isFocused, inputValue])
+      if (!isOpen && wasOpen) {
+        // Dropdown just closed - check if we need to commit user input
+        const current = getFormattedValue()
+        if (isFocused && inputValue.trim() && inputValue !== current) {
+          // Store input value to commit later (after parseAndUpdateTime is defined)
+          setPendingCommitValue(inputValue)
+        } else {
+          setInputValue(current)
+        }
+        setIsFocused(false)
+        // Blur input to clear DOM focus (removes Mui-focused class)
+        inputRef.current?.blur()
+      }
+
+      wasOpenRef.current = isOpen
+    }
+    handleDropdown()
+  }, [open, getFormattedValue, isFocused, inputValue])
 
   const { hasValidationError } = useValidation({
     validator,
-    value: pickerContext.value,
-    timezone: pickerContext.timezone,
+    value: pickerValue,
+    timezone: timezone,
     props: internalProps
   })
 
@@ -132,10 +150,7 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
         return
       }
 
-      const newValue = parseTimeInput(
-        trimmed,
-        pickerContext.value as Dayjs | null
-      )
+      const newValue = parseTimeInput(trimmed, pickerValue as Dayjs | null)
 
       if (newValue) {
         // Update picker internal state and trigger onChange in one call
@@ -146,15 +161,18 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
         setInputValue(getFormattedValue())
       }
     },
-    [pickerContext, pickerActions, getFormattedValue]
+    [pickerValue, pickerActions, getFormattedValue]
   )
 
   // Commit pending input value when picker closes (after parseAndUpdateTime is defined)
   useEffect(() => {
-    if (pendingCommitValue !== null) {
-      parseAndUpdateTime(pendingCommitValue)
-      setPendingCommitValue(null)
+    const updateTimeAndClearPending = () => {
+      if (pendingCommitValue !== null) {
+        parseAndUpdateTime(pendingCommitValue)
+        setPendingCommitValue(null)
+      }
     }
+    updateTimeAndClearPending()
   }, [pendingCommitValue, parseAndUpdateTime])
 
   // Listen for close events from other picker fields
@@ -165,8 +183,8 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
         return
       }
       // If this picker is open and another field is requesting to close others
-      if (pickerContext.open) {
-        pickerContext.setOpen(false)
+      if (open) {
+        setOpen(false)
       }
     }
 
@@ -177,7 +195,7 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
         handleCloseOtherPickers
       )
     }
-  }, [pickerContext])
+  }, [open, setOpen])
 
   const dispatchCloseOtherPickers = useCallback(() => {
     // Guard: prevent duplicate dispatch in the same microtask
@@ -213,8 +231,8 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
     dispatchCloseOtherPickers()
 
     // Always keep it open when clicked, or open it if closed
-    if (!pickerContext.open) {
-      pickerContext.setOpen(true)
+    if (!open) {
+      setOpen(true)
     }
   }
 
@@ -228,7 +246,7 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
   const handleBlur = (_e: React.FocusEvent<HTMLInputElement>) => {
     // If dropdown is open, don't parse input
     // MUI will handle selection and sync value via useEffect
-    if (pickerContext.open) {
+    if (open) {
       return
     }
 
@@ -246,19 +264,19 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
       e.preventDefault()
       parseAndUpdateTime(inputValue)
       setIsFocused(false)
-      pickerContext.setOpen(false)
+      setOpen(false)
       inputRef.current?.blur()
     } else if (e.key === 'Escape') {
       setInputValue(getFormattedValue())
       setIsFocused(false)
-      pickerContext.setOpen(false)
+      setOpen(false)
       inputRef.current?.blur()
     }
   }
 
   const mergedInputProps = {
     ...forwardedProps.InputProps,
-    ref: pickerContext.triggerRef,
+    ref: triggerRef,
     sx: {
       cursor: 'text',
       ...forwardedProps.InputProps?.sx
@@ -279,15 +297,15 @@ function EditableTimePickerField(props: GenericPickerFieldProps) {
       onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
-      className={pickerContext.rootClassName}
+      className={rootClassName}
       sx={{
-        ...pickerContext.rootSx,
+        ...rootSx,
         '& input': {
           textAlign: 'center'
         }
       }}
-      ref={pickerContext.rootRef}
-      name={pickerContext.name}
+      ref={rootRef}
+      name={pickerName}
     />
   )
 }

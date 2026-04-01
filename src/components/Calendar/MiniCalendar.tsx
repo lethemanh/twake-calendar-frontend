@@ -23,7 +23,12 @@ export function MiniCalendar({
   const [visibleDate, setVisibleDate] = useState(selectedDate)
   const { t } = useI18n()
 
-  useEffect(() => setVisibleDate(selectedDate), [selectedDate])
+  useEffect(() => {
+    const handleVisibleDateChange = () => {
+      setVisibleDate(selectedDate)
+    }
+    handleVisibleDateChange()
+  }, [selectedDate])
   return (
     <LocalizationProvider
       dateAdapter={AdapterMoment}

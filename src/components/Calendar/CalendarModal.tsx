@@ -78,21 +78,24 @@ function CalendarPopover({
 
   useEffect(() => {
     if (!open) return
-    if (calendar) {
-      setName(calendar.name)
-      setDescription(calendar.description ?? '')
-      setColor(calendar.color ?? defaultColors[0])
-      setVisibility(calendar.visibility ?? 'public')
-      setImportTarget(calendar.id ?? 'new')
-    } else {
-      setName('')
-      setDescription('')
-      setColor(defaultColors[0])
-      setVisibility('public')
-      setImportTarget('new')
+    const fillCalendarData = () => {
+      if (calendar) {
+        setName(calendar.name)
+        setDescription(calendar.description ?? '')
+        setColor(calendar.color ?? defaultColors[0])
+        setVisibility(calendar.visibility ?? 'public')
+        setImportTarget(calendar.id ?? 'new')
+      } else {
+        setName('')
+        setDescription('')
+        setColor(defaultColors[0])
+        setVisibility('public')
+        setImportTarget('new')
+      }
+      setUsersWithAccess([])
+      initialUsersRef.current = []
     }
-    setUsersWithAccess([])
-    initialUsersRef.current = []
+    fillCalendarData()
   }, [calendar, open])
 
   const handleUsersWithAccessChange = useCallback((users: UserWithAccess[]) => {

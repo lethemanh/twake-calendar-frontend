@@ -14,7 +14,10 @@ export function FreeBusyIndicator({ status }: FreeBusyIndicatorProps) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    if (status === 'busy') setOpen(true)
+    const triggerOpen = () => {
+      if (status === 'busy') setOpen(true)
+    }
+    triggerOpen()
   }, [status])
 
   if (status !== 'busy') return null

@@ -108,3 +108,5 @@ export const FieldWithLabel = React.memo(
     )
   }
 )
+
+FieldWithLabel.displayName = 'FieldWithLabel'

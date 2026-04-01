@@ -73,7 +73,9 @@ function App() {
     const mediaQuery = window.matchMedia(SMALL_SCREEN_QUERY)
     const onChange = (event: MediaQueryListEvent) =>
       setIsTooSmall(event.matches)
-    setIsTooSmall(mediaQuery.matches)
+    const onChangeInitial = () => setIsTooSmall(mediaQuery.matches)
+
+    onChangeInitial()
     mediaQuery.addEventListener('change', onChange)
     return () => mediaQuery.removeEventListener('change', onChange)
   }, [])

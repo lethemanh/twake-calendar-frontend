@@ -58,12 +58,6 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
 
-      // TO DO: Remove these exceptions in the commit to fix react-hooks rules
-      'react-hooks/refs': 'off',
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/immutability': 'off',
-      'react/display-name': 'off',
-
       /* Imports */
       'import/order': 'off',
 
