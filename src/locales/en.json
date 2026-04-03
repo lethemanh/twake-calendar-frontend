@@ -230,7 +230,10 @@
     "duplicateEvent": "Duplicate event"
   },
   "menubar": {
+    "toggleSidebar": "Toggle sidebar",
     "today": "Today",
+    "next": "Next",
+    "prev": "Previous",
     "refresh": "Refresh",
     "viewSelector": "Select view",
     "languageSelector": "Select language",
@@ -378,5 +381,8 @@
     "searchError": "Unable to fetch resources right now. Please try again.",
     "noResults": "No results",
     "loading": "Loading..."
+  },
+  "sidebar": {
+    "displayMode": "Display mode"
   }
 }

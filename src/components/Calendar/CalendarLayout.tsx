@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import SettingsPage from '@/features/Settings/SettingsPage'
+import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import { getViewRange } from '@/utils/dateUtils'
 import type { CalendarApi } from '@fullcalendar/core'
 import CozyBridge from 'cozy-external-bridge'
@@ -8,6 +9,8 @@ import { ErrorSnackbar } from '../Error/ErrorSnackbar'
 import { refreshCalendars } from '../Event/utils/eventUtils'
 import { Menubar, MenubarProps } from '../Menubar/Menubar'
 import CalendarApp from './Calendar'
+import { CALENDAR_VIEWS } from './utils/constants'
+import { setView } from '@/features/Settings/SettingsSlice'
 
 export default function CalendarLayout() {
   const calendarRef = useRef<CalendarApi | null>(null)
@@ -16,8 +19,31 @@ export default function CalendarLayout() {
   const selectedCalendars = useAppSelector(state => state.calendars.list)
   const tempcalendars = useAppSelector(state => state.calendars.templist)
   const view = useAppSelector(state => state.settings.view)
+
+  const { isTablet } = useScreenSizeDetection()
+  const [openSidebar, setOpenSideBar] = useState(false)
+
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
-  const [currentView, setCurrentView] = useState<string>('timeGridWeek')
+  const [currentView, setCurrentView] = useState<string>(
+    isTablet ? CALENDAR_VIEWS.timeGridDay : CALENDAR_VIEWS.timeGridWeek
+  )
+
+  useEffect(() => {
+    const setView = () =>
+      setCurrentView(prev => {
+        if (
+          prev !== CALENDAR_VIEWS.timeGridDay &&
+          prev !== CALENDAR_VIEWS.timeGridWeek
+        ) {
+          return prev
+        }
+
+        return isTablet
+          ? CALENDAR_VIEWS.timeGridDay
+          : CALENDAR_VIEWS.timeGridWeek
+      })
+    setView()
+  }, [isTablet])
   const isInIframe = useMemo(() => new CozyBridge().isInIframe(), [])
 
   const handleRefresh = async () => {
@@ -47,8 +73,18 @@ export default function CalendarLayout() {
     setCurrentDate(date)
   }
 
-  const handleViewChange = (view: string) => {
+  const handleViewChange = (view: string): void => {
+    if (!calendarRef.current) return
+    dispatch(setView('calendar'))
+
+    calendarRef.current.changeView(view)
+
+    // Notify parent about view change
     setCurrentView(view)
+
+    // Notify parent about date change after view change
+    const newDate = calendarRef.current.getDate()
+    handleDateChange(newDate)
   }
 
   // Hide topbar navigation elements when in settings view (same as fullscreen dialog mode)
@@ -72,7 +108,8 @@ export default function CalendarLayout() {
     onDateChange: handleDateChange,
     currentView,
     onViewChange: handleViewChange,
-    isIframe: isInIframe
+    isIframe: isInIframe,
+    onToggleSidebar: () => setOpenSideBar(true)
   }
 
   return (
@@ -84,6 +121,10 @@ export default function CalendarLayout() {
           onDateChange={handleDateChange}
           onViewChange={handleViewChange}
           menubarProps={menubarProps}
+          openSidebar={openSidebar}
+          onCloseSidebar={() => setOpenSideBar(false)}
+          setCurrentView={setCurrentView}
+          currentView={currentView}
         />
       )}
       {view === 'settings' && <SettingsPage isInIframe={isInIframe} />}

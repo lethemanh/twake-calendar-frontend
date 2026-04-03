@@ -5,6 +5,7 @@ import { CalendarEvent } from '@/features/Events/EventsTypes'
 import ImportAlert from '@/features/Events/ImportAlert'
 import SearchResultsPage from '@/features/Search/SearchResultsPage'
 import { setTimeZone } from '@/features/Settings/SettingsSlice'
+import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import { setDisplayedDateAndRange } from '@/utils/CalendarRangeManager'
 import { extractEventBaseUuid } from '@/utils/extractEventBaseUuid'
 import { setSelectedCalendars as setSelectedCalendarsToStorage } from '@/utils/storage/setSelectedCalendars'
@@ -20,7 +21,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import momentTimezonePlugin from '@fullcalendar/moment-timezone'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { Box, Button, radius } from '@linagora/twake-mui'
+import { Fab } from '@linagora/twake-mui'
 import AddIcon from '@mui/icons-material/Add'
 import moment from 'moment-timezone'
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
@@ -32,18 +33,17 @@ import { EventErrorHandler } from '../Error/EventErrorHandler'
 import { EditModeDialog } from '../Event/EditModeDialog'
 import { Menubar, MenubarProps } from '../Menubar/Menubar'
 import './Calendar.styl'
-import CalendarSelection from './CalendarSelection'
 import './CustomCalendar.styl'
 import { useCalendarEventHandlers } from './hooks/useCalendarEventHandlers'
 import { useCalendarViewHandlers } from './hooks/useCalendarViewHandlers'
-import { MiniCalendar } from './MiniCalendar'
-import { TempCalendarsInput } from './TempCalendarsInput'
+import Sidebar from './Sidebar/SideBar'
 import { TimezoneSelector } from './TimezoneSelector'
 import {
   eventToFullCalendarFormat,
   extractEvents,
   updateSlotLabelVisibility
 } from './utils/calendarUtils'
+import { CALENDAR_VIEWS } from './utils/constants'
 
 const localeMap: Record<string, LocaleInput | undefined> = {
   fr: frLocale,
@@ -55,16 +55,24 @@ const localeMap: Record<string, LocaleInput | undefined> = {
 interface CalendarAppProps {
   calendarRef: MutableRefObject<CalendarApi | null>
   onDateChange?: (date: Date) => void
-  onViewChange?: (view: string) => void
+  onViewChange: (view: string) => void
   menubarProps?: MenubarProps
+  openSidebar: boolean
+  onCloseSidebar: () => void
+  setCurrentView: (view: string) => void
+  currentView: string
 }
 
 export default function CalendarApp({
   calendarRef,
   onDateChange,
   onViewChange,
-  menubarProps
-}: CalendarAppProps) {
+  menubarProps,
+  openSidebar,
+  onCloseSidebar,
+  setCurrentView,
+  currentView
+}: CalendarAppProps): JSX.Element {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [debouncedDate, setDebouncedDate] = useState(new Date())
   useEffect(() => {
@@ -84,6 +92,9 @@ export default function CalendarApp({
   const hideDeclinedEvents = useAppSelector(
     state => state.settings.hideDeclinedEvents
   )
+
+  const { isTablet } = useScreenSizeDetection()
+
   const hiddenDays = useMemo(() => {
     if (!hideWorkingDays || !workingDays || workingDays.length === 0) return []
     const validWorkingDays = workingDays.filter(d => d >= 0 && d <= 6)
@@ -113,7 +124,6 @@ export default function CalendarApp({
     [calendarIdsString]
   )
 
-  const [currentView, setCurrentView] = useState('timeGridWeek')
   const timezone =
     useAppSelector(state => state.settings.timeZone) ?? browserDefaultTimeZone
 
@@ -297,6 +307,20 @@ export default function CalendarApp({
   const [tempUsers, setTempUsers] = useState<User[]>([])
   const [tempEvent, setTempEvent] = useState<CalendarEvent>({} as CalendarEvent)
 
+  useEffect(() => {
+    if (view !== 'calendar') return
+    const targetView =
+      currentView ||
+      (isTablet ? CALENDAR_VIEWS.timeGridDay : CALENDAR_VIEWS.timeGridWeek)
+
+    if (calendarRef.current?.view.type === targetView) return
+    const id = requestAnimationFrame(() => {
+      if (calendarRef.current?.view.type !== targetView) {
+        calendarRef.current?.changeView(targetView)
+      }
+    })
+    return () => cancelAnimationFrame(id)
+  }, [view, isTablet, currentView, calendarRef])
   // Event handlers
   const eventHandlers = useCalendarEventHandlers({
     setSelectedRange,
@@ -321,7 +345,7 @@ export default function CalendarApp({
     calendarRef,
     setSelectedDate,
     setSelectedMiniDate,
-    onViewChange,
+    onViewChange: setCurrentView,
     calendars,
     tempcalendars,
     // Note: To preserve current logic, this will temporarily disable eslint for react-hooks/refs
@@ -341,68 +365,40 @@ export default function CalendarApp({
     <main
       className={`main-layout calendar-layout ${menubarProps?.isIframe ? ' isInIframe' : ''}`}
     >
-      <Box
-        className="sidebar"
-        sx={{
-          paddingTop: 0,
-          paddingBottom: 3,
-          paddingLeft: 3,
-          paddingRight: 2,
-          width: '270px'
-        }}
-      >
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
-            backgroundColor: '#fff',
-            paddingTop: menubarProps?.isIframe ? '10px' : 3
-          }}
-        >
-          <Button
-            size="medium"
-            variant="contained"
-            fullWidth
-            onClick={() =>
-              eventHandlers.handleDateSelect(null as unknown as DateSelectArg)
-            }
-            sx={{
-              borderRadius: radius.lg,
-              fontSize: '16px',
-              fontWeight: 500,
-              lineHeight: 'normal'
-            }}
-          >
-            <AddIcon sx={{ marginRight: 0.5, fontSize: '20px' }} />{' '}
-            {t('event.createEvent')}
-          </Button>
-        </Box>
-
-        <MiniCalendar
-          calendarRef={calendarRef}
-          selectedDate={selectedMiniDate}
-          setSelectedMiniDate={setSelectedMiniDate}
-        />
-        <Box sx={{ mb: 3, mt: 2 }}>
-          <TempCalendarsInput
-            tempUsers={tempUsers}
-            setTempUsers={setTempUsers}
-            handleToggleEventPreview={() => {
-              eventHandlers.handleDateSelect(null as unknown as DateSelectArg)
-            }}
-          />
-        </Box>
-        <div className="calendarList">
-          <CalendarSelection
-            selectedCalendars={selectedCalendars}
-            setSelectedCalendars={setSelectedCalendars}
-          />
-        </div>
-      </Box>
+      <Sidebar
+        open={openSidebar}
+        onClose={onCloseSidebar}
+        calendarRef={calendarRef}
+        isIframe={menubarProps?.isIframe}
+        onCreateEvent={() => eventHandlers.handleDateSelect(null)}
+        onViewChange={onViewChange}
+        selectedMiniDate={selectedMiniDate}
+        setSelectedMiniDate={setSelectedMiniDate}
+        selectedCalendars={selectedCalendars}
+        setSelectedCalendars={setSelectedCalendars}
+        tempUsers={tempUsers}
+        setTempUsers={setTempUsers}
+        currentView={currentView}
+      />
       <div className="calendar">
         <ImportAlert />
         {menubarProps?.isIframe && <Menubar {...menubarProps} />}
+        {isTablet && (
+          <Fab
+            color="primary"
+            aria-label={t('event.createEvent')}
+            onClick={() => eventHandlers.handleDateSelect(null)}
+            sx={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              zIndex: 20,
+              borderRadius: '16px'
+            }}
+          >
+            <AddIcon />
+          </Fab>
+        )}
         {view === 'calendar' && (
           <FullCalendar
             key={hiddenDays.join(',')}
@@ -417,7 +413,12 @@ export default function CalendarApp({
               interactionPlugin,
               momentTimezonePlugin
             ]}
-            initialView="timeGridWeek"
+            initialView={
+              currentView ||
+              (isTablet
+                ? CALENDAR_VIEWS.timeGridDay
+                : CALENDAR_VIEWS.timeGridWeek)
+            }
             firstDay={1}
             editable={true}
             locale={localeMap[lang]}
@@ -448,7 +449,8 @@ export default function CalendarApp({
               a.extendedProps.priority - b.extendedProps.priority
             }
             weekNumbers={
-              currentView === 'timeGridWeek' || currentView === 'timeGridDay'
+              currentView === CALENDAR_VIEWS.timeGridWeek ||
+              currentView === CALENDAR_VIEWS.timeGridDay
             }
             weekNumberFormat={{ week: 'long' }}
             weekNumberContent={arg => {
@@ -474,7 +476,7 @@ export default function CalendarApp({
                 month: 'short',
                 timeZone: timezone
               })
-              if (arg.view.type === 'dayGridMonth') {
+              if (arg.view.type === CALENDAR_VIEWS.dayGridMonth) {
                 return (
                   <span
                     className={`fc-daygrid-day-number ${
@@ -502,7 +504,7 @@ export default function CalendarApp({
                 calendarRef.current?.getDate() || new Date(arg.start)
               setDisplayedDateAndRange(calendarCurrentDate)
 
-              if (arg.view.type === 'dayGridMonth') {
+              if (arg.view.type === CALENDAR_VIEWS.dayGridMonth) {
                 const start = new Date(arg.start).getTime()
                 const end = new Date(arg.end).getTime()
                 const middle = start + (end - start) / 2
@@ -519,9 +521,7 @@ export default function CalendarApp({
               }
 
               // Notify parent about view change
-              if (onViewChange) {
-                onViewChange(arg.view.type)
-              }
+              setCurrentView(arg.view.type)
 
               // Update slot label visibility when view changes
               setTimeout(() => {
@@ -543,7 +543,7 @@ export default function CalendarApp({
               return (
                 <div className="fc-daygrid-day-top">
                   <small>{weekDay}</small>
-                  {arg.view.type !== 'dayGridMonth' && (
+                  {arg.view.type !== CALENDAR_VIEWS.dayGridMonth && (
                     <span
                       className={`fc-daygrid-day-number ${arg.isToday ? 'current-date' : ''}`}
                     >

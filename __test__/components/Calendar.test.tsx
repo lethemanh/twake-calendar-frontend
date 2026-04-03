@@ -1,5 +1,6 @@
 import CalendarApp from '@/components/Calendar/Calendar'
 import CalendarLayout from '@/components/Calendar/CalendarLayout'
+import { CALENDAR_VIEWS } from '@/components/Calendar/utils/constants'
 import * as calendarDetailThunks from '@/features/Calendars/services'
 import * as servicesModule from '@/features/Calendars/services'
 import { searchUsers } from '@/features/User/userAPI'
@@ -14,7 +15,16 @@ const mockedSearchUsers = searchUsers as jest.MockedFunction<typeof searchUsers>
 // Test wrapper component to provide calendarRef
 function CalendarTestWrapper() {
   const calendarRef = useRef(null)
-  return <CalendarApp calendarRef={calendarRef} />
+  return (
+    <CalendarApp
+      setCurrentView={jest.fn()}
+      onViewChange={jest.fn()}
+      openSidebar={false}
+      onCloseSidebar={jest.fn()}
+      currentView="timeGridWeek"
+      calendarRef={calendarRef}
+    />
+  )
 }
 
 describe('CalendarSelection', () => {
@@ -143,7 +153,14 @@ describe('CalendarSelection', () => {
     const mockCalendarRef = { current: null }
     await act(async () => {
       renderWithProviders(
-        <CalendarApp calendarRef={mockCalendarRef} />,
+        <CalendarApp
+          setCurrentView={jest.fn()}
+          onViewChange={jest.fn()}
+          openSidebar={false}
+          onCloseSidebar={jest.fn()}
+          currentView="timeGridWeek"
+          calendarRef={mockCalendarRef}
+        />,
         preloadedState
       )
     })
@@ -159,7 +176,14 @@ describe('CalendarSelection', () => {
     const mockCalendarRef = { current: null }
     await act(async () => {
       renderWithProviders(
-        <CalendarApp calendarRef={mockCalendarRef} />,
+        <CalendarApp
+          setCurrentView={jest.fn()}
+          onViewChange={jest.fn()}
+          openSidebar={false}
+          onCloseSidebar={jest.fn()}
+          currentView="timeGridWeek"
+          calendarRef={mockCalendarRef}
+        />,
         preloadedState
       )
     })
@@ -194,7 +218,14 @@ describe('CalendarSelection', () => {
     )
     await act(async () => {
       renderWithProviders(
-        <CalendarApp calendarRef={mockCalendarRef} />,
+        <CalendarApp
+          setCurrentView={jest.fn()}
+          onViewChange={jest.fn()}
+          openSidebar={false}
+          onCloseSidebar={jest.fn()}
+          currentView="timeGridWeek"
+          calendarRef={mockCalendarRef}
+        />,
         preloadedState
       )
     })
@@ -207,7 +238,14 @@ describe('CalendarSelection', () => {
     const mockCalendarRef = { current: null }
     await act(async () => {
       renderWithProviders(
-        <CalendarApp calendarRef={mockCalendarRef} />,
+        <CalendarApp
+          setCurrentView={jest.fn()}
+          onViewChange={jest.fn()}
+          openSidebar={false}
+          onCloseSidebar={jest.fn()}
+          currentView="timeGridWeek"
+          calendarRef={mockCalendarRef}
+        />,
         preloadedState
       )
     })
@@ -423,8 +461,9 @@ describe('calendar Availability search', () => {
     })
 
     const calendarApi = calendarRef.current
+    expect(calendarApi).not.toBeNull()
     await act(async () => {
-      calendarApi.changeView('dayGridMonth')
+      calendarApi?.changeView(CALENDAR_VIEWS.dayGridMonth)
     })
     await waitFor(() => {
       expect(screen.queryAllByRole('columnheader').length).toBe(14)
@@ -472,9 +511,10 @@ describe('calendar Availability search', () => {
 
     const calendarRef = window.__calendarRef
     const calendarApi = calendarRef.current
+    expect(calendarApi).not.toBeNull()
 
     await act(async () => {
-      calendarApi.changeView('dayGridMonth')
+      calendarApi?.changeView(CALENDAR_VIEWS.dayGridMonth)
       fireEvent.click(screen.getByTestId('ChevronRightIcon'))
     })
 
@@ -554,7 +594,14 @@ describe('calendar Availability search', () => {
 
       await act(async () => {
         renderWithProviders(
-          <CalendarApp calendarRef={{ current: null }} />,
+          <CalendarApp
+            setCurrentView={jest.fn()}
+            onViewChange={jest.fn()}
+            openSidebar={false}
+            onCloseSidebar={jest.fn()}
+            currentView="timeGridWeek"
+            calendarRef={{ current: null }}
+          />,
           stateWithManyCalendars
         )
       })
@@ -612,7 +659,14 @@ describe('calendar Availability search', () => {
 
       await act(async () => {
         renderWithProviders(
-          <CalendarApp calendarRef={{ current: null }} />,
+          <CalendarApp
+            setCurrentView={jest.fn()}
+            onViewChange={jest.fn()}
+            openSidebar={false}
+            onCloseSidebar={jest.fn()}
+            currentView="timeGridWeek"
+            calendarRef={{ current: null }}
+          />,
           calendarsWithSelected
         )
       })
@@ -646,10 +700,20 @@ describe('calendar Availability search', () => {
         )
 
       await act(async () => {
-        renderWithProviders(<CalendarApp calendarRef={{ current: null }} />, {
-          ...preloadedState,
-          calendars: { ...preloadedState.calendars, pending: false }
-        })
+        renderWithProviders(
+          <CalendarApp
+            setCurrentView={jest.fn()}
+            onViewChange={jest.fn()}
+            openSidebar={false}
+            onCloseSidebar={jest.fn()}
+            currentView="timeGridWeek"
+            calendarRef={{ current: null }}
+          />,
+          {
+            ...preloadedState,
+            calendars: { ...preloadedState.calendars, pending: false }
+          }
+        )
       })
 
       await waitFor(
@@ -682,7 +746,14 @@ describe('calendar Availability search', () => {
 
       await act(async () => {
         renderWithProviders(
-          <CalendarApp calendarRef={{ current: null }} />,
+          <CalendarApp
+            setCurrentView={jest.fn()}
+            onViewChange={jest.fn()}
+            openSidebar={false}
+            onCloseSidebar={jest.fn()}
+            currentView="timeGridWeek"
+            calendarRef={{ current: null }}
+          />,
           stateWithUndefinedCalendars
         )
       })
@@ -701,7 +772,14 @@ describe('calendar Availability search', () => {
 
       await act(async () => {
         renderWithProviders(
-          <CalendarApp calendarRef={{ current: null }} />,
+          <CalendarApp
+            setCurrentView={jest.fn()}
+            onViewChange={jest.fn()}
+            openSidebar={false}
+            onCloseSidebar={jest.fn()}
+            currentView="timeGridWeek"
+            calendarRef={{ current: null }}
+          />,
           stateWithUndefinedTemp
         )
       })
