@@ -20,6 +20,8 @@ declare global {
     VIDEO_CONFERENCE_BASE_URL: string
     SUPPORT_URL: string
 
+    SENTRY_DSN: string | undefined
+
     DEBUG: boolean
     LANG: string
 
