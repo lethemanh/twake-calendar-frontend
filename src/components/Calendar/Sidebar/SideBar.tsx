@@ -4,6 +4,7 @@ import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { User } from '../../Attendees/PeopleSearch'
 import { DesktopSidebar } from './DesktopSidebar'
 import { TabletSidebar } from './TabletSidebar'
+import { MobileSidebar } from './MobileSidebar'
 
 export interface CalendarSidebarProps {
   open: boolean
@@ -19,14 +20,23 @@ export interface CalendarSidebarProps {
   tempUsers: User[]
   setTempUsers: Dispatch<SetStateAction<User[]>>
   currentView: string
+  onDateChange?: (date: Date) => void
 }
 
-export default function Sidebar(sharedProps: CalendarSidebarProps) {
-  const { isTablet } = useScreenSizeDetection()
+const Sidebar: React.FC<CalendarSidebarProps> = (
+  sharedProps: CalendarSidebarProps
+) => {
+  const { isTablet, isTooSmall: isMobile } = useScreenSizeDetection()
 
-  return isTablet ? (
+  if (isMobile) {
+    return <MobileSidebar {...sharedProps} />
+  }
+
+  return isTablet || isMobile ? (
     <TabletSidebar {...sharedProps} />
   ) : (
     <DesktopSidebar {...sharedProps} />
   )
 }
+
+export default Sidebar
