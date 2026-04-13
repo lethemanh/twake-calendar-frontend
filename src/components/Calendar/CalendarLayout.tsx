@@ -1,3 +1,4 @@
+import cx from 'classnames'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import SettingsPage from '@/features/Settings/SettingsPage'
 import { useScreenSizeDetection } from '@/useScreenSizeDetection'
@@ -106,7 +107,7 @@ export default function CalendarLayout(): JSX.Element {
   }
 
   return (
-    <div className="App">
+    <div className={cx('App ', { 'App--mobile': isMobile })}>
       {!isInIframe && <Menubar {...menubarProps} />}
       {(view === 'calendar' || view === 'search') && (
         <CalendarApp

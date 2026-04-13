@@ -1,5 +1,22 @@
 declare module '*.styl'
 
+declare module 'classnames' {
+  type ClassValue =
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | ClassArray
+    | ClassDictionary
+  interface ClassDictionary {
+    [id: string]: boolean | undefined | null
+  }
+  type ClassArray = ClassValue[]
+  function classnames(...args: ClassValue[]): string
+  export = classnames
+}
+
 declare module '@linagora/twake-mui' {
   export * from '@mui/material'
 
