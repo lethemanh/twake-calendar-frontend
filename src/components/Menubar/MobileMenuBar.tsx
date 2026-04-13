@@ -48,7 +48,7 @@ export const MobileMenubar: React.FC<MobileMenubarProps> = ({
 
   return (
     <>
-      <header className="menubar">
+      <header className="menubar menubar--mobile">
         <div className="left-menu">
           <IconButton
             onClick={onOpenSidebar}
