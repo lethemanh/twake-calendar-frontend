@@ -25,7 +25,18 @@ import { ReadOnlyDateField } from './components/ReadOnlyPickerField'
 import { LONG_DATE_FORMAT } from './utils/dateTimeFormatters'
 import { FC_DAYS, WeekDaySelector } from './WeekDaySelector'
 
-export default function RepeatEvent({
+const numericSlotProps = {
+  htmlInput: {
+    inputMode: 'numeric'
+  }
+}
+
+export const RepeatEvent: React.FC<{
+  repetition: RepetitionObject
+  eventStart: Date
+  setRepetition: (repetition: RepetitionObject) => void
+  isOwn?: boolean
+}> = ({
   repetition,
   eventStart,
   setRepetition,
@@ -35,7 +46,7 @@ export default function RepeatEvent({
   eventStart: Date
   setRepetition: (repetition: RepetitionObject) => void
   isOwn?: boolean
-}) {
+}) => {
   const { t } = useI18n()
   const days = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
   const day = new Date(eventStart)
@@ -48,7 +59,7 @@ export default function RepeatEvent({
   }
 
   // Fully derived — occurrences takes priority over endDate
-  const getEndOption = () => {
+  const getEndOption = (): 'after' | 'on' | 'never' => {
     if (repetition.occurrences) return 'after'
     if (repetition.endDate) return 'on'
     return 'never'
@@ -75,13 +86,16 @@ export default function RepeatEvent({
               })
             }
             size="small"
-            style={{ width: 80 }}
-            inputProps={{
-              min: 1,
-              'data-testid': 'repeat-interval',
-              style: {
-                textAlign: 'center',
-                paddingRight: 5
+            sx={{ width: 80 }}
+            slotProps={{
+              htmlInput: {
+                ...numericSlotProps.htmlInput,
+                min: 1,
+                'data-testid': 'repeat-interval',
+                style: {
+                  textAlign: 'center',
+                  paddingRight: 5
+                }
               }
             }}
           />
@@ -258,28 +272,12 @@ export default function RepeatEvent({
               control={<Radio />}
               sx={{ mt: 1 }}
               label={
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  onClick={() => {
-                    if (!isOwn || endOption === 'after') return
-                    setRepetition({
-                      ...repetition,
-                      endDate: null,
-                      occurrences:
-                        repetition.occurrences && repetition.occurrences > 0
-                          ? repetition.occurrences
-                          : 1
-                    })
-                  }}
-                >
+                <Box display="flex" alignItems="center" gap={1}>
                   <Typography variant="h6">
                     {t('event.repeat.end.after')}
                   </Typography>
                   <TextField
                     type="number"
-                    inputProps={{ min: 1, 'data-testid': 'occurrences-input' }}
                     size="small"
                     value={repetition.occurrences || 1}
                     onChange={e => {
@@ -290,8 +288,15 @@ export default function RepeatEvent({
                         occurrences: value > 0 ? value : 1
                       })
                     }}
-                    style={{ width: 100 }}
+                    sx={{ width: 100 }}
                     disabled={!isOwn}
+                    slotProps={{
+                      htmlInput: {
+                        ...numericSlotProps.htmlInput,
+                        min: 1,
+                        'data-testid': 'occurrences-input'
+                      }
+                    }}
                   />
                   <Typography variant="h6">
                     {t('event.repeat.end.occurrences')}
@@ -305,3 +310,5 @@ export default function RepeatEvent({
     </Box>
   )
 }
+
+export default RepeatEvent
