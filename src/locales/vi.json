@@ -346,7 +346,11 @@
     "startDate": "Ngày bắt đầu",
     "startTime": "Giờ bắt đầu",
     "endDate": "Ngày kết thúc",
-    "endTime": "Giờ kết thúc"
+    "endTime": "Giờ kết thúc",
+    "pickADate": "Chọn ngày",
+    "switchToTextInput": "Chuyển sang nhập văn bản",
+    "switchToCalendar": "Chuyển sang chế độ lịch",
+    "switchToClockView": "Chuyển sang chế độ đồng hồ"
   },
   "websocket": {
     "browserOnline": "Bạn đã trực tuyến trở lại. Đang kết nối lại cập nhật thời gian thực…",
