@@ -29,7 +29,7 @@ export const DateTimeSummarySection: React.FC<DateTimeSummarySectionProps> = ({
   onExpand
 }) => {
   const isMultiDay = startDate !== endDate
-  const showEndDate = allday || (hasEndDateChanged && isMultiDay) || isMultiDay
+  const showEndDate = allday || hasEndDateChanged || isMultiDay
 
   return (
     <DateTimeSummary
