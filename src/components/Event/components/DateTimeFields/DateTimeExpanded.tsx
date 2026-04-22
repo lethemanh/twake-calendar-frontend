@@ -66,7 +66,8 @@ const DateTimeControlsRow: React.FC<DateTimeControlsRowProps> = ({
     setShowRepeat(newShowRepeat)
     if (newShowRepeat) {
       const days = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
-      const eventStartDate = new Date(start)
+      const parsed = new Date(start)
+      const eventStartDate = isNaN(parsed.getTime()) ? new Date() : parsed
       const jsDay = eventStartDate.getDay()
       const icsDay = days[(jsDay + 6) % 7]
       setRepetition({
