@@ -1,4 +1,5 @@
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
+import { useEffect, useRef } from 'react'
+import { useAppSelector } from '@/app/hooks'
 import {
   Box,
   Button,
@@ -9,22 +10,19 @@ import {
 } from '@linagora/twake-mui'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import ReplayIcon from '@mui/icons-material/Replay'
-import { useEffect, useRef } from 'react'
-import { push } from 'redux-first-history'
 import { useI18n } from 'twake-i18n'
 
-export function Error() {
+export const Error: React.FC = () => {
   const { t } = useI18n()
-  const dispatch = useAppDispatch()
   const userError = useAppSelector(state => state.user.error)
   const calendarError = useAppSelector(state => state.calendars.error)
-  const initialUserError = useRef(userError)
+  const initialError = useRef(userError || calendarError)
 
   useEffect(() => {
-    if (!initialUserError.current) {
-      dispatch(push('/'))
+    if (!initialError.current) {
+      window.location.replace('/')
     }
-  }, [dispatch])
+  }, [])
 
   const errorMessage = userError || calendarError || t('error.unknown')
 
@@ -69,7 +67,11 @@ export function Error() {
               {t('error.title')}
             </Typography>
 
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ mb: 2, width: '100%', wordBreak: 'break-all' }}
+            >
               {errorMessage}
             </Typography>
 
@@ -77,7 +79,7 @@ export function Error() {
               variant="contained"
               color="error"
               startIcon={<ReplayIcon />}
-              onClick={() => window.location.reload()}
+              onClick={() => (window.location.href = '/')}
               sx={{
                 textTransform: 'none',
                 fontWeight: 600,
