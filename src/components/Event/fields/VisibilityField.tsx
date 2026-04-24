@@ -1,3 +1,4 @@
+import React from 'react'
 import { ToggleButton, ToggleButtonGroup } from '@linagora/twake-mui'
 import { Public as PublicIcon } from '@mui/icons-material'
 import LockOutlineIcon from '@mui/icons-material/LockOutline'
@@ -25,7 +26,7 @@ export const VisibilityField: React.FC<VisibilityFieldProps> = ({
       <ToggleButtonGroup
         value={eventClass}
         exclusive
-        onChange={(_e, newValue: string) => {
+        onChange={(_e, newValue: string | null) => {
           if (newValue !== null) {
             setEventClass(newValue as 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL')
           }
