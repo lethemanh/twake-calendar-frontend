@@ -5,7 +5,6 @@ import React from 'react'
 import { useI18n } from 'twake-i18n'
 import { FieldWithLabel } from './components/FieldWithLabel'
 import { SectionPreviewRow } from './components/SectionPreviewRow'
-import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 
 export function AddDescButton({
   showDescription,
