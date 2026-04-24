@@ -88,7 +88,7 @@ const VideoConferenceFieldInShortMode: React.FC<{
   )
 }
 
-const VideoConferenceFieldInExpanedMode: React.FC<{
+const VideoConferenceFieldInExpandedMode: React.FC<{
   hasVideoConference: boolean
   meetingLink: string | null
   cameraIcon: React.ReactNode
@@ -222,7 +222,7 @@ export const VideoConferenceField: React.FC<VideoConferenceFieldProps> = ({
             handleAddVideoConference={handleAddVideoConference}
           />
         ) : (
-          <VideoConferenceFieldInExpanedMode
+          <VideoConferenceFieldInExpandedMode
             hasVideoConference={hasVideoConference}
             meetingLink={meetingLink}
             cameraIcon={cameraIcon}
