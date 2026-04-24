@@ -44,7 +44,7 @@ export default function LocationField({
   return (
     <FieldWithLabel
       label={showInputLabel(isLocationExpanded, t('event.form.location'))}
-      isExpanded={isLocationExpanded && !isMobile}
+      isExpanded={showMore && !isMobile}
     >
       {!isLocationExpanded ? (
         <SectionPreviewRow
