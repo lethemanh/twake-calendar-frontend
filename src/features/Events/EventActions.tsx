@@ -1,0 +1,55 @@
+import { useScreenSizeDetection } from '@/useScreenSizeDetection'
+import { Box, Button } from '@linagora/twake-mui'
+import AddIcon from '@mui/icons-material/Add'
+import { useI18n } from 'twake-i18n'
+
+interface EventActionsProps {
+  showExpandedBtn: boolean
+  isEdit?: boolean
+  onExpanded: () => void
+  onClose: () => void
+  onSave: () => Promise<void>
+}
+
+export const EventActions: React.FC<EventActionsProps> = ({
+  showExpandedBtn,
+  isEdit,
+  onExpanded,
+  onClose,
+  onSave
+}) => {
+  const { t } = useI18n()
+  const { isTooSmall: isMobile } = useScreenSizeDetection()
+
+  return (
+    <Box display="flex" justifyContent="space-between" width="100%" px={2}>
+      {showExpandedBtn && (
+        <Button
+          size={isMobile ? 'small' : 'medium'}
+          startIcon={<AddIcon />}
+          onClick={onExpanded}
+        >
+          {t('common.moreOptions')}
+        </Button>
+      )}
+      <Box display="flex" gap={1} ml={!showExpandedBtn ? 'auto' : 0}>
+        {(!showExpandedBtn || isEdit) && (
+          <Button
+            size={isMobile ? 'small' : 'medium'}
+            variant="outlined"
+            onClick={onClose}
+          >
+            {t('common.cancel')}
+          </Button>
+        )}
+        <Button
+          size={isMobile ? 'small' : 'medium'}
+          variant="contained"
+          onClick={() => void onSave()}
+        >
+          {t('actions.save')}
+        </Button>
+      </Box>
+    </Box>
+  )
+}

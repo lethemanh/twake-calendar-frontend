@@ -26,8 +26,6 @@ import {
 import { TIMEZONES } from '@/utils/timezone-data'
 import { addVideoConferenceToDescription } from '@/utils/videoConferenceUtils'
 import { CalendarApi, DateSelectArg } from '@fullcalendar/core'
-import { Box, Button } from '@linagora/twake-mui'
-import AddIcon from '@mui/icons-material/Add'
 import React, {
   startTransition,
   useCallback,
@@ -44,6 +42,7 @@ import { CalendarEvent, RepetitionObject } from './EventsTypes'
 import { useEventOrganizer } from './useEventOrganizer'
 import { buildDelegatedEventURL } from './utils/buildDelegatedEventURL'
 import { Resource } from '@/components/Attendees/ResourceSearch'
+import { EventActions } from './EventActions'
 
 function EventPopover({
   open,
@@ -158,7 +157,9 @@ function EventPopover({
       : []
   )
   const [alarm, setAlarm] = useState(event?.alarm?.trigger ?? '')
-  const [eventClass, setEventClass] = useState<string>(event?.class ?? 'PUBLIC')
+  const [eventClass, setEventClass] = useState<
+    'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL'
+  >(event?.class ?? 'PUBLIC')
   const [busy, setBusy] = useState(event?.transp ?? 'OPAQUE')
   const [timezone, setTimezone] = useState(
     event?.timezone ? resolveTimezone(event.timezone) : resolvedCalendarTimezone
@@ -789,7 +790,7 @@ function EventPopover({
       uid: newEventUID,
       description,
       location,
-      class: eventClass as 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL',
+      class: eventClass,
       repetition,
       organizer,
       timezone,
@@ -916,26 +917,6 @@ function EventPopover({
     }
   }
 
-  const dialogActions = (
-    <Box display="flex" justifyContent="space-between" width="100%" px={2}>
-      {!showMore && (
-        <Button startIcon={<AddIcon />} onClick={() => setShowMore(!showMore)}>
-          {t('common.moreOptions')}
-        </Button>
-      )}
-      <Box display="flex" gap={1} ml={showMore ? 'auto' : 0}>
-        {showMore && (
-          <Button variant="outlined" onClick={handleClose}>
-            {t('common.cancel')}
-          </Button>
-        )}
-        <Button variant="contained" onClick={handleSave}>
-          {t('actions.save')}
-        </Button>
-      </Box>
-    </Box>
-  )
-
   return (
     <ResponsiveDialog
       open={open}
@@ -947,7 +928,14 @@ function EventPopover({
       }
       isExpanded={showMore}
       onExpandToggle={() => setShowMore(!showMore)}
-      actions={dialogActions}
+      actions={
+        <EventActions
+          showExpandedBtn={!showMore}
+          onClose={handleClose}
+          onSave={handleSave}
+          onExpanded={() => setShowMore(!showMore)}
+        />
+      }
     >
       <EventFormFields
         title={title}
