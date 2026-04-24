@@ -13,6 +13,7 @@ import { parseMessage } from './parseMessage'
 import { UpdateCalendarsAccumulators } from './type/UpdateCalendarsAccumulators'
 
 const DEFAULT_DEBOUNCE_MS = 0
+const DEFAULT_WS_SKIP_DELAY_MS = 2000
 
 function createDebouncedUpdate(
   debouncePeriodMs: number,
@@ -39,7 +40,7 @@ function createDebouncedUpdate(
       resetShouldRefreshCalendarList()
 
       try {
-        processCalendarsToRefresh(dispatch, currentRange, calendarsToProcess)
+        scheduleCalendarsRefresh(dispatch, currentRange, calendarsToProcess)
         processCalendarsToHide(calendarsToHideSnapshot)
 
         if (shouldRefresh) {
@@ -106,7 +107,7 @@ export function updateCalendars(
   accumulators.shouldRefreshCalendarListRef.current = false
 
   try {
-    processCalendarsToRefresh(dispatch, currentRange, calendarsToProcess)
+    scheduleCalendarsRefresh(dispatch, currentRange, calendarsToProcess)
     processCalendarsToHide(calendarsToHideSnapshot)
     if (shouldRefreshCalendarList) {
       dispatch(getCalendarsListAsync())
@@ -117,6 +118,52 @@ export function updateCalendars(
 }
 
 // --- Helpers ---
+
+function scheduleCalendarsRefresh(
+  dispatch: AppDispatch,
+  currentRange: { start: Date; end: Date },
+  calendarsMap: Map<string, { calendar: Calendar; type?: 'temp' }>
+) {
+  const skipDelayMs = window.WS_SKIP_DELAY_MS ?? DEFAULT_WS_SKIP_DELAY_MS
+
+  if (skipDelayMs === 0) {
+    dispatchCalendarsRefresh(dispatch, currentRange, calendarsMap)
+    return
+  }
+
+  setTimeout(() => {
+    const stateAfterDelay = store.getState()
+    const rangeAfterDelay = getDisplayedCalendarRange()
+    calendarsMap.forEach(({ calendar, type }, calId) => {
+      const current = findCalendarById(stateAfterDelay, calId)
+      if (current && current.calendar.syncToken !== calendar.syncToken) return
+      dispatch(
+        refreshCalendarWithSyncToken({
+          calendar: current?.calendar ?? calendar,
+          calType: type,
+          calendarRange: rangeAfterDelay
+        })
+      )
+    })
+  }, skipDelayMs)
+}
+
+function dispatchCalendarsRefresh(
+  dispatch: AppDispatch,
+  currentRange: { start: Date; end: Date },
+  calendarsMap: Map<string, { calendar: Calendar; type?: 'temp' }>
+) {
+  calendarsMap.forEach(({ calendar, type }) => {
+    dispatch(
+      refreshCalendarWithSyncToken({
+        calendar,
+        calType: type,
+        calendarRange: currentRange
+      })
+    )
+  })
+}
+
 function accumulateCalendarsToRefresh(
   state: ReturnType<typeof store.getState>,
   calendarPaths: Set<string>,
@@ -146,22 +193,6 @@ function accumulateCalendarsToHide(
     if (calendarId) {
       calendarsToHideSet.add(calendarId)
     }
-  })
-}
-
-function processCalendarsToRefresh(
-  dispatch: AppDispatch,
-  currentRange: { start: Date; end: Date },
-  calendarsMap: Map<string, { calendar: Calendar; type?: 'temp' }>
-) {
-  calendarsMap.forEach(calendar => {
-    dispatch(
-      refreshCalendarWithSyncToken({
-        calendar: calendar.calendar,
-        calType: calendar.type,
-        calendarRange: currentRange
-      })
-    )
   })
 }
 

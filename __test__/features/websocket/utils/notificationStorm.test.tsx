@@ -60,6 +60,7 @@ describe('websocket messages storm', () => {
     ;(getDisplayedCalendarRange as jest.Mock).mockReturnValue(mockRange)
     ;(store.getState as jest.Mock).mockReturnValue(mockState)
     window.WS_DEBOUNCE_PERIOD_MS = 500
+    window.WS_SKIP_DELAY_MS = 0
     mockAccumulators.calendarsToRefresh = new Map<string, any>()
     mockAccumulators.calendarsToHide = new Set()
     mockAccumulators.shouldRefreshCalendarListRef.current = false
