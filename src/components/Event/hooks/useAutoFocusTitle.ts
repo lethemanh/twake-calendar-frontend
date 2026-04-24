@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 // Effects that auto-focus the title input must not run in the test environment
 // because jsdom has no layout engine and focus() calls produce false positives.
