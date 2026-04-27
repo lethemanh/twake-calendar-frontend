@@ -29,8 +29,6 @@ import {
 } from '@/utils/timezone'
 import { TIMEZONES } from '@/utils/timezone-data'
 import { addVideoConferenceToDescription } from '@/utils/videoConferenceUtils'
-import { Box, Button } from '@linagora/twake-mui'
-import AddIcon from '@mui/icons-material/Add'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from 'twake-i18n'
 import {
@@ -46,6 +44,7 @@ import { moveEventBetweenCalendars } from './updateEventHelpers/moveEventBetween
 import { detectRecurringEventChanges } from './utils/detectRecurringEventChanges'
 import { Resource } from '@/components/Attendees/ResourceSearch'
 import { useScreenSizeDetection } from '@/useScreenSizeDetection'
+import { EventActions } from './EventActions'
 
 const EventUpdateModal: React.FC<{
   eventId: string
@@ -1057,41 +1056,6 @@ const EventUpdateModal: React.FC<{
     }
   }
 
-  const dialogActions = (
-    <Box
-      display="flex"
-      justifyContent="space-between"
-      width="100%"
-      px={isMobile ? 0 : 2}
-    >
-      {!showMore && (
-        <Button
-          size={isMobile ? 'small' : 'medium'}
-          startIcon={<AddIcon />}
-          onClick={() => setShowMore(!showMore)}
-        >
-          {t('common.moreOptions')}
-        </Button>
-      )}
-      <Box display="flex" gap={1} ml={showMore ? 'auto' : 0}>
-        <Button
-          size={isMobile ? 'small' : 'medium'}
-          variant="outlined"
-          onClick={handleClose}
-        >
-          {t('common.cancel')}
-        </Button>
-        <Button
-          size={isMobile ? 'small' : 'medium'}
-          variant="contained"
-          onClick={() => void handleSave()}
-        >
-          {t('actions.save')}
-        </Button>
-      </Box>
-    </Box>
-  )
-
   if (!event) return null
 
   return (
@@ -1101,7 +1065,15 @@ const EventUpdateModal: React.FC<{
       title={t('event.updateEvent')}
       isExpanded={showMore}
       onExpandToggle={() => setShowMore(!showMore)}
-      actions={dialogActions}
+      actions={
+        <EventActions
+          showExpandedBtn={!showMore}
+          isEdit
+          onClose={handleClose}
+          onSave={handleSave}
+          onExpanded={() => setShowMore(!showMore)}
+        />
+      }
       sx={{
         '& .MuiDialogActions-root': {
           paddingLeft: isMobile ? 2 : 4,
