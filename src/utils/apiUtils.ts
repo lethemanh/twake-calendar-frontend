@@ -1,7 +1,17 @@
 import { Auth } from '@/features/User/oidcAuth'
 import { assertWebSocketAlive } from '@/websocket/connection/lifecycle/assertWebSocketAlive'
-import ky from 'ky'
+import ky, {
+  type KyInstance,
+  type KyRequest,
+  type KyResponse,
+  HTTPError,
+  type NormalizedOptions
+} from 'ky'
 import { getRetryDelay } from './getRetryDelay'
+import {
+  TokenEndpointResponse,
+  TokenEndpointResponseHelpers
+} from 'openid-client'
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
@@ -11,7 +21,57 @@ const RETRY_CONFIG = {
   maxDelay: 120000
 }
 
-export const api = ky.extend({
+let isRedirectingToSso = false
+
+const redirectSSO = async (
+  response: KyResponse,
+  request: KyRequest,
+  options: NormalizedOptions
+): Promise<void> => {
+  if (isRedirectingToSso) {
+    return
+  }
+  isRedirectingToSso = true
+  try {
+    const loginurl = await Auth()
+
+    sessionStorage.setItem(
+      'redirectState',
+      JSON.stringify({
+        code_verifier: loginurl.code_verifier,
+        state: loginurl.state
+      })
+    )
+    redirectTo(loginurl.redirectTo)
+  } catch (error) {
+    isRedirectingToSso = false
+    console.error('SSO Redirect failed:', error)
+    throw new HTTPError(response, request, options)
+  }
+}
+
+const handleUnauthorizeRequest = async (
+  response: KyResponse,
+  request: KyRequest,
+  options: NormalizedOptions
+): Promise<KyResponse | void> => {
+  // Check if we're already on login flow to prevent redirect loop
+  const currentPath = window.location.pathname
+  if (currentPath === '/callback') {
+    return response
+  }
+
+  // Check if we have a token in the request
+  const hasAuthHeader = request.headers.has('Authorization')
+  if (!hasAuthHeader) {
+    return response
+  }
+
+  // Only redirect to SSO if we're sure token is invalid (not just missing)
+  await redirectSSO(response, request, options)
+}
+
+export const api: KyInstance = ky.extend({
   prefixUrl: window.CALENDAR_BASE_URL,
   retry: {
     limit: RETRY_CONFIG.maxRetries,
@@ -24,11 +84,13 @@ export const api = ky.extend({
   },
   hooks: {
     beforeRequest: [
-      async request => {
+      async (request: KyRequest): Promise<KyRequest> => {
         const saved = sessionStorage.getItem('tokenSet')
-          ? JSON.parse(sessionStorage.getItem('tokenSet') ?? '{}')
+          ? (JSON.parse(
+              sessionStorage.getItem('tokenSet') ?? '{}'
+            ) as TokenEndpointResponse & TokenEndpointResponseHelpers)
           : null
-        const access_token = saved?.access_token
+        const access_token = saved?.access_token as string
         if (access_token) {
           request.headers.set('Authorization', `Bearer ${access_token}`)
         }
@@ -41,7 +103,7 @@ export const api = ky.extend({
     ],
 
     beforeRetry: [
-      ({ request, error, retryCount }) => {
+      ({ request, error, retryCount }): void => {
         console.warn(
           `[API Retry] Attempt ${retryCount}/${RETRY_CONFIG.maxRetries}`,
           {
@@ -53,31 +115,9 @@ export const api = ky.extend({
     ],
 
     afterResponse: [
-      async (request, options, response) => {
+      async (request, options, response): Promise<KyResponse> => {
         if (response.status === 401) {
-          // Check if we're already on login flow to prevent redirect loop
-          const currentPath = window.location.pathname
-          if (currentPath === '/callback') {
-            return response
-          }
-
-          // Check if we have a token in the request
-          const hasAuthHeader = request.headers.has('Authorization')
-          if (!hasAuthHeader) {
-            return response
-          }
-
-          // Only redirect to SSO if we're sure token is invalid (not just missing)
-          const loginurl = await Auth()
-
-          sessionStorage.setItem(
-            'redirectState',
-            JSON.stringify({
-              code_verifier: loginurl.code_verifier,
-              state: loginurl.state
-            })
-          )
-          redirectTo(loginurl.redirectTo)
+          await handleUnauthorizeRequest(response, request, options)
         }
         return response
       }
@@ -85,15 +125,15 @@ export const api = ky.extend({
   }
 })
 
-export function redirectTo(url: URL) {
+export function redirectTo(url: URL): void {
   window.location.assign(url)
 }
 
-export function getLocation() {
+export function getLocation(): string {
   return window.location.href
 }
 
-export function isValidUrl(string?: string) {
+export function isValidUrl(string?: string): URL | boolean {
   let url
 
   try {
@@ -104,7 +144,7 @@ export function isValidUrl(string?: string) {
   return url
 }
 
-export async function importFile(file: File) {
+export async function importFile(file: File): Promise<KyResponse<unknown>> {
   const response = await api.post(
     `api/files?mimetype=${file.type}&name=${file.name}&size=${file.size}`,
     { body: await file.text() }
