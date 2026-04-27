@@ -44,6 +44,21 @@ import { buildDelegatedEventURL } from './utils/buildDelegatedEventURL'
 import { Resource } from '@/components/Attendees/ResourceSearch'
 import { EventActions } from './EventActions'
 
+function resolveSourceCalendarId(
+  calId: string | undefined,
+  calList: Record<string, Calendar>,
+  userId: string,
+  defaultCalendarId: string
+): string {
+  if (!calId) return defaultCalendarId
+  const sourceCalendar = calList[calId]
+  if (!sourceCalendar) return defaultCalendarId
+  const isWritable =
+    sourceCalendar.id?.split('/')[0] === userId ||
+    (sourceCalendar.delegated && sourceCalendar.access?.write)
+  return isWritable ? calId : defaultCalendarId
+}
+
 function EventPopover({
   open,
   onClose,
@@ -475,9 +490,9 @@ function EventPopover({
         setEnd('')
       }
 
-      if (defaultCalendarId) {
-        setCalendarid(defaultCalendarId)
-      }
+      setCalendarid(
+        resolveSourceCalendarId(event.calId, calList, userId, defaultCalendarId)
+      )
       setRepetition(event.repetition ?? ({} as RepetitionObject))
       setShowRepeat(event.repetition?.freq ? true : false)
       setAttendees(
@@ -519,6 +534,8 @@ function EventPopover({
     organizer?.cal_address,
     resolvedCalendarTimezone,
     defaultCalendarId,
+    calList,
+    userId,
     resources,
     eventAttendees
   ])
