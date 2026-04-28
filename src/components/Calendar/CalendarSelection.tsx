@@ -10,34 +10,23 @@ import {
   AccordionDetails,
   AccordionSummary,
   Checkbox,
-  Divider,
   IconButton,
-  ListItem,
-  Menu,
-  MenuItem
+  ListItem
 } from '@linagora/twake-mui'
 import AddIcon from '@mui/icons-material/Add'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
-import { SetStateAction, useEffect, useMemo, useState } from 'react'
+import { SetStateAction, useEffect, useMemo, useState, useRef } from 'react'
 import { useI18n } from 'twake-i18n'
+import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import CalendarPopover from './CalendarModal'
 import CalendarSearch from './CalendarSearch'
 import { DeleteCalendarDialog } from './DeleteCalendarDialog'
 import { OwnerCaption } from './OwnerCaption'
 import CalendarResources from './CalendarResources'
+import { CalendarSelectorMenu } from './CalendarSelectorMenu'
 
-function CalendarAccordion({
-  title,
-  calendars,
-  selectedCalendars,
-  handleToggle,
-  showAddButton = false,
-  onAddClick,
-  defaultExpanded = false,
-  setOpen,
-  hideOwner
-}: {
+const CalendarAccordion: React.FC<{
   title: string
   calendars: string[]
   selectedCalendars: string[]
@@ -47,14 +36,24 @@ function CalendarAccordion({
   defaultExpanded?: boolean
   setOpen: (id: string) => void
   hideOwner?: boolean
-}) {
+}> = ({
+  title,
+  calendars,
+  selectedCalendars,
+  handleToggle,
+  showAddButton = false,
+  onAddClick,
+  defaultExpanded = false,
+  setOpen,
+  hideOwner
+}) => {
   const allCalendars = useAppSelector(state => state.calendars.list)
   const { t } = useI18n()
 
   const [expended, setExpended] = useState(defaultExpanded)
 
   useEffect(() => {
-    const handleExpendedChange = () => {
+    const handleExpendedChange = (): void => {
       setExpended(defaultExpanded)
     }
     handleExpendedChange()
@@ -127,13 +126,10 @@ function CalendarAccordion({
   )
 }
 
-export default function CalendarSelection({
-  selectedCalendars,
-  setSelectedCalendars
-}: {
+const CalendarSelection: React.FC<{
   selectedCalendars: string[]
   setSelectedCalendars: (value: SetStateAction<string[]>) => void
-}) {
+}> = ({ selectedCalendars, setSelectedCalendars }) => {
   const { t } = useI18n()
   const userId = useAppSelector(state => state.user.userData?.openpaasId) ?? ''
   const calendars = useAppSelector(state => state.calendars.list)
@@ -158,7 +154,7 @@ export default function CalendarSelection({
       extractEventBaseUuid(id) !== userId && calendars?.[id]?.owner?.resource
   )
 
-  const handleCalendarToggle = (name: string) => {
+  const handleCalendarToggle = (name: string): void => {
     setSelectedCalendars((prev: string[]) =>
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     )
@@ -243,7 +239,7 @@ export default function CalendarSelection({
       />
       <CalendarSearch
         open={Boolean(anchorElCalOthers)}
-        onClose={(newCalIds?: string[]) => {
+        onClose={(newCalIds?: string[] | Record<string, never>) => {
           setAnchorElCalOthers(null)
           if (newCalIds?.length) {
             newCalIds.forEach(id => handleCalendarToggle(id))
@@ -265,15 +261,7 @@ export default function CalendarSelection({
   )
 }
 
-function CalendarSelector({
-  calendars,
-  id,
-  isPersonal,
-  selectedCalendars,
-  handleCalendarToggle,
-  setOpen,
-  hideOwner
-}: {
+const CalendarSelector: React.FC<{
   calendars: Record<string, Calendar>
   id: string
   isPersonal: boolean
@@ -281,25 +269,62 @@ function CalendarSelector({
   handleCalendarToggle: (name: string) => void
   setOpen: () => void
   hideOwner?: boolean
-}) {
+}> = ({
+  calendars,
+  id,
+  isPersonal,
+  selectedCalendars,
+  handleCalendarToggle,
+  setOpen,
+  hideOwner
+}) => {
   const { t } = useI18n()
   const dispatch = useAppDispatch()
   const calLink = useAppSelector(state => state.calendars.list[id].link) ?? ''
+  const { isTooSmall: isMobile } = useScreenSizeDetection()
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     setAnchorEl(event.currentTarget)
   }
-  const handleClose = () => {
+  const handleClose = (): void => {
     setAnchorEl(null)
   }
+
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isLongPressedRef = useRef(false)
+
+  const handleTouchStart = (): void => {
+    if (!isMobile) return
+    isLongPressedRef.current = false
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressedRef.current = true
+      setAnchorEl(document.body)
+    }, 300)
+  }
+
+  const handleTouchEnd = (): void => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
+  const handleTouchMove = (): void => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
   const [userId, calId] = id.split('/')
   const isDefault = isPersonal && userId === calId
 
   const [deletePopupOpen, setDeletePopupOpen] = useState(false)
-  const handleDeleteConfirm = () => {
-    dispatch(removeCalendarAsync({ calId: id, calLink }))
+  const handleDeleteConfirm = async (): Promise<void> => {
+    await dispatch(removeCalendarAsync({ calId: id, calLink }))
     setDeletePopupOpen(false)
     handleClose()
   }
@@ -337,6 +362,15 @@ function CalendarSelector({
           '&:hover': {
             backgroundColor: '#F3F3F6',
             '& .MoreBtn': { opacity: 1 }
+          }
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
+        onClickCapture={e => {
+          if (isLongPressedRef.current) {
+            e.stopPropagation()
+            e.preventDefault()
           }
         }}
       >
@@ -381,26 +415,23 @@ function CalendarSelector({
             />
           </div>
         </label>
-        <IconButton className="MoreBtn" onClick={handleClick}>
-          <MoreHorizIcon />
-        </IconButton>
-      </ListItem>
-      <Menu id={id} anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MenuItem
-          onClick={() => {
-            setOpen()
-            handleClose()
-          }}
-        >
-          {t('actions.modify')}
-        </MenuItem>
-        {!isDefault && <Divider />}
-        {!isDefault && (
-          <MenuItem onClick={() => setDeletePopupOpen(!deletePopupOpen)}>
-            {isPersonal ? t('actions.delete') : t('actions.remove')}
-          </MenuItem>
+        {!isMobile && (
+          <IconButton className="MoreBtn" onClick={handleClick}>
+            <MoreHorizIcon />
+          </IconButton>
         )}
-      </Menu>
+      </ListItem>
+
+      <CalendarSelectorMenu
+        id={id}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        onModify={setOpen}
+        onDelete={() => setDeletePopupOpen(true)}
+        isDefault={isDefault}
+        isPersonal={isPersonal}
+      />
 
       <DeleteCalendarDialog
         deletePopupOpen={deletePopupOpen}
@@ -408,8 +439,10 @@ function CalendarSelector({
         calendars={calendars}
         id={id}
         isPersonal={isPersonal}
-        handleDeleteConfirm={handleDeleteConfirm}
+        handleDeleteConfirm={() => void handleDeleteConfirm()}
       />
     </>
   )
 }
+
+export default CalendarSelection
