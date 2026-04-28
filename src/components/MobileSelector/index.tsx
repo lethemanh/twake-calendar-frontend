@@ -1,9 +1,9 @@
 import {
   Box,
-  Typography,
-  styled,
   ButtonBase,
-  SwipeableDrawer
+  styled,
+  SwipeableDrawer,
+  Typography
 } from '@linagora/twake-mui'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
@@ -19,6 +19,7 @@ const StyledSwipeableDrawer = styled(SwipeableDrawer)(({ theme }) => ({
 
 const SelectorButton = styled(ButtonBase)(({ theme }) => ({
   width: '100%',
+  whiteSpace: 'nowrap',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -36,7 +37,7 @@ const SelectorButton = styled(ButtonBase)(({ theme }) => ({
 }))
 
 interface MobileSelectorProps {
-  displayText: string
+  displayText: React.ReactNode
   children?: React.ReactNode
   bottomSheetRef?: React.RefObject<HTMLDivElement>
   paperRef?: React.RefObject<HTMLDivElement>
@@ -44,64 +45,55 @@ interface MobileSelectorProps {
     open: boolean
     onClose: () => void
   }) => React.ReactNode
+  fullscreen?: boolean
 }
 
 export const MobileSelector = forwardRef<
   MobileSelectorHandle,
   MobileSelectorProps
->(
-  (
-    { displayText, children, bottomSheetRef, paperRef, bottomSheetChildren },
-    ref
-  ) => {
-    const [open, setOpen] = useState(false)
+>(({ displayText, children, bottomSheetChildren, fullscreen }, ref) => {
+  const [open, setOpen] = useState(false)
+  const onClose = (): void => setOpen(false)
 
-    const onClose = (): void => {
-      setOpen(false)
-    }
+  useImperativeHandle(ref, () => ({ open, onClose }))
 
-    useImperativeHandle(ref, () => ({
-      open,
-      onClose
-    }))
-
-    return (
-      <>
-        <SelectorButton onClick={() => setOpen(true)}>
+  return (
+    <>
+      <SelectorButton onClick={() => setOpen(true)}>
+        {typeof displayText === 'string' ? (
           <Typography variant="body1">{displayText}</Typography>
-          <Box
-            component={ArrowDropDownIcon}
-            sx={{
-              fontSize: 20,
-              transition: 'transform 0.2s',
-              transform: open ? 'rotate(180deg)' : 'rotate(0deg)'
-            }}
-          />
-        </SelectorButton>
-
-        {children ? (
-          <StyledSwipeableDrawer
-            ref={bottomSheetRef}
-            anchor="bottom"
-            open={open}
-            onClose={onClose}
-            onOpen={(): void => {}}
-            disableAutoFocus
-            slotProps={{
-              paper: {
-                ref: paperRef,
-                sx: { maxHeight: '90dvh' }
-              }
-            }}
-          >
-            {children}
-          </StyledSwipeableDrawer>
         ) : (
-          bottomSheetChildren?.({ open, onClose })
+          displayText
         )}
-      </>
-    )
-  }
-)
+        <Box
+          component={ArrowDropDownIcon}
+          sx={{
+            fontSize: 20,
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
+        />
+      </SelectorButton>
+      {children ? (
+        <StyledSwipeableDrawer
+          anchor="bottom"
+          open={open}
+          onClose={onClose}
+          onOpen={(): void => {}}
+          disableAutoFocus
+          slotProps={{
+            paper: {
+              sx: fullscreen ? { height: '100dvh' } : { maxHeight: '90dvh' }
+            }
+          }}
+        >
+          {children}
+        </StyledSwipeableDrawer>
+      ) : (
+        bottomSheetChildren?.({ open, onClose })
+      )}
+    </>
+  )
+})
 
 MobileSelector.displayName = 'MobileSelector'

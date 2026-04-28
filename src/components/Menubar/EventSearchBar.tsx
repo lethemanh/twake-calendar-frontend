@@ -1,6 +1,15 @@
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { selectCalendars } from '@/app/selectors/selectCalendars'
-import { searchEventsAsync } from '@/features/Search/SearchSlice'
+import { AttendeesFilter } from '@/features/Search/AttendeesFilter'
+import { KeywordsFilter } from '@/features/Search/KeywordsFilter'
+import { OrganizersFilter } from '@/features/Search/OrganizersFilter'
+import { SearchInFilter } from '@/features/Search/SearchInFilter'
+import {
+  clearFilters,
+  searchEventsAsync,
+  setFilters
+} from '@/features/Search/SearchSlice'
+import { buildQuery } from '@/features/Search/searchUtils'
 import { setView } from '@/features/Settings/SettingsSlice'
 import { userAttendee } from '@/features/User/models/attendee'
 import { createAttendee } from '@/features/User/models/attendee.mapper'
@@ -11,16 +20,11 @@ import {
   Card,
   CardActions,
   CardContent,
-  Divider,
   IconButton,
   InputAdornment,
-  InputLabel,
-  MenuItem,
   Popover,
-  Select,
   Stack,
   TextField,
-  Typography,
   type AutocompleteRenderInputParams
 } from '@linagora/twake-mui'
 import HighlightOffIcon from '@mui/icons-material/HighlightOff'
@@ -28,10 +32,8 @@ import SearchIcon from '@mui/icons-material/Search'
 import TuneIcon from '@mui/icons-material/Tune'
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from 'twake-i18n'
-import UserSearch from '../Attendees/AttendeeSearch'
 import { PeopleSearch } from '../Attendees/PeopleSearch'
 import { User } from '../Attendees/types'
-import { CalendarItemList } from '../Calendar/CalendarItemList'
 
 const SEARCH_OBJECT_TYPES = ['user', 'contact']
 
@@ -45,17 +47,13 @@ const SearchBar: React.FC<{
   const personnalCalendars = userId
     ? calendars.filter(c => extractEventBaseUuid(c.id) === userId)
     : []
+  const filters = useAppSelector(
+    state => state.searchResult.searchParams.filters
+  )
 
   const [search, setSearch] = useState('')
   const [selectedContacts, setSelectedContacts] = useState<User[]>([])
   const [extended, setExtended] = useState(false)
-
-  const [filters, setFilters] = useState({
-    searchIn: 'my-calendars',
-    keywords: '',
-    organizers: [] as userAttendee[],
-    attendees: [] as userAttendee[]
-  })
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const filterOpen = Boolean(anchorEl)
@@ -72,6 +70,7 @@ const SearchBar: React.FC<{
 
   const inputRef = useRef<HTMLInputElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const [popperAnchor, setPopperAnchor] = useState<HTMLDivElement | null>(null)
   const shouldCollapseRef = useRef(false)
 
   type FilterField = 'searchIn' | 'keywords' | 'organizers' | 'attendees'
@@ -79,7 +78,7 @@ const SearchBar: React.FC<{
     field: FilterField,
     value: string | userAttendee[]
   ): void => {
-    setFilters(prev => ({ ...prev, [field]: value }))
+    dispatch(setFilters({ ...filters, [field]: value }))
     if (field === 'organizers') {
       setSelectedContacts(
         (value as userAttendee[]).map((a: userAttendee) => ({
@@ -90,68 +89,8 @@ const SearchBar: React.FC<{
     }
   }
 
-  function buildQuery(
-    searchQuery: string,
-    filters: {
-      searchIn: string
-      keywords: string
-      organizers: userAttendee[]
-      attendees: userAttendee[]
-    }
-  ):
-    | {
-        search: string
-        filters: {
-          searchIn: string[]
-          keywords: string
-          organizers: string[]
-          attendees: string[]
-        }
-      }
-    | undefined {
-    const trimmedSearch = searchQuery.trim()
-    const trimmedKeywords = filters.keywords.trim()
-
-    // Block search if all search criteria are empty
-    const hasSearchCriteria =
-      trimmedSearch ||
-      trimmedKeywords ||
-      filters.organizers.length > 0 ||
-      filters.attendees.length > 0
-
-    if (!hasSearchCriteria) {
-      return
-    }
-
-    let searchInCalendars: string[]
-
-    if (filters.searchIn === '' || !filters.searchIn) {
-      searchInCalendars = calendars.map(c => c.id)
-    } else if (filters.searchIn === 'my-calendars') {
-      searchInCalendars = personnalCalendars.map(c => c.id)
-    } else {
-      searchInCalendars = [filters.searchIn]
-    }
-
-    const cleanedFilters = {
-      keywords: trimmedKeywords,
-      organizers: filters.organizers.map(u => u.cal_address),
-      attendees: filters.attendees.map(u => u.cal_address),
-      searchIn: searchInCalendars
-    }
-    return {
-      search: trimmedSearch,
-      filters: cleanedFilters
-    }
-  }
-
   const handleClearFilters = (): void => {
-    setFilters({
-      searchIn: 'my-calendars',
-      keywords: '',
-      organizers: [] as userAttendee[],
-      attendees: [] as userAttendee[]
-    })
+    dispatch(clearFilters())
     setAnchorEl(null)
     setFilterError(false)
   }
@@ -181,7 +120,12 @@ const SearchBar: React.FC<{
       attendees: userAttendee[]
     }
   ): Promise<void> => {
-    const cleanedQuery = buildQuery(searchQuery, filters)
+    const cleanedQuery = buildQuery(
+      searchQuery,
+      filters,
+      calendars.map(calendar => calendar.id),
+      personnalCalendars.map(calendar => calendar.id)
+    )
     if (cleanedQuery) {
       await dispatch(searchEventsAsync(cleanedQuery))
       dispatch(setView('search'))
@@ -228,7 +172,12 @@ const SearchBar: React.FC<{
   return (
     <>
       <Box
-        ref={containerRef}
+        ref={(el: HTMLDivElement | null) => {
+          containerRef.current = el
+          if (el && !popperAnchor) {
+            setPopperAnchor(el)
+          }
+        }}
         sx={{
           position: 'relative',
           width: extended ? '100%' : 'auto',
@@ -252,7 +201,7 @@ const SearchBar: React.FC<{
             onToggleEventPreview={() => {}}
             customSlotProps={{
               popper: {
-                anchorEl: containerRef.current,
+                anchorEl: popperAnchor,
                 placement: 'bottom-start',
                 sx: {
                   minWidth: searchWidth,
@@ -399,131 +348,20 @@ const SearchBar: React.FC<{
         <Card sx={{ p: 2, pb: 1 }}>
           <CardContent>
             <Stack spacing={2}>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 2,
-                  alignItems: 'center'
-                }}
-              >
-                <InputLabel id="search-in" sx={{ m: 0 }}>
-                  {t('search.searchIn')}
-                </InputLabel>
-                <Select
-                  displayEmpty
-                  value={filters.searchIn}
-                  onChange={e => handleFilterChange('searchIn', e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                        color: '#8C9CAF'
-                      }
-                    }
-                  }}
-                  sx={{ height: '40px' }}
-                >
-                  <MenuItem value="">
-                    <Typography
-                      sx={{
-                        color: '#243B55',
-                        font: 'Roboto',
-                        fontSize: '16px',
-                        weight: 400,
-                        pointerEvents: 'auto'
-                      }}
-                    >
-                      {t('search.filter.allCalendar')}
-                    </Typography>
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem
-                    value="my-calendars"
-                    sx={{
-                      color: '#243B55',
-                      font: 'Roboto',
-                      fontSize: '12px',
-                      weight: 400,
-                      pointerEvents: 'auto'
-                    }}
-                  >
-                    {t('search.filter.myCalendar')}
-                  </MenuItem>
-                  {CalendarItemList(personnalCalendars)}
-                </Select>
-              </Box>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 2,
-                  alignItems: 'center'
-                }}
-              >
-                <InputLabel id="keywords" sx={{ m: 0 }}>
-                  {t('search.keywords')}
-                </InputLabel>
-                <TextField
-                  fullWidth
-                  error={filterError}
-                  helperText={filterError ? t('search.error.emptySearch') : ''}
-                  placeholder={t('search.keywordsPlaceholder')}
-                  value={filters.keywords}
-                  onChange={e => {
-                    handleFilterChange('keywords', e.target.value)
-                    if (e.target.value.trim()) {
-                      setFilterError(false)
-                    }
-                  }}
-                  size="small"
-                />
-              </Box>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 2,
-                  alignItems: 'center'
-                }}
-              >
-                <InputLabel id="from" sx={{ m: 0 }}>
-                  {t('search.organizers')}
-                </InputLabel>
-                <UserSearch
-                  attendees={filters.organizers}
-                  setAttendees={(users: userAttendee[]) => {
-                    handleFilterChange('organizers', users)
-                    if (users.length > 0) {
-                      setFilterError(false)
-                    }
-                  }}
-                />
-              </Box>
-
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 2,
-                  alignItems: 'center'
-                }}
-              >
-                <InputLabel id="participant" sx={{ m: 0 }}>
-                  {t('search.participants')}
-                </InputLabel>
-                <UserSearch
-                  attendees={filters.attendees}
-                  setAttendees={(users: userAttendee[]) => {
-                    handleFilterChange('attendees', users)
-                    if (users.length > 0) {
-                      setFilterError(false)
-                    }
-                  }}
-                />
-              </Box>
+              <SearchInFilter mode="popover" />
+              <KeywordsFilter
+                mode="popover"
+                error={filterError}
+                onErrorClear={() => setFilterError(false)}
+              />
+              <OrganizersFilter
+                mode="popover"
+                onErrorClear={() => setFilterError(false)}
+              />
+              <AttendeesFilter
+                mode="popover"
+                onErrorClear={() => setFilterError(false)}
+              />
             </Stack>
           </CardContent>
 
