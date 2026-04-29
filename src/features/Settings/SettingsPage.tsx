@@ -4,11 +4,15 @@ import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import { SettingErrorSnackbars } from './SettingErrorSnackbars'
 import { DesktopSettingsPage } from './DesktopSettingsPage'
 import { MobileSettingsPage } from './MobileSettingsPage'
+import { Menubar, type MenubarProps } from '@/components/Menubar/Menubar'
 
 export type SidebarNavItem = 'settings' | 'sync'
 export type SettingsSubTab = 'settings' | 'notifications'
 
-const SettingsPage: React.FC<{ isInIframe?: boolean }> = ({ isInIframe }) => {
+const SettingsPage: React.FC<{
+  menubarProps?: MenubarProps
+  isInIframe?: boolean
+}> = ({ menubarProps, isInIframe }) => {
   const { isTooSmall: isMobile } = useScreenSizeDetection()
 
   const [activeSettingsSubTab, setActiveSettingsSubTab] =
@@ -46,49 +50,57 @@ const SettingsPage: React.FC<{ isInIframe?: boolean }> = ({ isInIframe }) => {
   }
 
   return (
-    <main
-      className={`main-layout settings-layout${isInIframe ? ' isInIframe' : ''} ${isMobile ? 'settings-layout--mobile' : ''}`}
-    >
-      {isMobile ? (
-        <MobileSettingsPage
-          activeSettingsSubTab={activeSettingsSubTab}
-          setLanguageErrorOpen={setLanguageErrorOpen}
-          setTimeZoneErrorOpen={setTimeZoneErrorOpen}
-          setAlarmEmailsErrorOpen={setAlarmEmailsErrorOpen}
-          setHideDeclinedEventsErrorOpen={setHideDeclinedEventsErrorOpen}
-          setDisplayWeekNumbersErrorOpen={setDisplayWeekNumbersErrorOpen}
+    <>
+      {isInIframe && isMobile && menubarProps && <Menubar {...menubarProps} />}
+
+      <main
+        className={`main-layout settings-layout${isInIframe ? ' isInIframe' : ''} ${isMobile ? 'settings-layout--mobile' : ''}`}
+      >
+        {isMobile ? (
+          <MobileSettingsPage
+            activeSettingsSubTab={activeSettingsSubTab}
+            setLanguageErrorOpen={setLanguageErrorOpen}
+            setTimeZoneErrorOpen={setTimeZoneErrorOpen}
+            setAlarmEmailsErrorOpen={setAlarmEmailsErrorOpen}
+            setHideDeclinedEventsErrorOpen={setHideDeclinedEventsErrorOpen}
+            setDisplayWeekNumbersErrorOpen={setDisplayWeekNumbersErrorOpen}
+            setWorkingDaysErrorOpen={setWorkingDaysErrorOpen}
+            handleSettingsSubTabChange={handleSettingsSubTabChange}
+            setActiveSettingsSubTab={setActiveSettingsSubTab}
+          />
+        ) : (
+          <DesktopSettingsPage
+            activeSettingsSubTab={activeSettingsSubTab}
+            setLanguageErrorOpen={setLanguageErrorOpen}
+            setTimeZoneErrorOpen={setTimeZoneErrorOpen}
+            setAlarmEmailsErrorOpen={setAlarmEmailsErrorOpen}
+            setHideDeclinedEventsErrorOpen={setHideDeclinedEventsErrorOpen}
+            setDisplayWeekNumbersErrorOpen={setDisplayWeekNumbersErrorOpen}
+            setWorkingDaysErrorOpen={setWorkingDaysErrorOpen}
+            handleSettingsSubTabChange={handleSettingsSubTabChange}
+            setActiveSettingsSubTab={setActiveSettingsSubTab}
+          />
+        )}
+        <SettingErrorSnackbars
+          languageErrorOpen={languageErrorOpen}
+          timeZoneErrorOpen={timeZoneErrorOpen}
+          alarmEmailsErrorOpen={alarmEmailsErrorOpen}
+          hideDeclinedEventsErrorOpen={hideDeclinedEventsErrorOpen}
+          displayWeekNumbersErrorOpen={displayWeekNumbersErrorOpen}
+          workingDaysErrorOpen={workingDaysErrorOpen}
+          handleLanguageErrorClose={handleLanguageErrorClose}
+          handleTimeZoneErrorClose={handleTimeZoneErrorClose}
+          handleAlarmEmailsErrorClose={handleAlarmEmailsErrorClose}
+          handleHideDeclinedEventsErrorClose={
+            handleHideDeclinedEventsErrorClose
+          }
+          handleDisplayWeekNumbersErrorClose={
+            handleDisplayWeekNumbersErrorClose
+          }
           setWorkingDaysErrorOpen={setWorkingDaysErrorOpen}
-          handleSettingsSubTabChange={handleSettingsSubTabChange}
-          setActiveSettingsSubTab={setActiveSettingsSubTab}
         />
-      ) : (
-        <DesktopSettingsPage
-          activeSettingsSubTab={activeSettingsSubTab}
-          setLanguageErrorOpen={setLanguageErrorOpen}
-          setTimeZoneErrorOpen={setTimeZoneErrorOpen}
-          setAlarmEmailsErrorOpen={setAlarmEmailsErrorOpen}
-          setHideDeclinedEventsErrorOpen={setHideDeclinedEventsErrorOpen}
-          setDisplayWeekNumbersErrorOpen={setDisplayWeekNumbersErrorOpen}
-          setWorkingDaysErrorOpen={setWorkingDaysErrorOpen}
-          handleSettingsSubTabChange={handleSettingsSubTabChange}
-          setActiveSettingsSubTab={setActiveSettingsSubTab}
-        />
-      )}
-      <SettingErrorSnackbars
-        languageErrorOpen={languageErrorOpen}
-        timeZoneErrorOpen={timeZoneErrorOpen}
-        alarmEmailsErrorOpen={alarmEmailsErrorOpen}
-        hideDeclinedEventsErrorOpen={hideDeclinedEventsErrorOpen}
-        displayWeekNumbersErrorOpen={displayWeekNumbersErrorOpen}
-        workingDaysErrorOpen={workingDaysErrorOpen}
-        handleLanguageErrorClose={handleLanguageErrorClose}
-        handleTimeZoneErrorClose={handleTimeZoneErrorClose}
-        handleAlarmEmailsErrorClose={handleAlarmEmailsErrorClose}
-        handleHideDeclinedEventsErrorClose={handleHideDeclinedEventsErrorClose}
-        handleDisplayWeekNumbersErrorClose={handleDisplayWeekNumbersErrorClose}
-        setWorkingDaysErrorOpen={setWorkingDaysErrorOpen}
-      />
-    </main>
+      </main>
+    </>
   )
 }
 
