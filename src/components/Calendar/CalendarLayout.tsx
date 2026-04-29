@@ -121,7 +121,9 @@ export default function CalendarLayout(): JSX.Element {
           currentView={currentView}
         />
       )}
-      {view === 'settings' && <SettingsPage isInIframe={isInIframe} />}
+      {view === 'settings' && (
+        <SettingsPage menubarProps={menubarProps} isInIframe={isInIframe} />
+      )}
       <ErrorSnackbar error={error} type="calendar" />
     </div>
   )
