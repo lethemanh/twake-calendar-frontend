@@ -1,79 +1,23 @@
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { AppDispatch } from '@/app/store'
-import { defaultColors } from '@/utils/defaultColors'
-import { browserDefaultTimeZone } from '@/utils/timezone'
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Typography
-} from '@linagora/twake-mui'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import RepeatIcon from '@mui/icons-material/Repeat'
-import SquareRoundedIcon from '@mui/icons-material/SquareRounded'
-import VideocamIcon from '@mui/icons-material/Videocam'
-import { useState } from 'react'
-import { useI18n } from 'twake-i18n'
-import logo from '../../static/noResult-logo.svg'
-import { getEventAsync } from '../Calendars/services'
 import EventPreviewModal from '@/features/Events/EventPreview'
-import { CalendarEvent } from '../Events/EventsTypes'
+import { defaultColors } from '@/utils/defaultColors'
+import { Box, IconButton, Typography } from '@linagora/twake-mui'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import SquareRoundedIcon from '@mui/icons-material/SquareRounded'
+import { useI18n } from 'twake-i18n'
 import { setView } from '../Settings/SettingsSlice'
+import { ResultsList } from './ResultsList'
 import './searchResult.styl'
+import {
+  RenderDate,
+  RenderText,
+  RenderOrganizer,
+  RenderTime,
+  RenderTitle,
+  RenderVideoJoin
+} from './searchResultsComponents'
 import { SearchEventResult } from './types/SearchEventResult'
-
-const styles = {
-  M3BodyLarge: {
-    fontFamily: 'Roboto',
-    fontWeight: 400,
-    fontStyle: 'normal',
-    fontSize: '22px',
-    lineHeight: '28px',
-    letterSpacing: '0%',
-    color: '#243B55'
-  },
-  M3BodyMedium1: {
-    fontFamily: 'Inter',
-    fontWeight: 400,
-    fontStyle: 'normal',
-    fontSize: '16px',
-    lineHeight: '24px',
-    letterSpacing: '-0.15px',
-    color: '#243B55'
-  },
-  M3BodyMedium: {
-    fontFamily: 'Roboto',
-    fontWeight: 400,
-    fontStyle: 'normal',
-    fontSize: '14px',
-    lineHeight: '20px',
-    letterSpacing: '0.25px',
-    verticalAlign: 'middle',
-    color: '#8C9CAF'
-  },
-  M3BodyMedium3: {
-    fontFamily: 'Inter',
-    fontWeight: 400,
-    fontSize: '14px',
-    lineHeight: '20px',
-    letterSpacing: '0.25px',
-    verticalAlign: 'middle',
-    color: '#8C9CAF'
-  },
-  M3TitleMedium: {
-    fontFamily: 'Roboto',
-    fontWeight: 500,
-    fontStyle: 'medium',
-    fontSize: '16px',
-    lineHeight: '24px',
-    letterSpacing: '0.15px',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-    color: '#243B55'
-  }
-}
+import { useEventPreview } from './useEventPreview'
 
 export default function DesktopSearchResultsPage(): JSX.Element {
   const { t } = useI18n()
@@ -81,48 +25,6 @@ export default function DesktopSearchResultsPage(): JSX.Element {
   const { error, loading, hits, results } = useAppSelector(
     state => state.searchResult
   )
-
-  let layout
-
-  if (loading) {
-    layout = (
-      <Box className="loading">
-        <CircularProgress size={32} />
-      </Box>
-    )
-  } else if (error) {
-    layout = (
-      <Box className="error">
-        <Typography className="error-text">{error}</Typography>
-      </Box>
-    )
-  } else if (!hits) {
-    layout = (
-      <Box className="noResults">
-        <img className="logo" src={logo} alt={t('search.noResults')} />
-        <Typography sx={styles.M3TitleMedium}>
-          {t('search.noResults')}
-        </Typography>
-        <Typography sx={styles.M3BodyMedium}>
-          {t('search.noResultsSubtitle')}
-        </Typography>
-      </Box>
-    )
-  } else {
-    layout = (
-      <Box className="search-result-content-body">
-        <Stack sx={{ mt: 2 }}>
-          {results.map((r: SearchEventResult, idx: number) => (
-            <ResultItem
-              key={`row-${idx}-event-${r.data.uid}`}
-              eventData={r}
-              dispatch={dispatch}
-            />
-          ))}
-        </Stack>
-      </Box>
-    )
-  }
 
   return (
     <Box className="search-layout">
@@ -137,23 +39,39 @@ export default function DesktopSearchResultsPage(): JSX.Element {
           <Typography variant="h5">{t('search.resultsTitle')}</Typography>
         </Box>
       </Box>
-      {layout}
+
+      <ResultsList
+        loading={loading}
+        error={error}
+        hits={hits}
+        results={results}
+        renderItem={(result, idx) => (
+          <DesktopResultItem
+            key={`row-${idx}-event-${result.data.uid}`}
+            eventData={result}
+          />
+        )}
+        noResultsTitleSx={{
+          fontWeight: 500,
+          textAlign: 'center',
+          color: 'text.primary'
+        }}
+        noResultsSubtitleSx={{ color: 'text.secondary' }}
+        stackSx={{ mt: 2 }}
+      />
     </Box>
   )
 }
 
-function ResultItem({
-  eventData,
-  dispatch
+function DesktopResultItem({
+  eventData
 }: {
   eventData: SearchEventResult
-  dispatch: AppDispatch
 }): JSX.Element {
   const { t } = useI18n()
   const startDate = new Date(eventData.data.start)
   const endDate = eventData.data.end ? new Date(eventData.data.end) : startDate
-  const timeZone =
-    useAppSelector(state => state.settings.timeZone) ?? browserDefaultTimeZone
+
   const calendar = useAppSelector(
     state =>
       state.calendars.list[
@@ -162,32 +80,10 @@ function ResultItem({
   )
   const calendarColor = calendar?.color?.light
 
-  const [openPreview, setOpenPreview] = useState(false)
-
-  const handleOpenResult = async (
-    eventData: SearchEventResult
-  ): Promise<void> => {
-    if (calendar) {
-      const event = {
-        URL: eventData._links.self.href,
-        calId: calendar.id,
-        uid: eventData.data.uid,
-        start: eventData.data.start,
-        end: eventData.data.end,
-        allday: eventData.data.allDay,
-        attendee: eventData.data.attendees,
-        class: eventData.data.class,
-        description: eventData.data.description,
-        stamp: eventData.data.dtstamp,
-        location: eventData.data.location,
-        organizer: eventData.data.organizer,
-        title: eventData.data.summary,
-        timezone: timeZone
-      } as CalendarEvent
-      await dispatch(getEventAsync(event))
-      setOpenPreview(true)
-    }
-  }
+  const { openPreview, setOpenPreview, handleOpen, timeZone } = useEventPreview(
+    eventData,
+    calendar
+  )
 
   return (
     <>
@@ -197,48 +93,29 @@ function ResultItem({
           flexDirection: 'row',
           gap: 2,
           p: 3,
-          borderTop: '1px solid #F3F6F9',
+          borderTop: '1px solid',
+          borderColor: 'divider',
           cursor: 'pointer',
-          '&:hover': { backgroundColor: '#e7e7e7ff' },
+          '&:hover': { backgroundColor: 'action.hover' },
           alignItems: 'center',
           textAlign: 'left',
           maxWidth: '80vw'
         }}
-        onClick={() => void handleOpenResult(eventData)}
+        onClick={() => void handleOpen()}
       >
-        <Typography sx={{ ...styles.M3BodyLarge, minWidth: '90px' }}>
-          {startDate.toLocaleDateString(t('locale'), {
-            day: '2-digit',
-            month: 'short',
-            timeZone
-          })}
-          {startDate.toDateString() !== endDate.toDateString() && (
-            <>
-              {' - '}
-              {endDate.toLocaleDateString(t('locale'), {
-                day: '2-digit',
-                month: 'short',
-                timeZone
-              })}
-            </>
-          )}
-        </Typography>
-        {!eventData.data.allDay && (
-          <Typography sx={{ ...styles.M3BodyMedium1, minWidth: '120px' }}>
-            {startDate.toLocaleTimeString(t('locale'), {
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone
-            })}
-            -
-            {endDate.toLocaleTimeString(t('locale'), {
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone
-            })}
-          </Typography>
-        )}
-
+        <RenderDate
+          startDate={startDate}
+          endDate={endDate}
+          t={t}
+          timeZone={timeZone}
+        />
+        <RenderTime
+          startDate={startDate}
+          endDate={endDate}
+          allDay={!!eventData.data.allDay}
+          t={t}
+          timeZone={timeZone}
+        />
         <SquareRoundedIcon
           style={{
             color: calendarColor ?? defaultColors[0].light,
@@ -247,72 +124,22 @@ function ResultItem({
             flexShrink: 0
           }}
         />
-        <Box display="flex" flexDirection="row" gap={1} sx={{ minWidth: 0 }}>
-          <Typography sx={styles.M3BodyLarge}>
-            {eventData.data.summary || t('event.untitled')}
-          </Typography>
-          {eventData.data.isRecurrentMaster && <RepeatIcon />}
-        </Box>
-        {(eventData.data.organizer?.cn || eventData.data.organizer?.email) && (
-          <Typography
-            sx={{
-              ...styles.M3BodyMedium1,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              minWidth: '150px',
-              maxWidth: '150px'
-            }}
-          >
-            {eventData.data.organizer.cn || eventData.data.organizer.email}
-          </Typography>
-        )}
-        {eventData.data?.location && (
-          <Typography
-            sx={{
-              ...styles.M3BodyMedium,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              minWidth: '150px',
-              maxWidth: '250px'
-            }}
-          >
-            {eventData.data.location}
-          </Typography>
-        )}
-        {eventData.data?.description && (
-          <Typography
-            sx={{
-              ...styles.M3BodyMedium3,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              flex: 1,
-              minWidth: 0
-            }}
-          >
-            {eventData.data.description.replace(/\n/g, ' ')}
-          </Typography>
-        )}
-        {eventData.data['x-openpaas-videoconference'] && (
-          <Button
-            startIcon={<VideocamIcon />}
-            sx={{ flexShrink: 0, ml: 'auto' }}
-            onClick={e => {
-              e.stopPropagation()
-              window.open(
-                eventData.data['x-openpaas-videoconference'],
-                '_blank',
-                'noopener,noreferrer'
-              )
-            }}
-          >
-            {t('eventPreview.joinVideoShort')}
-          </Button>
-        )}
+
+        <RenderTitle
+          summary={eventData.data.summary}
+          isRecurrent={!!eventData.data.isRecurrentMaster}
+          t={t}
+        />
+        <RenderOrganizer organizer={eventData.data.organizer} />
+        <RenderText text={eventData.data.location} />
+        <RenderText text={eventData.data.description} />
+        <RenderVideoJoin
+          t={t}
+          url={eventData.data['x-openpaas-videoconference']}
+        />
       </Box>
-      {calendar && calendar.events[eventData.data.uid] && (
+
+      {calendar?.events?.[eventData.data.uid] && (
         <EventPreviewModal
           eventId={eventData.data.uid}
           calId={calendar.id}
