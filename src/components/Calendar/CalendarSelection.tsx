@@ -1,6 +1,9 @@
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { removeCalendarAsync } from '@/features/Calendars/services'
+import {
+  addSharedCalendarAsync,
+  removeCalendarAsync
+} from '@/features/Calendars/services'
 import { extractEventBaseUuid } from '@/utils/extractEventBaseUuid'
 import { makeDisplayName } from '@/utils/makeDisplayName'
 import { renameDefault } from '@/utils/renameDefault'
@@ -20,11 +23,13 @@ import { SetStateAction, useEffect, useMemo, useState, useRef } from 'react'
 import { useI18n } from 'twake-i18n'
 import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import CalendarPopover from './CalendarModal'
-import CalendarSearch from './CalendarSearch'
+import RegisterCalendars from './RegisterCalendars'
 import { DeleteCalendarDialog } from './DeleteCalendarDialog'
 import { OwnerCaption } from './OwnerCaption'
-import CalendarResources from './CalendarResources'
 import { CalendarSelectorMenu } from './CalendarSelectorMenu'
+import { CalendarInput } from '@/features/Calendars/types/CalendarData'
+import { addCalendarResourceAsync } from '@/features/Calendars/api/addCalendarResourceAsync'
+import type { ResourceCal } from './RegisterCalendars/index.types'
 
 const CalendarAccordion: React.FC<{
   title: string
@@ -237,8 +242,16 @@ const CalendarSelection: React.FC<{
           setAnchorElCal(null)
         }}
       />
-      <CalendarSearch
+      <RegisterCalendars
         open={Boolean(anchorElCalOthers)}
+        objectTypes={['user']}
+        onSave={({ userId, calId, cal }) =>
+          addSharedCalendarAsync({
+            userId,
+            calId,
+            cal: cal as CalendarInput
+          })
+        }
         onClose={(newCalIds?: string[] | Record<string, never>) => {
           setAnchorElCalOthers(null)
           if (newCalIds?.length) {
@@ -246,9 +259,17 @@ const CalendarSelection: React.FC<{
           }
         }}
       />
-      <CalendarResources
+      <RegisterCalendars
         open={Boolean(anchorElCalResources)}
-        onClose={(newResourceIds?: string[]) => {
+        objectTypes={['resource']}
+        onSave={({ userId, calId, cal }) =>
+          addCalendarResourceAsync({
+            userId,
+            calId,
+            cal: cal as ResourceCal
+          })
+        }
+        onClose={(newResourceIds?: string[] | Record<string, never>) => {
           setAnchorElCalResources(null)
           if (newResourceIds?.length) {
             newResourceIds.forEach(id => {

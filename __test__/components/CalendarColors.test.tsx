@@ -1,4 +1,4 @@
-import CalendarSearch from '@/components/Calendar/CalendarSearch'
+import RegisterCalendars from '@/components/Calendar/RegisterCalendars'
 import * as CalendarApi from '@/features/Calendars/CalendarApi'
 import * as CalendarSlice from '@/features/Calendars/services'
 import { searchUsers } from '@/features/User/userAPI'
@@ -14,7 +14,7 @@ const mockedGetCalendars = CalendarApi.getCalendars as jest.MockedFunction<
   typeof CalendarApi.getCalendars
 >
 
-describe('CalendarSearch', () => {
+describe('RegisterCalendars', () => {
   const mockOnClose = jest.fn()
   const mockUser = {
     email: 'user@example.com',
@@ -71,7 +71,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -103,7 +108,7 @@ describe('CalendarSearch', () => {
     const addSharedCalendarSpy = jest
       .spyOn(CalendarSlice, 'addSharedCalendarAsync')
       .mockImplementation(payload => {
-        return () => Promise.resolve(payload) as any
+        return (() => ({ unwrap: () => Promise.resolve(payload) })) as any
       })
 
     mockedSearchUsers.mockResolvedValueOnce([mockUser])
@@ -115,7 +120,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -147,7 +157,7 @@ describe('CalendarSearch', () => {
     const addSharedCalendarSpy = jest
       .spyOn(CalendarSlice, 'addSharedCalendarAsync')
       .mockImplementation(payload => {
-        return () => Promise.resolve(payload) as any
+        return (() => ({ unwrap: () => Promise.resolve(payload) })) as any
       })
 
     const existingCalendar = {
@@ -168,7 +178,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -203,7 +218,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -235,7 +255,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -284,7 +309,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -309,12 +339,17 @@ describe('CalendarSearch', () => {
     const addSharedCalendarSpy = jest
       .spyOn(CalendarSlice, 'addSharedCalendarAsync')
       .mockImplementation(payload => {
-        return () => Promise.resolve(payload) as any
+        return (() => ({ unwrap: () => Promise.resolve(payload) })) as any
       })
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -330,7 +365,7 @@ describe('CalendarSearch', () => {
     const addSharedCalendarSpy = jest
       .spyOn(CalendarSlice, 'addSharedCalendarAsync')
       .mockImplementation(payload => {
-        return () => Promise.resolve(payload) as any
+        return (() => ({ unwrap: () => Promise.resolve(payload) })) as any
       })
     const mockCalendarNoColor = {
       'dav:name': 'Test Calendar',
@@ -349,7 +384,12 @@ describe('CalendarSearch', () => {
 
     await act(async () => {
       renderWithProviders(
-        <CalendarSearch open={true} onClose={mockOnClose} />,
+        <RegisterCalendars
+          open={true}
+          onClose={mockOnClose}
+          objectTypes={['user']}
+          onSave={CalendarSlice.addSharedCalendarAsync as any}
+        />,
         preloadedState
       )
     })
@@ -405,7 +445,8 @@ describe('CalendarSearch', () => {
     )
 
     expect(mockOnClose).toHaveBeenCalledWith(
-      expect.arrayContaining(['user123/cal2'])
+      expect.arrayContaining(['user123/cal2']),
+      undefined
     )
   })
 })

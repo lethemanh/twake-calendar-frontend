@@ -1,4 +1,4 @@
-import CalendarResources from '@/components/Calendar/CalendarResources'
+import RegisterCalendars from '@/components/Calendar/RegisterCalendars'
 import { getCalendars } from '@/features/Calendars/CalendarApi'
 import { addCalendarResourceAsync } from '@/features/Calendars/api/addCalendarResourceAsync'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
@@ -6,22 +6,30 @@ import { renderWithProviders } from '../utils/Renderwithproviders'
 
 jest.mock('@/features/Calendars/CalendarApi')
 jest.mock('@/features/Calendars/api/addCalendarResourceAsync')
-jest.mock('@/components/Attendees/ResourceSearch', () => ({
-  ResourceSearch: ({
+jest.mock('@/components/Attendees/PeopleSearch', () => ({
+  PeopleSearch: ({
     onChange
   }: {
     onChange: (
       event: null,
-      value: { displayName: string; openpaasId: string }[]
+      value: { displayName: string; openpaasId: string; email?: string }[]
     ) => void
   }) => (
-    <div data-testid="resource-search">
+    <div data-testid="people-search">
       <button
         data-testid="mock-resource-search-select"
         onClick={() =>
           onChange(null, [
-            { displayName: 'Room A', openpaasId: 'room-a-id' },
-            { displayName: 'Room B', openpaasId: 'room-b-id' }
+            {
+              displayName: 'Room A',
+              openpaasId: 'room-a-id',
+              email: 'room-a@test.com'
+            },
+            {
+              displayName: 'Room B',
+              openpaasId: 'room-b-id',
+              email: 'room-b@test.com'
+            }
           ])
         }
       >
@@ -35,7 +43,7 @@ const mockedGetCalendars = getCalendars as jest.Mock
 const mockedAddCalendarResourceAsync =
   addCalendarResourceAsync as unknown as jest.Mock
 
-describe('CalendarResources', () => {
+describe('RegisterCalendars', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -52,16 +60,26 @@ describe('CalendarResources', () => {
 
   const setup = (isOpen = true) => {
     const onClose = jest.fn()
-    renderWithProviders(<CalendarResources onClose={onClose} open={isOpen} />, {
-      user: baseUser
-    })
+    renderWithProviders(
+      <RegisterCalendars
+        onClose={onClose}
+        open={isOpen}
+        objectTypes={['resource']}
+        onSave={mockedAddCalendarResourceAsync as any}
+      />,
+      {
+        user: baseUser
+      }
+    )
     return { onClose }
   }
 
   it('renders correctly and closes on cancel', () => {
     const { onClose } = setup()
 
-    expect(screen.getByText('calendar.browseResources')).toBeInTheDocument()
+    expect(
+      screen.getByText('calendar.browseOtherCalendars')
+    ).toBeInTheDocument()
 
     const cancelButton = screen.getByRole('button', {
       name: 'common.cancel'
@@ -74,7 +92,7 @@ describe('CalendarResources', () => {
   it('does not render when isOpen is false', () => {
     setup(false)
     expect(
-      screen.queryByText('calendar.browseResources')
+      screen.queryByText('calendar.browseOtherCalendars')
     ).not.toBeInTheDocument()
   })
 
