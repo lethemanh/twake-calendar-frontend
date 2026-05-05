@@ -26,15 +26,7 @@ export const OrganizersFilter: React.FC<Props> = ({ mode, onErrorClear }) => {
         objectTypes={['user', 'resources']}
         {...{
           ...mobileSearch,
-          handleContactSelect: contact => {
-            mobileSearch.handleContactSelect(contact)
-            dispatch(
-              setFilters({
-                ...searchParams.filters,
-                keywords: searchParams.search
-              })
-            )
-          }
+          handleContactSelect: mobileSearch.handleContactSelect
         }}
       />
     )

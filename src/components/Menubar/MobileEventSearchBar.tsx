@@ -21,7 +21,7 @@ const MobileSearchBar: React.FC = () => {
     handleContactSelect,
     clearAll,
     handleShow
-  } = useFilterSearch('organizers', setDialogOpen)
+  } = useFilterSearch('organizers', setDialogOpen, true)
 
   return (
     <>
