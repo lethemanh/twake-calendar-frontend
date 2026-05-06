@@ -33,6 +33,7 @@ export interface UseFilterSearchResult {
   handleContactSelect: (contacts: User[]) => void
   clearAll: () => void
   handleShow: () => void
+  currentSearch: string
 }
 
 interface StateSetters {
@@ -142,13 +143,20 @@ function useSearchChangeHandler(
 }
 
 function useContactSelectHandler(
-  filterData: { filterKey: FilterKey; filters: SearchFilters },
+  filterData: {
+    filterKey: FilterKey
+    filters: SearchFilters
+    isMainSearchBar: boolean
+    currentSearch: string
+    inputQuery: string
+  },
   dispatch: AppDispatch,
   setters: StateSetters,
   handleSearch: (q: string, f: SearchFilters) => Promise<void>
 ): (contacts: User[]) => void {
   const { setInputQuery, setSelectedContacts, setSearchState } = setters
-  const { filters, filterKey } = filterData
+  const { filters, filterKey, isMainSearchBar, currentSearch, inputQuery } =
+    filterData
   return useCallback(
     (contacts: User[]): void => {
       const mapped = contacts.map(c =>
@@ -157,13 +165,19 @@ function useContactSelectHandler(
       const nextFilters = { ...filters, [filterKey]: mapped }
       setSelectedContacts(contacts)
       dispatch(setFilters(nextFilters))
+
+      const searchText = isMainSearchBar ? inputQuery : currentSearch
+
       setInputQuery('')
       setSearchState({ query: '', options: [], loading: false })
-      if (contacts.length > 0) void handleSearch('', nextFilters)
+      if (contacts.length > 0) void handleSearch(searchText, nextFilters)
     },
     [
       filters,
       filterKey,
+      isMainSearchBar,
+      currentSearch,
+      inputQuery,
       handleSearch,
       dispatch,
       setInputQuery,
@@ -196,12 +210,13 @@ function useClearAll(
 
 export function useFilterSearch(
   filterKey: FilterKey,
-  setDialogOpen: (b: boolean) => void
+  setDialogOpen: (b: boolean) => void,
+  isMainSearchBar = false
 ): UseFilterSearchResult {
   const dispatch = useAppDispatch()
-  const filters = useAppSelector(
-    state => state.searchResult.searchParams.filters
-  )
+  const searchParams = useAppSelector(state => state.searchResult.searchParams)
+  const filters = searchParams.filters
+  const currentSearch = searchParams.search
   const { calendars, personalCalendars } = useCalendars()
   const {
     inputQuery,
@@ -229,7 +244,7 @@ export function useFilterSearch(
     setSearchState
   )
   const handleContactSelect = useContactSelectHandler(
-    { filterKey, filters },
+    { filterKey, filters, isMainSearchBar, currentSearch, inputQuery },
     dispatch,
     setters,
     handleSearch
@@ -250,6 +265,7 @@ export function useFilterSearch(
     handleSearchChange,
     handleContactSelect,
     clearAll,
-    handleShow
+    handleShow,
+    currentSearch
   }
 }
