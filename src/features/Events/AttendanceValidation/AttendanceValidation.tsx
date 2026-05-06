@@ -1,11 +1,12 @@
 import { PartStat } from '@/features/User/models/attendee'
 import { userData } from '@/features/User/userDataTypes'
-import { Box, Typography, useTheme, useMediaQuery } from '@linagora/twake-mui'
+import { Box, useTheme, useMediaQuery } from '@linagora/twake-mui'
 import { Dispatch, SetStateAction, useState } from 'react'
-import { useI18n } from 'twake-i18n'
 import { ContextualizedEvent } from '../EventsTypes'
 import { EventCounterModal } from './EventCounterModal'
-import { RSVPButton } from './RSVPButton'
+import { RSVPSection } from './RSVPSection'
+import { CounterProposalSection } from './CounterProposalSection'
+import { useAttendanceValidationAuthorization } from './useAttendanceValidationAuthorization'
 
 interface AttendanceValidationProps {
   contextualizedEvent: ContextualizedEvent
@@ -22,33 +23,19 @@ export function AttendanceValidation({
   setAfterChoiceFunc,
   setOpenEditModePopup
 }: AttendanceValidationProps): JSX.Element | null {
-  const { currentUserAttendee, isOwn, calendar } = contextualizedEvent
+  const { calendar } = contextualizedEvent
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const { t } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingValue, setLoadingValue] = useState<PartStat | null>(null)
   const [openCounterModal, setOpenCounterModal] = useState(false)
 
-  const hasNoAttendeesOrOrganizer =
-    !(contextualizedEvent.event?.attendee?.length > 0) &&
-    !contextualizedEvent.event?.organizer
+  const { isAuthorized } = useAttendanceValidationAuthorization(
+    contextualizedEvent,
+    user
+  )
 
-  const createByTheUser = currentUserAttendee || hasNoAttendeesOrOrganizer
-  const editRightInSelfCalendar = createByTheUser && isOwn
-  const isDelegatedPublicEvent =
-    contextualizedEvent.calendar.delegated &&
-    (!contextualizedEvent.event.class ||
-      contextualizedEvent.event.class === 'PUBLIC')
-
-  const { owner: resourceOwner } = calendar
-  const isAdminOfResource =
-    resourceOwner?.resource &&
-    resourceOwner?.administrators?.some(admin => admin.id === user?.openpaasId)
-
-  if (
-    !(editRightInSelfCalendar || isDelegatedPublicEvent || isAdminOfResource)
-  ) {
+  if (!isAuthorized) {
     return null
   }
 
@@ -76,36 +63,15 @@ export function AttendanceValidation({
         alignItems: 'center'
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          flexWrap: 'wrap'
-        }}
-      >
-        {!isMobile && (
-          <Typography variant="body2" sx={{ marginRight: 1 }}>
-            {calendar.owner?.resource
-              ? t('eventPreview.authorizeQuestion')
-              : t('eventPreview.attendingQuestion')}
-          </Typography>
-        )}
-        <Box display="flex" gap={1} mx={1} alignItems="center">
-          <RSVPButton rsvpValue="ACCEPTED" {...commonButtonProps} />
-          <RSVPButton rsvpValue="DECLINED" {...commonButtonProps} />
-          <RSVPButton rsvpValue="TENTATIVE" {...commonButtonProps} />
-        </Box>
-      </Box>
-      {!contextualizedEvent.isOrganizer && (
-        <Typography
-          variant="body2"
-          onClick={() => setOpenCounterModal(!openCounterModal)}
-          sx={{ marginLeft: 1, cursor: 'pointer' }}
-        >
-          {t('eventPreview.proposeNewTime')}
-        </Typography>
-      )}
+      <RSVPSection
+        isMobile={isMobile}
+        isResource={!!calendar.owner?.resource}
+        commonButtonProps={commonButtonProps}
+      />
+      <CounterProposalSection
+        isOrganizer={contextualizedEvent.isOrganizer}
+        onToggle={() => setOpenCounterModal(!openCounterModal)}
+      />
       <EventCounterModal
         open={openCounterModal}
         setOpen={setOpenCounterModal}
