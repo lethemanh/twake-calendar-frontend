@@ -15,40 +15,39 @@ export async function handleRSVPClick(
   setOpenEditModePopup: Dispatch<SetStateAction<string | null>>,
   dispatch: AppDispatch,
   onLoadingChange?: (loading: boolean, value?: PartStat) => void
-) {
+): Promise<void> {
   const { isRecurring, calendar, event } = contextualizedEvent
 
   if (isRecurring) {
-    setAfterChoiceFunc(() => async (type: string | null) => {
-      // If user cancelled the modal, don't proceed
-      if (type === null) {
-        return
-      }
+    setAfterChoiceFunc(
+      () =>
+        async (type: 'solo' | 'all' | undefined): Promise<void> => {
+          // If user cancelled the modal, don't proceed
+          if (type === undefined) {
+            return
+          }
 
-      // Now start loading since user made a choice
-      if (onLoadingChange) {
-        onLoadingChange(true, rsvp)
-      }
+          // Now start loading since user made a choice
+          onLoadingChange?.(true, rsvp)
 
-      try {
-        await handleRSVP(dispatch, calendar, user, event, rsvp, type)
-      } catch (error) {
-        console.error('Error handling RSVP:', error)
-        // Clear loading on error
-        if (onLoadingChange) {
-          onLoadingChange(false)
+          try {
+            await handleRSVP(dispatch, calendar, user, event, rsvp, type)
+            onLoadingChange?.(false)
+          } catch (error) {
+            console.error('Error handling RSVP:', error)
+            // Clear loading on error
+            onLoadingChange?.(false)
+          }
         }
-      }
-    })
+    )
     setOpenEditModePopup('attendance')
   } else {
     try {
       await handleRSVP(dispatch, calendar, user, event, rsvp)
+      onLoadingChange?.(false)
     } catch (error) {
       console.error('Error handling RSVP:', error)
-      if (onLoadingChange) {
-        onLoadingChange(false)
-      }
+      onLoadingChange?.(false)
     }
   }
 }

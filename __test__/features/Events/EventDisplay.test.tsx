@@ -312,7 +312,7 @@ describe('Event Preview Display', () => {
       screen.getByRole('button', { name: 'eventPreview.DECLINED' })
     ).toBeInTheDocument()
   })
-  it('doesnt renders RSVP buttons when user isnt an attendee', () => {
+  it('renders RSVP buttons when user is owner even if isnt an attendee', () => {
     const rsvpStateIsOrga = {
       ...preloadedState,
       calendars: {
@@ -354,17 +354,17 @@ describe('Event Preview Display', () => {
     )
 
     expect(
-      screen.queryByText('eventPreview.attendingQuestion')
-    ).not.toBeInTheDocument()
+      screen.getByText('eventPreview.attendingQuestion')
+    ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'eventPreview.ACCEPTED' })
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: 'eventPreview.ACCEPTED' })
+    ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'eventPreview.TENTATIVE' })
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: 'eventPreview.TENTATIVE' })
+    ).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'eventPreview.DECLINED' })
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: 'eventPreview.DECLINED' })
+    ).toBeInTheDocument()
   })
 
   it('handles RSVP Accept click', async () => {

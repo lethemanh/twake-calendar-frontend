@@ -69,10 +69,25 @@ describe('AttendanceValidation - delegation', () => {
       expect(container.firstChild).not.toBeNull()
     })
 
-    it('returns null when not isOwn and not delegated', () => {
+    it('renders when not isOwn but currentUserAttendee exists', () => {
       const { container } = render(
         <AttendanceValidation
           contextualizedEvent={makeContext({ isOwn: false })}
+          user={makeUser('other@example.com')}
+          setAfterChoiceFunc={noopSetFunc}
+          setOpenEditModePopup={noopSetFunc}
+        />
+      )
+      expect(container.firstChild).not.toBeNull()
+    })
+
+    it('returns null when not isOwn, not delegated, and not an attendee', () => {
+      const { container } = render(
+        <AttendanceValidation
+          contextualizedEvent={makeContext({
+            isOwn: false,
+            currentUserAttendee: undefined
+          })}
           user={makeUser('other@example.com')}
           setAfterChoiceFunc={noopSetFunc}
           setOpenEditModePopup={noopSetFunc}
@@ -164,7 +179,10 @@ describe('AttendanceValidation - delegation', () => {
     it('returns null when user is not an administrator of the resource', () => {
       const { container } = render(
         <AttendanceValidation
-          contextualizedEvent={resourceContext}
+          contextualizedEvent={{
+            ...resourceContext,
+            currentUserAttendee: undefined
+          }}
           user={
             {
               ...makeUser('other@example.com'),
