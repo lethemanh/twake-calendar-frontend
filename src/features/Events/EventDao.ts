@@ -1,9 +1,10 @@
 import { api } from '@/utils/apiUtils'
 import ICAL from 'ical.js'
 import { CalDavItem } from '../Calendars/api/types'
-import { VCalComponent } from '../Calendars/types/CalendarData'
+import { VCalComponent, VObjectProperty } from '../Calendars/types/CalendarData'
 import { SearchEventsResponse } from '../Search/types/SearchEventsResponse'
 import { CalendarEvent } from './EventsTypes'
+import { WKST_NUM_TO_DAY } from './utils/wkstUtils'
 
 export async function reportEventRaw(
   event: CalendarEvent,
@@ -77,9 +78,32 @@ export async function searchEventRaw(reqParam: {
     .json()
 }
 
+function normalizeVeventRrule(vevents: VCalComponent[]): VCalComponent[] {
+  return vevents.map(vevent => {
+    const props = (vevent[1] as VObjectProperty[]).map(prop => {
+      if (prop[0] === 'rrule' && prop[2] === 'recur') {
+        const rule = prop[3] as Record<string, unknown>
+        if (typeof rule.wkst === 'number') {
+          const dayStr = WKST_NUM_TO_DAY[rule.wkst]
+          if (dayStr) {
+            return [
+              prop[0],
+              prop[1],
+              prop[2],
+              { ...rule, wkst: dayStr }
+            ] as VObjectProperty
+          }
+        }
+      }
+      return prop
+    })
+    return [vevent[0], props, vevent[2]] as VCalComponent
+  })
+}
+
 /**
  * Fetches all VEVENTs (master + overrides) for a recurring series.
- * Returns the raw jCal VEVENT components — no transformation applied.
+ * Returns the raw jCal VEVENT components with RRULE.wkst normalized to a weekday string.
  */
 export async function fetchAllRecurrentVevents(
   event: CalendarEvent
@@ -87,7 +111,8 @@ export async function fetchAllRecurrentVevents(
   const response = await api.get(`dav${event.URL}`)
   const eventData = await response.text()
   const jcal = ICAL.parse(eventData) as VCalComponent
-  return (jcal[2] ?? []).filter(([name]) => name === 'vevent')
+  const vevents = (jcal[2] ?? []).filter(([name]) => name === 'vevent')
+  return normalizeVeventRrule(vevents)
 }
 
 /**

@@ -12,6 +12,7 @@ import { AlarmObject, CalendarEvent } from '../EventsTypes'
 import { buildDelegatedEventURL } from './buildDelegatedEventURL'
 import { formatDateToICal } from './formatDateToICal'
 import { inferTimezoneFromValue } from './inferTimezoneFromValue'
+import { WKST_NUM_TO_DAY } from './wkstUtils'
 
 const KNOWN_PROPS = new Set([
   'uid',
@@ -173,6 +174,12 @@ export function parseCalendarEvent(
         }
         if (ruleValue.interval) {
           event.repetition.interval = ruleValue.interval
+        }
+        if (ruleValue.wkst != null) {
+          event.repetition.wkst =
+            typeof ruleValue.wkst === 'number'
+              ? (WKST_NUM_TO_DAY[ruleValue.wkst] ?? String(ruleValue.wkst))
+              : ruleValue.wkst
         }
         break
       }
