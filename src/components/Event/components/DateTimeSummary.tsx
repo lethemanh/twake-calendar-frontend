@@ -13,6 +13,7 @@ import { RepetitionObject } from '@/features/Events/EventsTypes'
 import { LONG_DATE_FORMAT } from '../utils/dateTimeFormatters'
 import { SectionPreviewRow } from './SectionPreviewRow'
 import { makeRecurrenceString } from '@/features/Events/EventPreview/utils/makeRecurrenceString'
+import { isDateInPast } from '../utils/formValidation'
 
 interface DateTimeSummaryProps {
   startDate: string
@@ -124,6 +125,7 @@ export const DateTimeSummary: React.FC<DateTimeSummaryProps> = ({
   const timeText = formatTime(startTime, endTime)
   const timezoneText = formatTimezone(timezone, startDate)
   const repeatText = formatRepeat(repetition)
+  const startDateInPast = isDateInPast(startDate)
 
   // Don't render if no date
   if (!startDate) {
@@ -159,6 +161,14 @@ export const DateTimeSummary: React.FC<DateTimeSummaryProps> = ({
             {repeatText}
           </Typography>
         </Box>
+        {startDateInPast && (
+          <Typography
+            variant="caption"
+            sx={{ color: 'error.main', display: 'block', mt: 0.5 }}
+          >
+            {t('event.validation.startDateInPast')}
+          </Typography>
+        )}
       </Box>
     </SectionPreviewRow>
   )

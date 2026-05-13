@@ -3,6 +3,7 @@ import { PickerValue } from '@mui/x-date-pickers/internals'
 import { Dayjs } from 'dayjs'
 import React from 'react'
 import { useI18n } from 'twake-i18n'
+import { DateTimeErrors } from '../../utils/formValidation'
 import { DatePickerField } from './DatePickerField'
 import { TimePickerField } from './TimePickerField'
 
@@ -10,7 +11,7 @@ export interface CompactDateTimeLayoutProps {
   startDateValue: Dayjs | null
   startTimeValue: Dayjs | null
   endTimeValue: Dayjs | null
-  hasError: boolean
+  errors: DateTimeErrors
   isMobile: boolean
   allday: boolean
   startDateLabel: string
@@ -27,7 +28,7 @@ export const CompactDateTimeLayout: React.FC<CompactDateTimeLayoutProps> = ({
   startDateValue,
   startTimeValue,
   endTimeValue,
-  hasError,
+  errors,
   isMobile,
   allday,
   startDateLabel,
@@ -61,6 +62,7 @@ export const CompactDateTimeLayout: React.FC<CompactDateTimeLayoutProps> = ({
           onChange={onStartDateChange}
           testId="start-date-input"
           label={startDateLabel}
+          hasError={!!errors.date?.start}
         />
       </Box>
 
@@ -72,6 +74,7 @@ export const CompactDateTimeLayout: React.FC<CompactDateTimeLayoutProps> = ({
             testId="start-time-input"
             label={t('dateTimeFields.startTime')}
             disabled={allday}
+            hasError={!!errors.time?.start}
           />
         </Box>
 
@@ -87,7 +90,7 @@ export const CompactDateTimeLayout: React.FC<CompactDateTimeLayoutProps> = ({
             onChange={onEndTimeChange}
             testId="end-time-input"
             label={t('dateTimeFields.endTime')}
-            hasError={hasError}
+            hasError={!!errors.time?.end}
             disabled={allday}
           />
         </Box>

@@ -12,6 +12,12 @@ jest.mock('@/utils/apiUtils')
 describe('EventPopover', () => {
   beforeEach(() => {
     sessionStorage.clear()
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2025-01-01T00:00:00.000Z'))
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
   })
 
   const mockOnClose = jest.fn()
@@ -115,11 +121,8 @@ describe('EventPopover', () => {
     selectedRange = defaultSelectedRange,
     state = preloadedState
   ) => {
-    const el = document.createElement('div')
-    document.body.appendChild(el)
     renderWithProviders(
       <EventPopover
-        anchorEl={el}
         open={true}
         onClose={mockOnClose}
         selectedRange={selectedRange}
@@ -302,7 +305,6 @@ describe('EventPopover', () => {
   })
 
   it('adds a attendee', async () => {
-    jest.useFakeTimers()
     try {
       jest
         .spyOn(calendarsApi, 'getCalendars')
@@ -375,7 +377,6 @@ describe('EventPopover', () => {
   })
 
   it('adds a resource', async () => {
-    jest.useFakeTimers()
     try {
       renderPopover()
       fireEvent.change(screen.getByLabelText('event.form.title'), {
@@ -520,6 +521,14 @@ describe('EventPopover', () => {
   })
 
   describe('EventModal - Drag and Drop Scenarios', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+      jest.setSystemTime(new Date('2025-01-01T00:00:00.000Z'))
+    })
+
+    afterAll(() => {
+      jest.useRealTimers()
+    })
     // Test 2.1: Drag from allday slot (single day)
     it('sets allday=true when drag from allday slot (single day)', async () => {
       const selectedRange = {

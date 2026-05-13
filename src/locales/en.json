@@ -213,7 +213,11 @@
       "invalidStart": "Invalid start date/time",
       "endRequired": "End date/time is required",
       "invalidEnd": "Invalid end date/time",
-      "endAfterStart": "End time must be after start time"
+      "endAfterStart": "End time must be after start time",
+      "startDateInPast": "Start date cannot be in the past",
+      "invalidDate": "Invalid date",
+      "invalidDateTime": "Invalid date/time",
+      "invalidTimeFormat": "Invalid time format"
     }
   },
   "peopleSearch": {
