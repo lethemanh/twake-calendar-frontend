@@ -529,19 +529,18 @@ describe('CalendarApp integration', () => {
 
       jest
         .spyOn(EventDao, 'fetchEvent')
-        .mockImplementation(
-          async event =>
-            [
-              'BEGIN:VCALENDAR',
-              'VERSION:2.0',
-              'BEGIN:VEVENT',
-              `UID:${event.uid}`,
-              `SUMMARY:${event.title || 'Event'}`,
-              'DTSTART:20251114T103100Z',
-              'DTEND:20251114T113100Z',
-              'END:VEVENT',
-              'END:VCALENDAR'
-            ].join('\r\n')
+        .mockImplementation(async event =>
+          [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `UID:${event.uid}`,
+            `SUMMARY:${event.title || 'Event'}`,
+            'DTSTART:20251114T103100Z',
+            'DTEND:20251114T113100Z',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ].join('\r\n')
         )
 
       const eventHandlers = createEventHandlers({
@@ -621,19 +620,18 @@ describe('CalendarApp integration', () => {
 
       jest
         .spyOn(EventDao, 'fetchEvent')
-        .mockImplementation(
-          async event =>
-            [
-              'BEGIN:VCALENDAR',
-              'VERSION:2.0',
-              'BEGIN:VEVENT',
-              `UID:${event.uid}`,
-              `SUMMARY:${event.title || 'Event'}`,
-              'DTSTART:20251114T103100Z',
-              'DTEND:20251114T113100Z',
-              'END:VEVENT',
-              'END:VCALENDAR'
-            ].join('\r\n')
+        .mockImplementation(async event =>
+          [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `UID:${event.uid}`,
+            `SUMMARY:${event.title || 'Event'}`,
+            'DTSTART:20251114T103100Z',
+            'DTEND:20251114T113100Z',
+            'END:VEVENT',
+            'END:VCALENDAR'
+          ].join('\r\n')
         )
 
       const eventHandlers = createEventHandlers({

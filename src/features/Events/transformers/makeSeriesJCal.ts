@@ -139,7 +139,8 @@ const updateValarmComponents = (
 // Helper to check if a vevent is the source override being dragged
 const isSourceOverride = (
   vevent: VCalComponent,
-  sourceRecurrenceId?: string
+  sourceRecurrenceId?: string,
+  sourceTimezone?: string
 ): boolean => {
   if (!sourceRecurrenceId) return false
   const rid = findFieldValue(vevent[1] as VObjectProperty[], 'recurrence-id')
@@ -150,9 +151,10 @@ const isSourceOverride = (
   const ridMs = ridValue.endsWith('Z')
     ? moment.utc(ridValue).valueOf()
     : moment.tz(ridValue, tzid).valueOf()
+  const srcTzid = sourceTimezone || 'UTC'
   const srcMs = sourceRecurrenceId.endsWith('Z')
     ? moment.utc(sourceRecurrenceId).valueOf()
-    : moment.tz(sourceRecurrenceId, tzid).valueOf()
+    : moment.tz(sourceRecurrenceId, srcTzid).valueOf()
 
   return ridMs === srcMs
 }
@@ -241,12 +243,20 @@ const updateVeventsPreservingOverrides = (
     )
 }
 
+export interface MakeSeriesJCalOptions {
+  calOwnerEmail?: string
+  removeOverrides?: boolean
+  sourceRecurrenceId?: string
+}
+
 export const makeSeriesJCal = (
   vevents: VCalComponent[],
   event: CalendarEvent,
-  calOwnerEmail?: string,
-  removeOverrides: boolean = true
-): VCalComponent[] => {
+  options: MakeSeriesJCalOptions
+): VCalComponent => {
+  const calOwnerEmail = options.calOwnerEmail
+  const removeOverrides = options.removeOverrides ?? true
+  const sourceRecurrenceId = options.sourceRecurrenceId
   const masterIndex = vevents.findIndex(
     ([, props]) => !findFieldValue(props, 'recurrence-id')
   )
@@ -284,9 +294,14 @@ export const makeSeriesJCal = (
       vevents,
       oldMaster,
       updatedMaster,
-      masterIndex
+      masterIndex,
+      sourceRecurrenceId
     })
   }
 
-  return ['vcalendar', [], [...finalVevents, vtimezone.component.jCal]]
+  return [
+    'vcalendar',
+    [],
+    [...finalVevents, vtimezone.component.jCal as VCalComponent]
+  ] as VCalComponent
 }

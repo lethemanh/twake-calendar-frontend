@@ -245,7 +245,8 @@ export const createEventHandlers = (
       event: master,
       baseUID: master.uid,
       eventId: event.uid,
-      getSeriesInstances: () => getSeriesInstances(calendar, master.uid)
+      getSeriesInstances: () => getSeriesInstances(calendar, master.uid),
+      recurrenceId: event.recurrenceId
     })
   }
 

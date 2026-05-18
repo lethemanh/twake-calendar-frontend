@@ -219,16 +219,21 @@ async function handleUpdateSeriesTimeChangeOnly(params: {
     updateSeriesAsync({
       cal: targetCalendar,
       event: shiftedMasterEvent,
-      removeOverrides: false
+      removeOverrides: false,
+      sourceRecurrenceId: updateContext.recurrenceId
     })
   )
   await assertThunkSuccess(result)
 
-  await Promise.all(
+  const results = await Promise.allSettled(
     shiftedInstances.map(inst =>
       dispatch(updateEventInstanceAsync({ cal: targetCalendar, event: inst }))
     )
   )
+  const failures = results.filter(r => r.status === 'rejected')
+  if (failures.length > 0) {
+    console.error(`${failures.length} instance update(s) failed`)
+  }
 
   dispatch(clearFetchCache(calId))
   clearEventFormTempData('update')
@@ -287,7 +292,8 @@ export async function handleUpdateRecurringSeries(
     isSameDay && !changes.repetitionRulesChanged && !changes.timezoneChanged
 
   if (isTimeChangeOnly) {
-    const masterTz = event.timezone
+    const masterTz =
+      event.timezone || resolveTimezone(masterEvent?.timezone || '')
     const seriesDeltaMs =
       moment(values.start).valueOf() - moment(event.start).valueOf()
 
@@ -354,7 +360,9 @@ async function deleteSeriesInstancesFromServer(
 
 async function safeDeleteEvent(url: string): Promise<void> {
   try {
-    await deleteEvent({ URL: url })
+    await deleteEvent({
+      URL: url
+    } as CalendarEvent)
   } catch (e) {
     const err = e as { response?: { status?: number }; message?: string }
     const is404 =
@@ -448,7 +456,8 @@ async function handleUpdateRecurringSeriesMetadataOnly({
   newEvent,
   baseUID,
   targetCalendar,
-  getSeriesInstances
+  getSeriesInstances,
+  recurrenceId
 }: RecurringUpdateContext): Promise<void> {
   updateSeriesInstancesLocally(dispatch, calId, getSeriesInstances(), newEvent)
   const masterForUpdate = {
@@ -460,7 +469,8 @@ async function handleUpdateRecurringSeriesMetadataOnly({
     updateSeriesAsync({
       cal: targetCalendar,
       event: masterForUpdate,
-      removeOverrides: false
+      removeOverrides: false,
+      sourceRecurrenceId: recurrenceId
     })
   )
   await assertThunkSuccess(result)

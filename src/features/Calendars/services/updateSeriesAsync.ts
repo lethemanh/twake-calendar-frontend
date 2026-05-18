@@ -17,15 +17,17 @@ export const updateSeriesAsync = createAsyncThunk<
   { rejectValue: RejectedError }
 >(
   'calendars/updateSeries',
-  async ({ cal, event, removeOverrides = true }, { rejectWithValue }) => {
+  async (
+    { cal, event, removeOverrides = true, sourceRecurrenceId },
+    { rejectWithValue }
+  ) => {
     try {
       const vevents = await fetchAllRecurrentVevents(event)
-      const jCal = makeSeriesJCal(
-        vevents,
-        event,
-        cal.owner?.emails?.[0],
-        removeOverrides
-      )
+      const jCal = makeSeriesJCal(vevents, event, {
+        calOwnerEmail: cal.owner?.emails?.[0],
+        removeOverrides,
+        sourceRecurrenceId
+      })
 
       await putEvent(event, jCal)
     } catch (err) {
