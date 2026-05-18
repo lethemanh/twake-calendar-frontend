@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
+import { fetchEvent } from '../EventDao'
 import { CalendarEvent } from '../EventsTypes'
-import { getEvent } from '../EventApi'
+import { parseFetchedEvent } from '../transformers/parseFetchedEvent'
 
 export function useMasterEvent(
   event: CalendarEvent | null | undefined,
@@ -40,7 +41,9 @@ export function useMasterEvent(
       setIsLoadingMasterEvent(true)
       try {
         const masterEventToFetch = { ...event, uid: baseUID }
-        const fetched = await getEvent(masterEventToFetch, true)
+        const response = await fetchEvent(masterEventToFetch)
+        const fetched = parseFetchedEvent(masterEventToFetch, response, true)
+
         if (!cancelled) setMasterEvent(fetched)
       } catch (err) {
         console.error('Failed to fetch master event:', err)

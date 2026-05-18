@@ -3,7 +3,6 @@ import {
   VCalComponent,
   VObjectProperty
 } from '../../Calendars/types/CalendarData'
-import { fetchAllRecurrentVevents, putEventRaw } from '../EventDao'
 import { CalendarEvent } from '../EventsTypes'
 import { makeTimezone, makeVevent } from '../utils'
 
@@ -19,19 +18,28 @@ const METADATA_FIELDS = [
 ] as const
 
 // Helper function to get field values from props
-const getFieldValues = (props: VObjectProperty[], fieldName: string) =>
+const getFieldValues = (
+  props: VObjectProperty[],
+  fieldName: string
+): VObjectProperty[] =>
   props.filter(([k]) => k.toLowerCase() === fieldName.toLowerCase())
 
 // Helper function to find a single field value from props
-const findFieldValue = (props: VObjectProperty[], fieldName: string) =>
+const findFieldValue = (
+  props: VObjectProperty[],
+  fieldName: string
+): VObjectProperty | undefined =>
   props.find(([k]) => k.toLowerCase() === fieldName.toLowerCase())
 
 // Helper function to serialize for comparison
-const serialize = (values: VObjectProperty[] | VCalComponent[]) =>
+const serialize = (values: VObjectProperty[] | VCalComponent[]): string =>
   JSON.stringify(values)
 
 // Helper function to filter components by name
-const filterComponentsByName = (components: VCalComponent[], name: string) =>
+const filterComponentsByName = (
+  components: VCalComponent[],
+  name: string
+): VCalComponent[] =>
   components.filter(
     ([componentName]) => componentName.toLowerCase() === name.toLowerCase()
   )
@@ -40,7 +48,7 @@ const filterComponentsByName = (components: VCalComponent[], name: string) =>
 const detectChangedMetadataFields = (
   oldMasterProps: VObjectProperty[],
   newMasterProps: VObjectProperty[]
-) => {
+): Map<string, VObjectProperty[]> => {
   const changedFields = new Map<string, VObjectProperty[]>()
 
   METADATA_FIELDS.forEach(fieldName => {
@@ -59,7 +67,7 @@ const detectChangedMetadataFields = (
 const detectValarmChanges = (
   oldMaster: VCalComponent,
   updatedMaster: VCalComponent
-) => {
+): { valarmChanged: boolean; newValarm: VCalComponent[] } => {
   const oldMasterComponents = oldMaster[2] || []
   const newMasterComponents = updatedMaster[2] || []
 
@@ -75,7 +83,7 @@ const detectValarmChanges = (
 const applyMetadataChanges = (
   props: VObjectProperty[],
   changedFields: Map<string, VObjectProperty[]>
-) => {
+): VObjectProperty[] => {
   let newProps = [...props]
 
   changedFields.forEach((newValues, fieldNameLower) => {
@@ -92,7 +100,9 @@ const applyMetadataChanges = (
 }
 
 // Increment the sequence number in properties
-const incrementSequenceNumber = (props: VObjectProperty[]) => {
+const incrementSequenceNumber = (
+  props: VObjectProperty[]
+): VObjectProperty[] => {
   const newProps = [...props]
   const sequenceIndex = newProps.findIndex(
     ([k]) => k.toLowerCase() === 'sequence'
@@ -120,7 +130,7 @@ const incrementSequenceNumber = (props: VObjectProperty[]) => {
 const updateValarmComponents = (
   components: VCalComponent[],
   newValarm: VCalComponent[]
-) =>
+): VCalComponent[] =>
   components
     .filter(([name]) => name.toLowerCase() !== 'valarm')
     .concat(newValarm)
@@ -163,7 +173,7 @@ const updateVeventsPreservingOverrides = (
   oldMaster: VCalComponent,
   updatedMaster: VCalComponent,
   masterIndex: number
-) => {
+): VCalComponent[] => {
   const oldMasterProps = oldMaster[1]
   const newMasterProps = updatedMaster[1]
 
@@ -180,26 +190,26 @@ const updateVeventsPreservingOverrides = (
   )
 
   // Update all vevents
-  return vevents.map((vevent, index) =>
-    updateVeventWithMetadataChanges(
-      vevent,
-      index,
-      masterIndex,
-      updatedMaster,
-      changedFields,
-      valarmChanged,
-      newValarm
-    )
+  return vevents.map(
+    (vevent, index): VCalComponent =>
+      updateVeventWithMetadataChanges(
+        vevent,
+        index,
+        masterIndex,
+        updatedMaster,
+        changedFields,
+        valarmChanged,
+        newValarm
+      )
   )
 }
 
-export const updateSeries = async (
+export const makeSeriesJCal = (
+  vevents: VCalComponent[],
   event: CalendarEvent,
   calOwnerEmail?: string,
   removeOverrides: boolean = true
-) => {
-  const vevents = await fetchAllRecurrentVevents(event)
-
+): VCalComponent[] => {
   const masterIndex = vevents.findIndex(
     ([, props]) => !findFieldValue(props, 'recurrence-id')
   )
@@ -241,7 +251,5 @@ export const updateSeries = async (
     )
   }
 
-  const newJCal = ['vcalendar', [], [...finalVevents, vtimezone.component.jCal]]
-
-  return putEventRaw(event, newJCal)
+  return ['vcalendar', [], [...finalVevents, vtimezone.component.jCal]]
 }

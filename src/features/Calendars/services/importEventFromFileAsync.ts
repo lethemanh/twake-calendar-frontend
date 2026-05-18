@@ -1,4 +1,4 @@
-import { importEventFromFile } from '@/features/Events/EventApi'
+import { importEvent } from '@/features/Events/EventDao'
 import { importFile } from '@/utils/apiUtils'
 import { formatReduxError } from '@/utils/errorUtils'
 import { createAsyncThunk } from '@reduxjs/toolkit'
@@ -13,7 +13,7 @@ export const importEventFromFileAsync = createAsyncThunk<
   { rejectValue: RejectedError }
 >('calendars/importEvent', async ({ calLink, file }, { rejectWithValue }) => {
   try {
-    const response = await importFile(file)
+    const response = (await importFile(file)) as { _id?: string }
     const id = response?._id
     if (!id) {
       return rejectWithValue({
@@ -21,9 +21,9 @@ export const importEventFromFileAsync = createAsyncThunk<
         status: undefined
       })
     }
-    await importEventFromFile(id, calLink)
-  } catch (err) {
-    const error = err as { response?: { status?: number } }
+    await importEvent(id, calLink)
+  } catch (err: unknown) {
+    const error = err as { response?: { status?: number }; message?: string }
     return rejectWithValue({
       message: formatReduxError(err),
       status: error.response?.status

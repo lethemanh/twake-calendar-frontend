@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { useI18n } from 'twake-i18n'
-import { dlEvent } from '../EventApi'
+import { fetchEventIcs } from '../EventDao'
 import { CalendarEvent } from '../EventsTypes'
 
 interface EventPreviewHeaderProps {
@@ -25,7 +25,7 @@ interface EventPreviewHeaderProps {
   onDelete: () => void
 }
 
-export function EventPreviewHeader({
+export const EventPreviewHeader: React.FC<EventPreviewHeaderProps> = ({
   event,
   eventId,
   isOwn,
@@ -38,14 +38,14 @@ export function EventPreviewHeader({
   onEditInOrganizerCalendar,
   editInOrganizerCalendarTooltip,
   onDelete
-}: EventPreviewHeaderProps) {
+}: EventPreviewHeaderProps) => {
   const { t } = useI18n()
   const canSeeMore = isNotPrivate || isOwn
 
   const handleDownload = async (): Promise<void> => {
     let url: string | null = null
     try {
-      const icsContent = await dlEvent(event)
+      const icsContent = await fetchEventIcs(event)
       const blob = new Blob([icsContent], { type: 'text/calendar' })
       url = URL.createObjectURL(blob)
       const link = document.createElement('a')
