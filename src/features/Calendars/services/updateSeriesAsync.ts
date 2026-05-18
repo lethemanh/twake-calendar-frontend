@@ -8,7 +8,12 @@ import { fetchAllRecurrentVevents, putEvent } from '@/features/Events/EventDao'
 
 export const updateSeriesAsync = createAsyncThunk<
   void,
-  { cal: Calendar; event: CalendarEvent; removeOverrides?: boolean },
+  {
+    cal: Calendar
+    event: CalendarEvent
+    removeOverrides?: boolean
+    sourceRecurrenceId?: string
+  },
   { rejectValue: RejectedError }
 >(
   'calendars/updateSeries',
