@@ -393,3 +393,42 @@ hr.MuiDivider-root.MuiDivider-fullWidth
 .fc-timeGridWeek-view .fc-daygrid-body .fc-daygrid-day-top,
 .fc-timeGridDay-view .fc-daygrid-body .fc-daygrid-day-top
   display none
+
+/* FullCalendar List View Custom Styling */
+.fc-listWeek-view.fc-list
+  border-width 0
+
+.fc-list-table
+  border-width 0
+  border-collapse collapse
+
+.fc-list-day
+  display none !important
+
+.fc-list-event
+  cursor pointer
+  transition background-color 0.2s ease
+  
+  &:hover
+    background-color #F8FAFC !important
+
+  td
+    border none !important
+    padding 0 !important
+    vertical-align middle
+
+.fc-list-day + .fc-list-event td
+  border-top 1px solid #B5B7C033 !important
+
+.fc-list-day:first-child + .fc-list-event td
+  border-top none !important
+
+.fc-list-event-time
+  display none !important
+
+.fc-list-event-graphic
+  display none !important
+
+.fc-list-event-title
+  width 100% !important
+  padding 0 !important

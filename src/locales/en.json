@@ -109,6 +109,10 @@
     "updateEvent": "Update Event",
     "organizer": "Organizer",
     "untitled": "Untitled",
+    "noEventsToDisplay": "No events to display",
+    "list": {
+      "until": "Until"
+    },
     "repeat": {
       "repeatEvery": "Repeat every",
       "frequency": {
@@ -256,7 +260,8 @@
     "views": {
       "month": "Month",
       "week": "Week",
-      "day": "Day"
+      "day": "Day",
+      "schedule": "Schedule"
     },
     "apps": "Apps",
     "userProfile": "User profile",

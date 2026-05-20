@@ -110,6 +110,10 @@
     "updateEvent": "Обновить событие",
     "organizer": "Организатор",
     "untitled": "Без названия",
+    "noEventsToDisplay": "Нет событий для отображения",
+    "list": {
+      "until": "До"
+    },
     "repeat": {
       "repeatEvery": "Повторять каждые",
       "frequency": {
@@ -256,7 +260,8 @@
     "views": {
       "month": "Месяц",
       "week": "Неделя",
-      "day": "День"
+      "day": "День",
+      "schedule": "Расписание"
     },
     "apps": "Приложения",
     "userProfile": "Профиль",

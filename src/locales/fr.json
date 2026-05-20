@@ -110,6 +110,10 @@
     "updateEvent": "Mettre à jour un événement",
     "organizer": "Organisateur",
     "untitled": "Sans titre",
+    "noEventsToDisplay": "Aucun événement à afficher",
+    "list": {
+      "until": "Jusqu'à"
+    },
     "repeat": {
       "repeatEvery": "Répéter tous les",
       "frequency": {
@@ -256,7 +260,8 @@
     "views": {
       "month": "Mois",
       "week": "Semaine",
-      "day": "Jour"
+      "day": "Jour",
+      "schedule": "Programme"
     },
     "apps": "Applications",
     "userProfile": "Profil utilisateur",

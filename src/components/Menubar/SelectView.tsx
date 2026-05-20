@@ -2,13 +2,10 @@ import { FormControl, MenuItem, Select } from '@linagora/twake-mui'
 import { useI18n } from 'twake-i18n'
 import { CALENDAR_VIEWS } from '../Calendar/utils/constants'
 
-export function SelectView({
-  currentView,
-  onViewChange
-}: {
+export const SelectView: React.FC<{
   currentView: string
   onViewChange: (view: string) => void
-}) {
+}> = ({ currentView, onViewChange }) => {
   const { t } = useI18n()
   return (
     <FormControl
@@ -35,6 +32,9 @@ export function SelectView({
         </MenuItem>
         <MenuItem value={CALENDAR_VIEWS.timeGridDay}>
           {t('menubar.views.day')}
+        </MenuItem>
+        <MenuItem value={CALENDAR_VIEWS.listWeek}>
+          {t('menubar.views.schedule')}
         </MenuItem>
       </Select>
     </FormControl>

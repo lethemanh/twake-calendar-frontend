@@ -11,7 +11,7 @@ import './searchResult.styl'
 import {
   RenderMobileDate,
   RenderMobileEventCard
-} from './searchResultsComponents'
+} from './mobileSearchResultsComponents'
 import { SearchEventResult } from './types/SearchEventResult'
 import { useEventPreview } from './useEventPreview'
 

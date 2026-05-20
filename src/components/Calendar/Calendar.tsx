@@ -12,7 +12,12 @@ import { extractEventBaseUuid } from '@/utils/extractEventBaseUuid'
 import { setSelectedCalendars as setSelectedCalendarsToStorage } from '@/utils/storage/setSelectedCalendars'
 import { useSelectedCalendars } from '@/utils/storage/useSelectedCalendars'
 import { browserDefaultTimeZone } from '@/utils/timezone'
-import type { EventApi, LocaleInput, MoreLinkArg } from '@fullcalendar/core'
+import type {
+  EventApi,
+  LocaleInput,
+  MoreLinkArg,
+  SlotLabelContentArg
+} from '@fullcalendar/core'
 import { CalendarApi, DateSelectArg } from '@fullcalendar/core'
 import frLocale from '@fullcalendar/core/locales/fr'
 import ruLocale from '@fullcalendar/core/locales/ru'
@@ -22,7 +27,8 @@ import interactionPlugin from '@fullcalendar/interaction'
 import momentTimezonePlugin from '@fullcalendar/moment-timezone'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { Fab } from '@linagora/twake-mui'
+import listPlugin from '@fullcalendar/list'
+import { Fab, CircularProgress, Box, Typography } from '@linagora/twake-mui'
 import Tooltip from '@/components/Tooltip'
 import AddIcon from '@mui/icons-material/Add'
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
@@ -237,6 +243,26 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     userData?.email,
     hideDeclinedEvents
   )
+
+  const fullCalendarEvents = useMemo(() => {
+    return eventToFullCalendarFormat({
+      filteredEvents,
+      filteredTempEvents,
+      userId,
+      userAddress: userData?.email,
+      pending: isPending,
+      calendars,
+      t
+    })
+  }, [
+    filteredEvents,
+    filteredTempEvents,
+    userId,
+    userData?.email,
+    isPending,
+    calendars,
+    t
+  ])
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [openEventDisplay, setOpenEventDisplay] = useState(false)
@@ -461,7 +487,8 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
                   dayGridPlugin,
                   timeGridPlugin,
                   interactionPlugin,
-                  momentTimezonePlugin
+                  momentTimezonePlugin,
+                  listPlugin
                 ]}
                 initialView={
                   currentView ||
@@ -483,6 +510,27 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
                   updateSlotLabelVisibility(new Date(), arg, timezone)
                 ]}
                 nowIndicatorContent={viewHandlers.handleNowIndicatorContent}
+                noEventsContent={(): React.ReactNode => {
+                  return (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '24px'
+                      }}
+                    >
+                      {isPending ? (
+                        <CircularProgress size={24} />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          {t('event.noEventsToDisplay')}
+                        </Typography>
+                      )}
+                    </Box>
+                  )
+                }}
+                noEventsText=""
                 headerToolbar={false}
                 views={{
                   timeGridWeek: {
@@ -491,17 +539,23 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
                 }}
                 dayMaxEvents={true}
                 moreLinkClick={handleMoreLinkClick}
-                events={eventToFullCalendarFormat({
-                  filteredEvents,
-                  filteredTempEvents,
-                  userId,
-                  userAddress: userData?.email,
-                  pending: isPending,
-                  calendars
-                })}
-                eventOrder={(a: EventApi, b: EventApi) =>
-                  a.extendedProps.priority - b.extendedProps.priority
-                }
+                events={fullCalendarEvents}
+                eventOrder={(a: unknown, b: unknown) => {
+                  const ea = a as EventApi
+                  const eb = b as EventApi
+                  const aStart = ea.start ? new Date(ea.start).getTime() : 0
+                  const bStart = eb.start ? new Date(eb.start).getTime() : 0
+                  if (aStart !== bStart) return aStart - bStart
+                  // Tiebreak by end time so longer events sort later
+                  const aEnd = ea.end ? new Date(ea.end).getTime() : aStart
+                  const bEnd = eb.end ? new Date(eb.end).getTime() : bStart
+                  if (aEnd !== bEnd) return aEnd - bEnd
+                  const aPriority =
+                    (ea.extendedProps as { priority?: number })?.priority ?? 0
+                  const bPriority =
+                    (eb.extendedProps as { priority?: number })?.priority ?? 0
+                  return aPriority - bPriority
+                }}
                 weekNumbers={
                   currentView === CALENDAR_VIEWS.timeGridWeek ||
                   currentView === CALENDAR_VIEWS.timeGridDay
@@ -584,7 +638,11 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
 
                   // Update slot label visibility when view changes
                   setTimeout(() => {
-                    updateSlotLabelVisibility(new Date())
+                    updateSlotLabelVisibility(
+                      new Date(),
+                      {} as SlotLabelContentArg,
+                      timezone
+                    )
                   }, 100)
                 }}
                 dayHeaderContent={viewHandlers.handleDayHeaderContent}
