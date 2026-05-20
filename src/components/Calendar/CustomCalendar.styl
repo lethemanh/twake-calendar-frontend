@@ -432,3 +432,20 @@ hr.MuiDivider-root.MuiDivider-fullWidth
 .fc-list-event-title
   width 100% !important
   padding 0 !important
+
+/* Now indicator row in list/schedule view */
+.fc-list-event[data-event-id="__now_indicator__"]
+  cursor default
+  pointer-events none
+
+  &:hover
+    background-color transparent !important
+
+  td
+    padding 0 !important
+    border none !important
+    overflow visible
+
+  .fc-list-event-title
+    padding 0 !important
+    overflow visible

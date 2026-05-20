@@ -56,6 +56,7 @@ import {
 import { CALENDAR_VIEWS } from './utils/constants'
 import ViewMoreEvents from './ViewMoreEvents'
 import { TimezoneChangeAlert } from '../Timezone/TimezoneChangeAlert'
+import { NowIndicatorSchedule } from '../Event/EventChip/NowIndicatorSchedule'
 
 const localeMap: Record<string, LocaleInput | undefined> = {
   fr: frLocale,
@@ -245,7 +246,7 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
   )
 
   const fullCalendarEvents = useMemo(() => {
-    return eventToFullCalendarFormat({
+    const events = eventToFullCalendarFormat({
       filteredEvents,
       filteredTempEvents,
       userId,
@@ -254,6 +255,8 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
       calendars,
       t
     })
+
+    return events
   }, [
     filteredEvents,
     filteredTempEvents,
@@ -369,11 +372,20 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     if (calendarRef.current?.view.type === targetView) return
     const id = requestAnimationFrame(() => {
       if (calendarRef.current?.view.type !== targetView) {
+        // if (targetView === CALENDAR_VIEWS.listWeek) {
+        //   // Adding a small delay to ensure the view is fully rendered before scrolling
+        //   setTimeout(() => {
+        //     calendarRef.current?.changeView(targetView)
+        //   }, 0)
+        // } else {
+        //   calendarRef.current?.changeView(targetView)
+        // }
         calendarRef.current?.changeView(targetView)
       }
     })
     return (): void => cancelAnimationFrame(id)
   }, [view, isTablet, currentView, calendarRef])
+
   // Event handlers
   const eventHandlers = useCalendarEventHandlers({
     setSelectedRange,
@@ -664,6 +676,11 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
             </div>
           </>
         )}
+        <NowIndicatorSchedule
+          currentView={currentView}
+          timezone={timezone}
+          events={fullCalendarEvents}
+        />
         {view === 'search' && <SearchResultsPage />}
         <EventPopover
           open={Boolean(anchorEl)}
