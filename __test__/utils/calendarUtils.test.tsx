@@ -114,7 +114,8 @@ const callFormat = (
     userId,
     userAddress,
     pending: false,
-    calendars
+    calendars,
+    t: (key: string) => key
   })
 
 describe('eventToFullCalendarFormat - editable flag', () => {
@@ -150,7 +151,8 @@ describe('eventToFullCalendarFormat - editable flag', () => {
         userId: 'user1',
         userAddress: 'alice@example.com',
         pending: true,
-        calendars: { 'user1/cal1': calendar }
+        calendars: { 'user1/cal1': calendar },
+        t: (key: string) => key
       })
       expect(result.editable).toBe(false)
     })
@@ -216,7 +218,8 @@ describe('eventToFullCalendarFormat - editable flag', () => {
         userId: 'user1',
         userAddress: 'alice@example.com',
         pending: true,
-        calendars: { 'user2/cal1': writeDelegatedCalendar }
+        calendars: { 'user2/cal1': writeDelegatedCalendar },
+        t: (key: string) => key
       })
       expect(result.editable).toBe(false)
     })

@@ -1,16 +1,8 @@
 import {
-  getBestColor,
-  getTitleStyle
-} from '@/components/Event/EventChip/EventChipUtils'
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { defaultColors } from '@/utils/defaultColors'
-import {
   alpha,
   Avatar,
   Box,
   Button,
-  Card,
-  CardHeader,
   radius,
   Typography,
   useTheme
@@ -18,8 +10,6 @@ import {
 import RepeatIcon from '@mui/icons-material/Repeat'
 import VideocamIcon from '@mui/icons-material/Videocam'
 import React from 'react'
-import { useI18n } from 'twake-i18n'
-import { SearchEventResult } from './types/SearchEventResult'
 
 interface DateProps {
   startDate: Date
@@ -52,18 +42,6 @@ interface OrganizerProps {
 interface VideoJoinProps {
   url?: string
   t: (key: string) => string
-}
-
-interface MobileDateProps {
-  startDate: Date
-  t: (key: string) => string
-  timeZone: string
-}
-
-interface MobileEventCardProps {
-  eventData: SearchEventResult
-  calendar: Calendar | undefined
-  timeZone: string
 }
 
 export const RenderDate: React.FC<DateProps> = ({
@@ -262,204 +240,5 @@ export const RenderVideoJoin: React.FC<VideoJoinProps> = ({ url, t }) => {
     >
       {t('eventPreview.joinVideoShort')}
     </Button>
-  )
-}
-
-export const RenderMobileDate: React.FC<MobileDateProps> = ({
-  startDate,
-  t,
-  timeZone
-}) => (
-  <Box sx={{ width: '100%' }}>
-    <Typography variant="h4" sx={{ fontWeight: 400 }}>
-      {startDate.toLocaleDateString(t('locale'), { day: '2-digit', timeZone })}
-    </Typography>
-    <Typography variant="caption" color="text.secondary">
-      {startDate
-        .toLocaleDateString(t('locale'), { weekday: 'short', timeZone })
-        .toUpperCase()}
-    </Typography>
-  </Box>
-)
-
-export const RenderMobileEventCard: React.FC<MobileEventCardProps> = ({
-  eventData,
-  calendar,
-  timeZone
-}) => {
-  const { t } = useI18n()
-
-  if (!calendar) return null
-
-  const startDate = new Date(eventData.data.start)
-  const bestColor = calendar.color
-    ? getBestColor(calendar.color as { light: string; dark: string })
-    : defaultColors[0].dark
-  const titleStyle = getTitleStyle(bestColor, 'ACCEPTED', calendar, false)
-
-  return (
-    <Card
-      variant="outlined"
-      sx={{
-        height: 'stretch',
-        width: '100%',
-        borderRadius: '8px',
-        p: 1,
-        boxShadow: 'none',
-        backgroundColor: calendar?.color?.light,
-        color: calendar?.color?.dark,
-        border: '1px solid',
-        borderColor: 'background.paper',
-        display: 'flex'
-      }}
-      data-testid={`event-card-${eventData.data.uid}`}
-    >
-      <CardHeader
-        sx={{ p: '0px', '& .MuiCardHeader-content': { overflow: 'hidden' } }}
-        title={
-          <Typography variant="body2" noWrap style={titleStyle}>
-            {eventData.data.summary || t('event.untitled')}
-          </Typography>
-        }
-        subheader={
-          !eventData.data.allDay && (
-            <Typography
-              style={{
-                color: titleStyle.color,
-                opacity: '70%',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                fontSize: '10px',
-                lineHeight: '16px',
-                letterSpacing: '0%',
-                verticalAlign: 'middle'
-              }}
-            >
-              {startDate.toLocaleTimeString(t('locale'), {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: timeZone
-              })}
-            </Typography>
-          )
-        }
-      />
-    </Card>
-  )
-}
-
-interface DayIndicatorProps {
-  isFirstRow: boolean
-  isToday: boolean
-  dayNum: string
-  dayName: string
-}
-
-export const RenderDayIndicator: React.FC<DayIndicatorProps> = ({
-  isFirstRow,
-  isToday,
-  dayNum,
-  dayName
-}) => {
-  const theme = useTheme()
-
-  if (!isFirstRow) {
-    return <Box sx={{ width: '80px', flexShrink: 0 }} />
-  }
-
-  return (
-    <Box
-      sx={{
-        width: '80px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        flexShrink: 0
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {isToday ? (
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              bgcolor: '#FB9E3A',
-              color: '#FFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-              flexShrink: 0
-            }}
-          >
-            {dayNum}
-          </Box>
-        ) : (
-          <Typography
-            sx={{
-              fontSize: '22px',
-              color: theme.palette.grey[900],
-              minWidth: '32px',
-              textAlign: 'center'
-            }}
-          >
-            {dayNum}
-          </Typography>
-        )}
-        <Typography
-          sx={{
-            fontSize: '14px',
-            color: theme.palette.grey[500],
-            textTransform: 'uppercase'
-          }}
-        >
-          {dayName}
-        </Typography>
-      </Box>
-    </Box>
-  )
-}
-
-interface ListEventTimeProps {
-  allDay: boolean
-  startDate: Date
-  endDate: Date
-  timeZone: string
-  t: (key: string) => string
-}
-
-export const RenderListEventTime: React.FC<ListEventTimeProps> = ({
-  allDay,
-  startDate,
-  endDate,
-  timeZone,
-  t
-}) => {
-  if (allDay) {
-    return (
-      <Typography
-        sx={{
-          fontSize: '16px',
-          fontWeight: 400,
-          width: '120px',
-          flexShrink: 0
-        }}
-      >
-        {t('event.form.allDay')}
-      </Typography>
-    )
-  }
-
-  return (
-    <Box sx={{ width: '120px', flexShrink: 0 }}>
-      <RenderTime
-        startDate={startDate}
-        endDate={endDate}
-        allDay={false}
-        t={t}
-        timeZone={timeZone}
-      />
-    </Box>
   )
 }

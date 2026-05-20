@@ -108,6 +108,10 @@
     "updateEvent": "Cập nhật sự kiện",
     "organizer": "Người tổ chức",
     "untitled": "Không có tiêu đề",
+    "noEventsToDisplay": "Không có sự kiện để hiển thị",
+    "list": {
+      "until": "Đến"
+    },
     "repeat": {
       "repeatEvery": "Lặp lại mỗi",
       "frequency": {
@@ -254,7 +258,8 @@
     "views": {
       "month": "Tháng",
       "week": "Tuần",
-      "day": "Ngày"
+      "day": "Ngày",
+      "schedule": "Lịch trình"
     },
     "apps": "Ứng dụng",
     "userProfile": "Hồ sơ người dùng",

@@ -38,7 +38,10 @@ export function getBestColor(colors: { light: string; dark: string }): string {
 export function getEventTimes(
   event: EventContentArg['event'],
   timeZone: string
-) {
+): {
+  startTime: string
+  endTime: string
+} {
   return {
     startTime: moment.tz(event.start, timeZone).format('HH:mm'),
     endTime: moment.tz(event.end, timeZone).format('HH:mm')
@@ -88,7 +91,9 @@ export function getTitleStyle(
   }
 }
 
-function getEventVariant(duration: number) {
+function getEventVariant(
+  duration: number
+): 'short' | 'medium' | 'long' | 'extraLong' {
   if (duration <= EVENT_DURATION.SHORT) return 'short'
   if (duration <= EVENT_DURATION.MEDIUM) return 'medium'
   if (duration <= EVENT_DURATION.LONG) return 'long'
@@ -174,7 +179,7 @@ export function getCardStyle(
 export function DisplayedIcons(
   IconDisplayed: IconDisplayConfig,
   iconColor?: string
-) {
+): React.ReactNode {
   if (!Object.values(IconDisplayed).find(b => b === true)) return
   const iconStyle: React.CSSProperties = {
     fontSize: '15px',
@@ -213,7 +218,7 @@ export function useCompactMode(
   useLayoutEffect(() => {
     if (!cardRef.current) return
 
-    const checkWidth = () => {
+    const checkWidth = (): void => {
       const width = cardRef.current?.offsetWidth ?? 0
       const newCompact = width < COMPACT_WIDTH_THRESHOLD
 
@@ -228,7 +233,7 @@ export function useCompactMode(
 
     resizeObserver.observe(cardRef.current)
 
-    return () => resizeObserver.disconnect()
+    return (): void => resizeObserver.disconnect()
   }, [cardRef])
 
   return showCompact

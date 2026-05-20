@@ -70,15 +70,16 @@ export default function CalendarLayout(): JSX.Element {
   }
 
   const handleViewChange = (view: string): void => {
-    if (!calendarRef.current) return
     dispatch(setView('calendar'))
 
     // Notify parent about view change
     setCurrentView(view)
 
-    // Notify parent about date change after view change
-    const newDate = calendarRef.current.getDate()
-    handleDateChange(newDate)
+    if (calendarRef.current) {
+      // Notify parent about date change after view change
+      const newDate = calendarRef.current.getDate()
+      handleDateChange(newDate)
+    }
   }
 
   // Hide topbar navigation elements when in settings view (same as fullscreen dialog mode)

@@ -16,6 +16,7 @@ import moment from 'moment-timezone'
 import React from 'react'
 import { CALENDAR_VIEWS } from '../utils/constants'
 import { createMouseHandlers } from './mouseHandlers'
+import { EventChipSchedule } from '@/components/Event/EventChip/EventChipSchedule'
 
 export interface ViewHandlersProps {
   calendarRef: React.RefObject<CalendarApi | null>
@@ -31,7 +32,9 @@ export interface ViewHandlersProps {
   t: (key: string) => string
 }
 
-export const createViewHandlers = (props: ViewHandlersProps) => {
+export const createViewHandlers = (
+  props: ViewHandlersProps
+): Record<string, unknown> => {
   const {
     calendarRef,
     setSelectedDate,
@@ -124,9 +127,13 @@ export const createViewHandlers = (props: ViewHandlersProps) => {
     )
   }
 
+  interface ClickableHeaderElement extends HTMLElement {
+    __dayHeaderClickHandler?: EventListener
+  }
+
   const handleDayHeaderDidMount = (arg: DayHeaderMountArg): void => {
     if (arg.view.type === CALENDAR_VIEWS.timeGridWeek) {
-      const headerEl = arg.el
+      const headerEl = arg.el as ClickableHeaderElement
 
       const handleDayClick = (): void => {
         handleDayHeaderClick(arg)
@@ -138,12 +145,9 @@ export const createViewHandlers = (props: ViewHandlersProps) => {
   }
 
   const handleDayHeaderWillUnmount = (arg: DayHeaderMountArg): void => {
-    const headerEl = arg.el
+    const headerEl = arg.el as ClickableHeaderElement
     if (headerEl.__dayHeaderClickHandler) {
-      headerEl.removeEventListener(
-        'click',
-        headerEl.__dayHeaderClickHandler as EventListener
-      )
+      headerEl.removeEventListener('click', headerEl.__dayHeaderClickHandler)
       delete headerEl.__dayHeaderClickHandler
     }
   }
@@ -185,6 +189,14 @@ export const createViewHandlers = (props: ViewHandlersProps) => {
   }
 
   const handleEventContent = (arg: EventContentArg): React.ReactElement => {
+    if (arg.view.type === CALENDAR_VIEWS.listWeek) {
+      return React.createElement(EventChipSchedule, {
+        arg,
+        calendars,
+        tempcalendars,
+        timezone
+      })
+    }
     return React.createElement(EventChip, {
       arg,
       calendars,

@@ -10,7 +10,6 @@ import { isEventOrganiser } from '@/utils/isEventOrganiser'
 import { convertEventDateTimeToISO } from '@/utils/timezone'
 import { EventInput, SlotLabelContentArg } from '@fullcalendar/core'
 import moment from 'moment-timezone'
-import { useI18n } from 'twake-i18n'
 
 export const updateSlotLabelVisibility = (
   currentTime: Date,
@@ -191,6 +190,7 @@ export interface EventToFullCalendarFormatProps {
   userAddress: string | undefined
   pending: boolean
   calendars: Record<string, Calendar>
+  t: (key: string, options?: Record<string, unknown>) => string
 }
 
 export const eventToFullCalendarFormat = ({
@@ -199,10 +199,9 @@ export const eventToFullCalendarFormat = ({
   userId,
   userAddress,
   pending,
-  calendars
+  calendars,
+  t
 }: EventToFullCalendarFormatProps): EventInput[] => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { t } = useI18n()
   return filteredEvents
     .concat(filteredTempEvents.map(event => ({ ...event, temp: true })))
     .map(event =>
