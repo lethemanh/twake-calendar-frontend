@@ -30,11 +30,23 @@ export interface ViewHandlersProps {
   isTablet: boolean
   isMobile: boolean
   t: (key: string) => string
+  upcommingEventId?: string
 }
 
-export const createViewHandlers = (
-  props: ViewHandlersProps
-): Record<string, unknown> => {
+export interface ViewHandlers {
+  handleNowIndicatorContent: (
+    arg: NowIndicatorContentArg
+  ) => React.ReactElement | undefined
+  handleDayHeaderContent: (arg: DayHeaderContentArg) => JSX.Element
+  handleDayHeaderDidMount: (arg: DayHeaderMountArg) => void
+  handleDayHeaderWillUnmount: (arg: DayHeaderMountArg) => void
+  handleViewDidMount: (arg: ViewMountArg) => void
+  handleViewWillUnmount: (arg: ViewMountArg) => void
+  handleEventContent: (arg: EventContentArg) => React.ReactElement
+  handleEventDidMount: (arg: EventMountArg) => void
+}
+
+export const createViewHandlers = (props: ViewHandlersProps): ViewHandlers => {
   const {
     calendarRef,
     setSelectedDate,
@@ -46,7 +58,8 @@ export const createViewHandlers = (
     timezone,
     isTablet,
     isMobile,
-    t
+    t,
+    upcommingEventId
   } = props
 
   const handleNowIndicatorContent = (
@@ -194,7 +207,8 @@ export const createViewHandlers = (
         arg,
         calendars,
         tempcalendars,
-        timezone
+        timezone,
+        upcommingEventId
       })
     }
     return React.createElement(EventChip, {

@@ -32,6 +32,7 @@ import { Fab, CircularProgress, Box, Typography } from '@linagora/twake-mui'
 import Tooltip from '@/components/Tooltip'
 import AddIcon from '@mui/icons-material/Add'
 import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
+import moment from 'moment-timezone'
 import { useI18n } from 'twake-i18n'
 import { useCalendarDataLoader } from '../../features/Calendars/useCalendarLoader'
 import { User } from '../Attendees/types'
@@ -51,11 +52,15 @@ import { useTouchListener } from './hooks/useTouchListener'
 import {
   eventToFullCalendarFormat,
   extractEvents,
+  sortEventsByDateTime,
   updateSlotLabelVisibility
 } from './utils/calendarUtils'
 import { CALENDAR_VIEWS } from './utils/constants'
 import ViewMoreEvents from './ViewMoreEvents'
 import { TimezoneChangeAlert } from '../Timezone/TimezoneChangeAlert'
+import { useFindUpcommingEvent } from './hooks/useFindUpcommingEvent'
+import { useAutoScrollToUpcommingEvent } from '../Event/hooks/useAutoScrollToUpcommingEvent'
+import { usePreserveScrollPositionInScheduleView } from './hooks/usePreserveScrollPositionInScheduleView'
 
 const localeMap: Record<string, LocaleInput | undefined> = {
   fr: frLocale,
@@ -99,7 +104,7 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
   const dispatch = useAppDispatch()
   const view = useAppSelector(state => state.settings.view)
   const userData = useAppSelector(state => state.user.userData)
-  const workingDays = useAppSelector(
+  const workingDays: number[] | undefined = useAppSelector(
     state => state.settings.businessHours?.daysOfWeek
   )
   const hideWorkingDays = useAppSelector(state => state.settings.workingDays)
@@ -160,7 +165,8 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
 
   useEffect(() => {
     const updateSelectedCalendars = (): void => {
-      if (initialLoadRef.current && calendarIds.length > 0 && userId) {
+      const isValid = initialLoadRef.current && calendarIds.length > 0 && userId
+      if (isValid) {
         const cached = localStorage.getItem('selectedCalendars')
         if (cached && cached.length > 0) {
           const parsed = JSON.parse(cached) as string[]
@@ -264,6 +270,25 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     t
   ])
 
+  const filteredCalendarEvents = useMemo(() => {
+    if (currentView !== CALENDAR_VIEWS.listWeek) {
+      return fullCalendarEvents
+    }
+
+    const now = moment().tz(timezone)
+    const startOfToday = now.clone().startOf('day')
+
+    return fullCalendarEvents.filter(event => {
+      if (!event.start) return false
+
+      const eventEnd = event.end
+        ? moment(event.end).tz(timezone)
+        : moment(event.start).tz(timezone)
+      // Keep events that end today or in the future (includes multi-day events that are still ongoing)
+      return eventEnd.isSameOrAfter(startOfToday, 'day')
+    })
+  }, [fullCalendarEvents, currentView, timezone])
+
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [openEventDisplay, setOpenEventDisplay] = useState(false)
   const [eventDisplayedId, setEventDisplayedId] = useState('')
@@ -296,11 +321,11 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
           )
 
           // Open EventDisplayPreview if it's not already open with matching event, so it can pick up the sessionStorage
-          if (
-            !openEventDisplay ||
-            eventDisplayedId !== event.detail.eventId ||
-            eventDisplayedCalId !== event.detail.calId
-          ) {
+          const isCurrentlyDisplayedEvent =
+            openEventDisplay &&
+            eventDisplayedId === event.detail.eventId &&
+            eventDisplayedCalId === event.detail.calId
+          if (!isCurrentlyDisplayedEvent) {
             setEventDisplayedId(event.detail.eventId)
             setEventDisplayedCalId(event.detail.calId)
             setEventDisplayedTemp(false)
@@ -374,6 +399,20 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     })
     return (): void => cancelAnimationFrame(id)
   }, [view, isTablet, currentView, calendarRef])
+
+  const upcommingEventId = useFindUpcommingEvent(
+    fullCalendarEvents,
+    currentView
+  )
+
+  useAutoScrollToUpcommingEvent(upcommingEventId)
+
+  // When the preview modal opens in the schedule view, FullCalendar
+  // re-renders event content because getEventAsync updates the calendars store.
+  // This re-render resets the list scroller to the top. We save the current
+  // scroll position immediately and restore it after the re-render settles.
+  usePreserveScrollPositionInScheduleView(openEventDisplay, currentView)
+
   // Event handlers
   const eventHandlers = useCalendarEventHandlers({
     setSelectedRange,
@@ -407,7 +446,8 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     timezone,
     isTablet,
     isMobile,
-    t
+    t,
+    upcommingEventId
   })
 
   useEffect(() => {
@@ -539,23 +579,10 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
                 }}
                 dayMaxEvents={true}
                 moreLinkClick={handleMoreLinkClick}
-                events={fullCalendarEvents}
-                eventOrder={(a: unknown, b: unknown) => {
-                  const ea = a as EventApi
-                  const eb = b as EventApi
-                  const aStart = ea.start ? new Date(ea.start).getTime() : 0
-                  const bStart = eb.start ? new Date(eb.start).getTime() : 0
-                  if (aStart !== bStart) return aStart - bStart
-                  // Tiebreak by end time so longer events sort later
-                  const aEnd = ea.end ? new Date(ea.end).getTime() : aStart
-                  const bEnd = eb.end ? new Date(eb.end).getTime() : bStart
-                  if (aEnd !== bEnd) return aEnd - bEnd
-                  const aPriority =
-                    (ea.extendedProps as { priority?: number })?.priority ?? 0
-                  const bPriority =
-                    (eb.extendedProps as { priority?: number })?.priority ?? 0
-                  return aPriority - bPriority
-                }}
+                events={filteredCalendarEvents}
+                eventOrder={(a: unknown, b: unknown) =>
+                  sortEventsByDateTime(a as EventApi, b as EventApi)
+                }
                 weekNumbers={
                   currentView === CALENDAR_VIEWS.timeGridWeek ||
                   currentView === CALENDAR_VIEWS.timeGridDay
