@@ -1,7 +1,7 @@
 import React from 'react'
 import { EventContentArg, EventApi } from '@fullcalendar/core'
 import moment from 'moment-timezone'
-import { Box } from '@linagora/twake-mui'
+import { alpha, Box, useTheme } from '@linagora/twake-mui'
 import SquareRoundedIcon from '@mui/icons-material/SquareRounded'
 import { Calendar } from '@/features/Calendars/CalendarTypes'
 import { CalendarEvent } from '@/features/Events/EventsTypes'
@@ -17,12 +17,14 @@ import {
   RenderDayIndicator,
   RenderListEventTime
 } from '@/features/Search/listSearchResultsComponents'
+import { sortEventsByDateTime } from '@/components/Calendar/utils/calendarUtils'
 
 export interface EventChipScheduleProps {
   arg: EventContentArg
   calendars: Record<string, Calendar>
   tempcalendars: Record<string, Calendar>
   timezone: string
+  upcommingEventId?: string
 }
 
 const getEffectiveDayMoment = (
@@ -56,26 +58,15 @@ const isEventOnDay = (
   return false
 }
 
-const compareEvents = (a: EventApi, b: EventApi): number => {
-  const aStart = a.start?.getTime() ?? 0
-  const bStart = b.start?.getTime() ?? 0
-  if (aStart !== bStart) return aStart - bStart
-  const aEnd = a.end?.getTime() ?? aStart
-  const bEnd = b.end?.getTime() ?? bStart
-  if (aEnd !== bEnd) return aEnd - bEnd
-  const aPriority =
-    (a.extendedProps as unknown as { priority?: number }).priority ?? 0
-  const bPriority =
-    (b.extendedProps as unknown as { priority?: number }).priority ?? 0
-  return aPriority - bPriority
-}
-
-const getEventCompositeKey = (e: {
-  id: string
-  extendedProps: Record<string, unknown>
-}): string => {
+const getEventInstanceKey = (e: EventApi): string => {
+  // Use FullCalendar's internal instanceId (unique per occurrence) when available.
+  // This prevents recurring events sharing the same id/calId/start from all
+  // matching as the "first" event and showing the day indicator multiple times.
+  const instanceId = (e as unknown as { _instance?: { instanceId?: string } })
+    ._instance?.instanceId
+  if (instanceId) return instanceId
   const ext = e.extendedProps as unknown as CalendarEvent
-  return `${e.id}_${ext.calId ?? ''}`
+  return `${e.id}_${ext.calId ?? ''}_${e.start?.getTime() ?? ''}`
 }
 
 const buildListDayData = (
@@ -84,6 +75,7 @@ const buildListDayData = (
 ): {
   isFirstRow: boolean
   isToday: boolean
+  isInPast: boolean
   dayNum: string
   dayName: string
 } => {
@@ -93,21 +85,23 @@ const buildListDayData = (
   const allEvents = arg.view.calendar.getEvents()
   const sameDayEvents = allEvents
     .filter(e => isEventOnDay(e, dayKey, timezone))
-    .sort(compareEvents)
+    .sort(sortEventsByDateTime)
 
   const firstEvent = sameDayEvents[0]
 
   const isFirstRow = Boolean(
     firstEvent &&
-    getEventCompositeKey(firstEvent) === getEventCompositeKey(arg.event) &&
-    firstEvent.start &&
-    arg.event.start &&
-    firstEvent.start.getTime() === arg.event.start.getTime()
+    getEventInstanceKey(firstEvent) === getEventInstanceKey(arg.event)
   )
+
+  const now = moment().tz(timezone)
+  const isToday = effectiveDayMoment.isSame(now, 'day')
+  const isInPast = effectiveDayMoment.isBefore(now, 'day')
 
   return {
     isFirstRow,
-    isToday: effectiveDayMoment.isSame(moment().tz(timezone), 'day'),
+    isToday,
+    isInPast,
     dayNum: effectiveDayMoment.format('D'),
     dayName: effectiveDayMoment.format('ddd')
   }
@@ -117,9 +111,12 @@ export const EventChipSchedule: React.FC<EventChipScheduleProps> = ({
   arg,
   calendars,
   tempcalendars,
-  timezone
+  timezone,
+  upcommingEventId
 }) => {
   const { t } = useI18n()
+  const theme = useTheme()
+
   const ext = arg.event.extendedProps as CalendarEvent
   const { temp } = arg.event._def.extendedProps
   const isRecurrent = !!ext.repetition
@@ -130,8 +127,13 @@ export const EventChipSchedule: React.FC<EventChipScheduleProps> = ({
 
   const dayData = buildListDayData(arg, timezone)
 
+  if (dayData.isInPast) {
+    return null
+  }
+
   return (
     <Box
+      data-event-id={ext.uid}
       sx={{
         display: 'flex',
         flexDirection: 'row',
@@ -139,7 +141,11 @@ export const EventChipSchedule: React.FC<EventChipScheduleProps> = ({
         alignItems: 'center',
         textAlign: 'left',
         width: '100%',
-        p: 3
+        p: 3,
+        backgroundColor:
+          upcommingEventId === ext.uid
+            ? alpha(theme.palette.grey[200], 0.5)
+            : 'transparent'
       }}
     >
       <RenderDayIndicator {...dayData} />

@@ -8,7 +8,7 @@ import { extractEventBaseUuid } from '@/utils/extractEventBaseUuid'
 import { getEffectiveEmail } from '@/utils/getEffectiveEmail'
 import { isEventOrganiser } from '@/utils/isEventOrganiser'
 import { convertEventDateTimeToISO } from '@/utils/timezone'
-import { EventInput, SlotLabelContentArg } from '@fullcalendar/core'
+import { EventApi, EventInput, SlotLabelContentArg } from '@fullcalendar/core'
 import moment from 'moment-timezone'
 
 export const updateSlotLabelVisibility = (
@@ -394,4 +394,29 @@ function privilegeToAccess(
     default:
       break
   }
+}
+
+const getTime = (date: Date | null): number => {
+  return date ? new Date(date).getTime() : 0
+}
+
+export const sortEventsByDateTime = (
+  curEvent: EventApi,
+  nextEvent: EventApi
+): number => {
+  const aStart = getTime(curEvent.start)
+  const bStart = getTime(nextEvent.start)
+  if (aStart !== bStart) return aStart - bStart
+
+  // Tiebreak by end time so longer events sort later
+  const aEnd = getTime(curEvent.end)
+  const bEnd = getTime(nextEvent.end)
+  if (aEnd !== bEnd) return aEnd - bEnd
+
+  // Final tiebreak by priority (personal events first)
+  const aPriority =
+    (curEvent.extendedProps as { priority?: number })?.priority ?? 0
+  const bPriority =
+    (nextEvent.extendedProps as { priority?: number })?.priority ?? 0
+  return aPriority - bPriority
 }
