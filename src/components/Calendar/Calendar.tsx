@@ -600,7 +600,14 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
                 eventResize={arg => {
                   void eventHandlers.handleEventResize(arg)
                 }}
-                eventContent={viewHandlers.handleEventContent}
+                eventContent={arg => {
+                  try {
+                    return viewHandlers.handleEventContent(arg)
+                  } catch (e) {
+                    console.error('Error rendering event:', e)
+                    return viewHandlers.handleEventContent(arg)
+                  }
+                }}
                 eventDidMount={viewHandlers.handleEventDidMount}
               />
             </div>

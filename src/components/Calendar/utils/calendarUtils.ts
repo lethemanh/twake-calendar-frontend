@@ -240,7 +240,7 @@ export const extractEvents = (
           hideDeclinedEvents &&
           event.attendee?.some(
             a =>
-              calendars[event.calId].owner.emails.includes(a.cal_address) &&
+              calendars[event.calId]?.owner?.emails?.includes(a.cal_address) &&
               a.partstat === 'DECLINED'
           )
         )

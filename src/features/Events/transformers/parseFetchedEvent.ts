@@ -1,5 +1,6 @@
 import { convertEventDateTimeToISO, resolveTimezoneId } from '@/utils/timezone'
 import ICAL from 'ical.js'
+import moment from 'moment-timezone'
 import { Calendar } from '../../Calendars/CalendarTypes'
 import {
   VCalComponent,
@@ -17,13 +18,88 @@ function filterComponents(
   )
 }
 
+function normalizeRecurrenceId(id: string): string {
+  if (!id) return ''
+  return id
+    .replace(/\.\d+/, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase()
+}
+
+function parseRecurrenceIdToMs(
+  id: string,
+  defaultTimezone: string
+): number | null {
+  if (!id) return null
+  try {
+    const isUtc = id.toLowerCase().endsWith('z')
+    if (isUtc) {
+      const parsed = moment.utc(id)
+      if (parsed.isValid()) return parsed.valueOf()
+    } else {
+      const parsed = moment.tz(id, defaultTimezone)
+      if (parsed.isValid()) return parsed.valueOf()
+    }
+  } catch (e) {
+    // Ignore parsing errors and return null
+  }
+  return null
+}
+
 function selectTargetVevent(
   vevents: VCalComponent[],
-  isMaster?: boolean
+  isMaster?: boolean,
+  recurrenceId?: string,
+  defaultTimezone: string = 'UTC'
 ): VCalComponent | undefined {
-  if (!isMaster) {
-    return vevents[0]
+  if (isMaster) {
+    const master = vevents.find(
+      ([, props]) =>
+        !(props as VObjectProperty[]).find(
+          ([k]) => k.toLowerCase() === 'recurrence-id'
+        )
+    )
+    return master ?? vevents[0]
   }
+
+  if (recurrenceId) {
+    // 1. Timezone-aware timestamp matching
+    const targetMs = parseRecurrenceIdToMs(recurrenceId, defaultTimezone)
+    if (targetMs !== null) {
+      const target = vevents.find(([, props]) => {
+        const recProp = (props as VObjectProperty[]).find(
+          ([k]) => k.toLowerCase() === 'recurrence-id'
+        )
+        if (!recProp) return false
+        const recValue = recProp[3]
+        if (typeof recValue !== 'string') return false
+        const recParams = recProp[1] as Record<string, string> | undefined
+        const tzid =
+          resolveTimezoneId(getTimeZone(recParams)) ?? defaultTimezone
+        const recMs = parseRecurrenceIdToMs(recValue, tzid)
+        return recMs === targetMs
+      })
+      if (target) {
+        return target
+      }
+    }
+
+    // 2. String-based normalization fallback
+    const normalizedTarget = normalizeRecurrenceId(recurrenceId)
+    const target = vevents.find(([, props]) => {
+      const recProp = (props as VObjectProperty[]).find(
+        ([k]) => k.toLowerCase() === 'recurrence-id'
+      )
+      if (!recProp) return false
+      const recValue = recProp[3]
+      if (typeof recValue !== 'string') return false
+      return normalizeRecurrenceId(recValue) === normalizedTarget
+    })
+    if (target) {
+      return target
+    }
+  }
+
   const master = vevents.find(
     ([, props]) =>
       !(props as VObjectProperty[]).find(
@@ -108,13 +184,34 @@ export function parseFetchedEvent(
   const vevents = filterComponents(eventical, 'vevent')
   const vtimezones = filterComponents(eventical, 'vtimezone')
 
-  const targetVevent = selectTargetVevent(vevents, isMaster)
+  const recurrenceId =
+    event.recurrenceId ??
+    (event.uid?.includes('/') ? event.uid.split('/')[1] : undefined)
+
+  const timezoneFromVTimezone = resolveTimezoneFromVTimezone(vtimezones)
+  const masterVevent = vevents.find(
+    ([, props]) =>
+      !(props as VObjectProperty[]).find(
+        ([k]) => k.toLowerCase() === 'recurrence-id'
+      )
+  )
+  const timezoneFromDtstart = masterVevent
+    ? resolveTimezoneFromDtstart(masterVevent)
+    : undefined
+  const defaultTimezone =
+    timezoneFromVTimezone ?? timezoneFromDtstart ?? event.timezone ?? 'UTC'
+
+  const targetVevent = selectTargetVevent(
+    vevents,
+    isMaster,
+    recurrenceId,
+    defaultTimezone
+  )
   if (!targetVevent) {
     return event
   }
 
-  const timezoneFromVTimezone = resolveTimezoneFromVTimezone(vtimezones)
-  const timezoneFromDtstart = resolveTimezoneFromDtstart(targetVevent)
+  const targetTimezoneFromDtstart = resolveTimezoneFromDtstart(targetVevent)
 
   const eventjson = parseCalendarEvent(
     targetVevent[1] as VObjectProperty[],
@@ -124,10 +221,18 @@ export function parseFetchedEvent(
   )
 
   const finalTimezone =
-    timezoneFromVTimezone ?? timezoneFromDtstart ?? eventjson.timezone ?? 'UTC'
+    timezoneFromVTimezone ??
+    targetTimezoneFromDtstart ??
+    eventjson.timezone ??
+    'UTC'
 
   eventjson.timezone = finalTimezone
   applyTimezoneToDateFields(eventjson, finalTimezone)
 
-  return { ...event, ...eventjson, timezone: finalTimezone }
+  const mergedEvent = { ...event, ...eventjson, timezone: finalTimezone }
+  if (event.uid?.includes('/')) {
+    mergedEvent.uid = event.uid
+    mergedEvent.recurrenceId = event.recurrenceId ?? event.uid.split('/')[1]
+  }
+  return mergedEvent
 }

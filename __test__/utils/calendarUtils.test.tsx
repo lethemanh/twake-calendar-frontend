@@ -1,6 +1,7 @@
 import {
   eventToFullCalendarFormat,
-  getCalendarVisibility
+  getCalendarVisibility,
+  extractEvents
 } from '@/components/Calendar/utils/calendarUtils'
 import { Calendar, DelegationAccess } from '@/features/Calendars/CalendarTypes'
 import { AclEntry } from '@/features/Calendars/types/CalendarData'
@@ -234,5 +235,49 @@ describe('eventToFullCalendarFormat - editable flag', () => {
       )
       expect(result.editable).toBe(true)
     })
+  })
+})
+
+describe('extractEvents', () => {
+  it('does not crash if a calendar is missing from the calendars record', () => {
+    const event = {
+      uid: 'event-1',
+      calId: 'missing-calendar-id',
+      attendee: [{ cal_address: 'bob@example.com', partstat: 'DECLINED' }]
+    } as CalendarEvent
+
+    // calendars record does NOT contain 'missing-calendar-id'
+    const result = extractEvents(
+      ['missing-calendar-id'],
+      {}, // empty calendars record
+      'bob@example.com',
+      true
+    )
+
+    expect(result).toBeDefined()
+  })
+
+  it('does not crash if a calendar owner is missing', () => {
+    const event = {
+      uid: 'event-1',
+      calId: 'cal-no-owner',
+      attendee: [{ cal_address: 'bob@example.com', partstat: 'DECLINED' }]
+    } as CalendarEvent
+
+    const calendars = {
+      'cal-no-owner': {
+        id: 'cal-no-owner',
+        events: { 'event-1': event }
+      } as unknown as Calendar
+    }
+
+    const result = extractEvents(
+      ['cal-no-owner'],
+      calendars,
+      'bob@example.com',
+      true
+    )
+
+    expect(result).toHaveLength(1)
   })
 })

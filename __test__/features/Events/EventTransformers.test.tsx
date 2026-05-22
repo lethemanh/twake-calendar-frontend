@@ -3,6 +3,7 @@ import { CalendarEvent } from '@/features/Events/EventsTypes'
 import { makeSearchEventParam } from '@/features/Events/transformers/makeSearchEventParam'
 import { clientConfig } from '@/features/User/oidcAuth'
 import { VCalComponent } from '@/features/Calendars/types/CalendarData'
+import { parseFetchedEvent } from '@/features/Events/transformers/parseFetchedEvent'
 
 clientConfig.url = 'https://example.com'
 
@@ -611,3 +612,102 @@ describe('makeSeriesJCal', () => {
     expect(override).toBeUndefined()
   })
 })
+
+describe('parseFetchedEvent', () => {
+  const sampleIcs = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Sabre//Sabre VObject 4.1.3//EN
+BEGIN:VEVENT
+UID:3f9a1e83-63f6-4ec1-8ccc-7719fd7af705
+SUMMARY:Master Event Title
+DTSTART:20240308T170000Z
+DTEND:20240308T190000Z
+RRULE:FREQ=WEEKLY
+END:VEVENT
+BEGIN:VEVENT
+UID:3f9a1e83-63f6-4ec1-8ccc-7719fd7af705
+SUMMARY:Override Event Title
+DTSTART:20240405T150000Z
+DTEND:20240405T170000Z
+RECURRENCE-ID:20240405T150000Z
+END:VEVENT
+END:VCALENDAR`
+
+  it('selects the correct override VEVENT and preserves original UID/recurrenceId format', () => {
+    const clickedEvent = {
+      uid: '3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-04-05T15:00:00Z',
+      recurrenceId: '2024-04-05T15:00:00Z',
+      calId: 'cal-1'
+    } as CalendarEvent
+
+    const parsed = parseFetchedEvent(clickedEvent, sampleIcs)
+    expect(parsed.title).toBe('Override Event Title')
+    expect(parsed.uid).toBe('3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-04-05T15:00:00Z')
+    expect(parsed.recurrenceId).toBe('2024-04-05T15:00:00Z')
+  })
+
+  it('fallbacks to the master event if no matching override is found', () => {
+    const clickedEvent = {
+      uid: '3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-03-15T17:00:00Z',
+      recurrenceId: '2024-03-15T17:00:00Z',
+      calId: 'cal-1'
+    } as CalendarEvent
+
+    const parsed = parseFetchedEvent(clickedEvent, sampleIcs)
+    expect(parsed.title).toBe('Master Event Title')
+    // Since there was no override vevent in the ICS, parseCalendarEvent parsed the master vevent (uid: baseUid).
+    // But we preserve the original clicked event UID!
+    expect(parsed.uid).toBe('3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-03-15T17:00:00Z')
+    expect(parsed.recurrenceId).toBe('2024-03-15T17:00:00Z')
+  })
+
+  it('selects the correct override VEVENT when target recurrenceId is UTC and override RECURRENCE-ID is local time with timezone', () => {
+    const timezoneIcs = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Sabre//Sabre VObject 4.1.3//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Paris
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:3f9a1e83-63f6-4ec1-8ccc-7719fd7af705
+SUMMARY:Master Event Title
+DTSTART;TZID=Europe/Paris:20240308T170000
+DTEND;TZID=Europe/Paris:20240308T190000
+RRULE:FREQ=WEEKLY
+END:VEVENT
+BEGIN:VEVENT
+UID:3f9a1e83-63f6-4ec1-8ccc-7719fd7af705
+SUMMARY:Override Event Title
+DTSTART;TZID=Europe/Paris:20240614T170000
+DTEND;TZID=Europe/Paris:20240614T190000
+RECURRENCE-ID;TZID=Europe/Paris:20240614T170000
+END:VEVENT
+END:VCALENDAR`
+
+    const clickedEvent = {
+      uid: '3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-06-14T15:00:00Z',
+      recurrenceId: '2024-06-14T15:00:00Z',
+      calId: 'cal-1'
+    } as CalendarEvent
+
+    const parsed = parseFetchedEvent(clickedEvent, timezoneIcs)
+    expect(parsed.title).toBe('Override Event Title')
+    expect(parsed.uid).toBe('3f9a1e83-63f6-4ec1-8ccc-7719fd7af705/2024-06-14T15:00:00Z')
+    expect(parsed.recurrenceId).toBe('2024-06-14T15:00:00Z')
+  })
+})
+
