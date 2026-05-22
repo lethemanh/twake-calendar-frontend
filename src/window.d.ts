@@ -45,5 +45,7 @@ declare global {
     TOOLTIP_DELAY_MS: number
 
     displayOrgAvatar: boolean
+
+    __ws?: WebSocket
   }
 }

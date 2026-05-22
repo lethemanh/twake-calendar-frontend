@@ -8,11 +8,14 @@ export const RECONNECT_CONFIG: RetryBackoffConfig = {
 export const MAX_RECONNECT_ATTEMPTS = 10
 
 export function useWebSocketReconnect(
-  reconnectTimeoutRef: MutableRefObject<NodeJS.Timeout | null>,
+  reconnectTimeoutRef: MutableRefObject<ReturnType<typeof setTimeout> | null>,
   isAuthenticatedRef: MutableRefObject<boolean>,
   reconnectAttemptsRef: MutableRefObject<number>,
   setShouldConnect: Dispatch<SetStateAction<boolean>>
-) {
+): {
+  scheduleReconnect: () => void
+  clearReconnectTimeout: () => void
+} {
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current)

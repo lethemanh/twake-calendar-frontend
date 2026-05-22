@@ -40,15 +40,18 @@ const mockState = {
 const mockAccumulators: {
   calendarsToRefresh: Map<string, any>
   calendarsToHide: Set<string>
-  debouncedUpdateFn?: (dispatch: AppDispatch) => void
+  debouncedUpdateFns: Map<string, (dispatch: AppDispatch) => void>
+  debouncedListUpdateFn?: (dispatch: AppDispatch) => void
   shouldRefreshCalendarListRef: React.MutableRefObject<boolean>
   currentDebouncePeriod?: number
+  delayedRefreshTimers?: Map<string, ReturnType<typeof setTimeout>>
 } = {
   calendarsToRefresh: new Map<string, any>(),
   calendarsToHide: new Set(),
+  debouncedUpdateFns: new Map(),
   shouldRefreshCalendarListRef: { current: false },
   currentDebouncePeriod: 0,
-  debouncedUpdateFn: undefined
+  delayedRefreshTimers: new Map()
 }
 
 describe('websocket messages storm', () => {
@@ -63,10 +66,11 @@ describe('websocket messages storm', () => {
     window.WS_SKIP_DELAY_MS = 0
     mockAccumulators.calendarsToRefresh = new Map<string, any>()
     mockAccumulators.calendarsToHide = new Set()
+    mockAccumulators.debouncedUpdateFns = new Map()
+    mockAccumulators.debouncedListUpdateFn = undefined
     mockAccumulators.shouldRefreshCalendarListRef.current = false
     mockAccumulators.currentDebouncePeriod = 0
-
-    mockAccumulators.debouncedUpdateFn = undefined
+    mockAccumulators.delayedRefreshTimers = new Map()
   })
   it('debounces calendar updates during message storm', () => {
     const mockMessage = {
@@ -112,14 +116,14 @@ describe('websocket messages storm', () => {
         )
     }
 
-    // Dispatch called once because of leading edge
-    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(1)
+    // Each calendar's leading edge triggers immediately (3 calendars)
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(3)
 
     // Trailing edge
     jest.advanceTimersByTime(500)
 
-    // Trailing edge updates once per calendar + the original leading edge
-    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(4)
+    // Trailing edge updates once per calendar (3 calls) + the 3 leading edge calls = 6 calls
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(6)
   })
 
   it('executes immediately when debounce is disabled', () => {
@@ -132,5 +136,66 @@ describe('websocket messages storm', () => {
     )
 
     expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(1)
+  })
+
+  it('bypasses skip delay for non-owned calendars and applies delay to owned calendars', () => {
+    window.WS_DEBOUNCE_PERIOD_MS = 0
+    window.WS_SKIP_DELAY_MS = 2000
+
+    const customState = {
+      user: { userData: { openpaasId: 'user1' } },
+      calendars: {
+        list: {
+          'user1/cal1': {
+            id: 'user1/cal1',
+            name: 'Own Calendar',
+            syncToken: 1
+          },
+          'user2/cal2': {
+            id: 'user2/cal2',
+            name: 'Other Calendar',
+            syncToken: 1
+          }
+        },
+        templist: {}
+      }
+    } as unknown as RootState
+
+    ;(store.getState as jest.Mock).mockReturnValue(customState)
+
+    updateCalendars(
+      {
+        '/calendars/user1/cal1': { syncToken: 'abc' },
+        '/calendars/user2/cal2': { syncToken: 'xyz' }
+      },
+      mockDispatch,
+      mockAccumulators
+    )
+
+    // user2/cal2 (non-owned) should refresh immediately
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(1)
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledWith({
+      calendar: customState.calendars.list['user2/cal2'],
+      calType: undefined,
+      calendarRange: mockRange
+    })
+
+    // user1/cal1 (owned) should not refresh immediately
+    expect(refreshCalendarWithSyncToken).not.toHaveBeenCalledWith({
+      calendar: customState.calendars.list['user1/cal1'],
+      calType: undefined,
+      calendarRange: mockRange
+    })
+
+    // Advance timer by 2 seconds
+    jest.advanceTimersByTime(2000)
+
+    // Now user1/cal1 (owned) should also have refreshed
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledTimes(2)
+    expect(refreshCalendarWithSyncToken).toHaveBeenCalledWith({
+      calendar: customState.calendars.list['user1/cal1'],
+      calType: undefined,
+      calendarRange: mockRange
+    })
   })
 })

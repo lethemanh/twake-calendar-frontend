@@ -5,6 +5,7 @@ import { useSelectedCalendars } from '@/utils/storage/useSelectedCalendars'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useI18n } from 'twake-i18n'
 import type { WebSocketWithCleanup } from './connection'
+import { DebouncedFunc } from 'lodash'
 import { closeWebSocketConnection } from './connection/lifecycle/closeWebSocketConnection'
 import { establishWebSocketConnection } from './connection/lifecycle/establishWebSocketConnection'
 import {
@@ -20,16 +21,16 @@ import { updateCalendars } from './messaging/updateCalendars'
 import { syncCalendarRegistrations } from './operations'
 import { WebSocketStatusSnackbar } from './WebSocketStatusSnackbar'
 
-export function WebSocketGate() {
+export function WebSocketGate(): JSX.Element | null {
   const socketRef = useRef<WebSocketWithCleanup | null>(null)
   const previousCalendarListRef = useRef<string[]>([])
   const previousTempCalendarListRef = useRef<string[]>([])
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const isConnectingRef = useRef(false)
   const pingCleanupRef = useRef<PingCleanup | null>(null)
 
-  const connectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const connectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const didConnectTimeoutRef = useRef(false)
   const CONNECT_TIMEOUT_MS = 10_000
 
@@ -62,10 +63,16 @@ export function WebSocketGate() {
   >(new Map())
   const calendarsToHideRef = useRef<Set<string>>(new Set())
   const shouldRefreshCalendarListRef = useRef<boolean>(false)
-  const debouncedUpdateFnRef = useRef<
-    ((dispatch: AppDispatch) => void) | undefined
-  >()
+  const debouncedUpdateFnsRef = useRef<
+    Map<string, DebouncedFunc<(dispatch: AppDispatch) => void>>
+  >(new Map())
+  const debouncedListUpdateFnRef = useRef<
+    DebouncedFunc<(dispatch: AppDispatch) => void> | undefined
+  >(undefined)
   const currentDebouncePeriodRef = useRef<number | undefined>()
+  const delayedRefreshTimersRef = useRef<
+    Map<string, ReturnType<typeof setTimeout>>
+  >(new Map())
 
   const onMessage = useCallback(
     (message: unknown) => {
@@ -73,12 +80,14 @@ export function WebSocketGate() {
         calendarsToRefresh: calendarsToRefreshRef.current,
         calendarsToHide: calendarsToHideRef.current,
         shouldRefreshCalendarListRef,
-        debouncedUpdateFn: debouncedUpdateFnRef.current,
-        currentDebouncePeriod: currentDebouncePeriodRef.current
+        debouncedUpdateFns: debouncedUpdateFnsRef.current,
+        debouncedListUpdateFn: debouncedListUpdateFnRef.current,
+        currentDebouncePeriod: currentDebouncePeriodRef.current,
+        delayedRefreshTimers: delayedRefreshTimersRef.current
       }
       updateCalendars(message, dispatch, accumulators)
       // Persist any mutations back to refs
-      debouncedUpdateFnRef.current = accumulators.debouncedUpdateFn
+      debouncedListUpdateFnRef.current = accumulators.debouncedListUpdateFn
       currentDebouncePeriodRef.current = accumulators.currentDebouncePeriod
     },
     [dispatch]
@@ -162,13 +171,16 @@ export function WebSocketGate() {
   useEffect(() => {
     const abortController = new AbortController()
 
-    const cleanup = () => {
+    const cleanup = (): void => {
       if (connectTimeoutRef.current) {
         clearTimeout(connectTimeoutRef.current)
         connectTimeoutRef.current = null
       }
       closeWebSocketConnection(socketRef, setIsSocketOpen)
+      delete window.__ws
       clearReconnectTimeout()
+      delayedRefreshTimersRef.current.forEach(timer => clearTimeout(timer))
+      delayedRefreshTimersRef.current.clear()
     }
 
     if (!isAuthenticated) {
@@ -179,7 +191,7 @@ export function WebSocketGate() {
       return
     }
 
-    const connect = async () => {
+    const connect = async (): Promise<void> => {
       if (isConnectingRef.current || isSocketOpen) return
       isConnectingRef.current = true
       setWebSocketConnecting(true)
@@ -204,6 +216,9 @@ export function WebSocketGate() {
           setIsSocketOpen,
           abortController.signal
         )
+        if (socketRef.current) {
+          window.__ws = socketRef.current
+        }
       } catch (err) {
         console.warn('WebSocket establishment failed:', err)
 
@@ -222,9 +237,9 @@ export function WebSocketGate() {
       }
     }
 
-    connect()
+    void connect()
 
-    return () => {
+    return (): void => {
       abortController.abort()
       cleanup()
     }
@@ -268,7 +283,7 @@ export function WebSocketGate() {
 
   // Handle browser online/offline events
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = (): void => {
       if (!isSocketOpen && isAuthenticatedRef.current) {
         reconnectAttemptsRef.current = 0
         clearReconnectTimeout()
@@ -276,23 +291,25 @@ export function WebSocketGate() {
       }
     }
 
-    const handleOffline = () => {
+    const handleOffline = (): void => {
       cleanupConnection()
     }
 
-    const cleanupConnection = () => {
+    const cleanupConnection = (): void => {
       closeWebSocketConnection(socketRef, setIsSocketOpen)
       clearReconnectTimeout()
       if (connectTimeoutRef.current) {
         clearTimeout(connectTimeoutRef.current)
         connectTimeoutRef.current = null
       }
+      delayedRefreshTimersRef.current.forEach(timer => clearTimeout(timer))
+      delayedRefreshTimersRef.current.clear()
     }
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    return () => {
+    return (): void => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
@@ -326,7 +343,7 @@ export function WebSocketGate() {
 
     pingCleanupRef.current = pingCleanup
 
-    return () => {
+    return (): void => {
       if (pingCleanupRef.current) {
         pingCleanupRef.current.stop()
         pingCleanupRef.current = null
@@ -343,6 +360,14 @@ export function WebSocketGate() {
   useEffect(() => {
     registerWebSocketState(socketRef, triggerReconnect)
   }, [triggerReconnect])
+
+  // Clean up delayed refresh timers on unmount
+  useEffect(() => {
+    return (): void => {
+      delayedRefreshTimersRef.current.forEach(timer => clearTimeout(timer))
+      delayedRefreshTimersRef.current.clear()
+    }
+  }, [])
 
   return websocketStatus ? (
     <WebSocketStatusSnackbar
