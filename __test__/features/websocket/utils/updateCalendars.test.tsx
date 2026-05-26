@@ -4,9 +4,28 @@ import { getDisplayedCalendarRange } from '@/utils/CalendarRangeManager'
 import { updateCalendars } from '@/websocket/messaging/updateCalendars'
 import { WS_INBOUND_EVENTS } from '@/websocket/protocols'
 import { waitFor } from '@testing-library/dom'
+import { getCalendarDetailAsync } from '@/features/Calendars/services/getCalendarDetailAsync'
+import { emptyEventsCal } from '@/features/Calendars/CalendarSlice'
+import { formatDateToYYYYMMDDTHHMMSS } from '@/utils/dateUtils'
 
 jest.mock('@/features/Calendars/services/refreshCalendar')
 jest.mock('@/utils/CalendarRangeManager')
+jest.mock('@/features/Calendars/services/getCalendarDetailAsync', () => ({
+  getCalendarDetailAsync: jest.fn(args => ({
+    type: 'mock/getCalendarDetailAsync',
+    payload: args
+  }))
+}))
+jest.mock('@/features/Calendars/CalendarSlice', () => {
+  const original = jest.requireActual('@/features/Calendars/CalendarSlice')
+  return {
+    ...original,
+    emptyEventsCal: jest.fn(args => ({
+      type: 'mock/emptyEventsCal',
+      payload: args
+    }))
+  }
+})
 jest.mock('@/app/store', () => ({
   store: {
     getState: jest.fn()
@@ -32,15 +51,16 @@ describe('updateCalendars', () => {
   const mockAccumulators: {
     calendarsToRefresh: Map<string, any>
     calendarsToHide: Set<string>
-    debouncedUpdateFn?: (dispatch: AppDispatch) => void
+    debouncedUpdateFns: Map<string, (dispatch: AppDispatch) => void>
+    debouncedListUpdateFn?: (dispatch: AppDispatch) => void
     shouldRefreshCalendarListRef: React.MutableRefObject<boolean>
     currentDebouncePeriod?: number
   } = {
     calendarsToRefresh: new Map<string, any>(),
     calendarsToHide: new Set(),
+    debouncedUpdateFns: new Map(),
     shouldRefreshCalendarListRef: { current: false },
-    currentDebouncePeriod: 0,
-    debouncedUpdateFn: jest.fn()
+    currentDebouncePeriod: 0
   }
 
   beforeEach(() => {
@@ -50,9 +70,10 @@ describe('updateCalendars', () => {
     ;(store.getState as jest.Mock).mockReturnValue(mockState)
     mockAccumulators.calendarsToRefresh = new Map<string, any>()
     mockAccumulators.calendarsToHide = new Set()
+    mockAccumulators.debouncedUpdateFns = new Map()
+    mockAccumulators.debouncedListUpdateFn = undefined
     mockAccumulators.currentDebouncePeriod = 0
     mockAccumulators.shouldRefreshCalendarListRef.current = false
-    mockAccumulators.debouncedUpdateFn = jest.fn()
     window.WS_SKIP_DELAY_MS = 0
   })
 
@@ -140,6 +161,42 @@ describe('updateCalendars', () => {
     }
 
     updateCalendars(message, mockDispatch, mockAccumulators)
+
+    expect(refreshCalendarWithSyncToken).not.toHaveBeenCalled()
+  })
+
+  it('should fall back to getCalendarDetailAsync when calendar has no syncToken', async () => {
+    const stateWithoutSyncToken = {
+      calendars: {
+        list: {
+          'cal1/entry1': { id: 'cal1/entry1', name: 'Calendar 1' }
+        },
+        templist: {}
+      }
+    } as unknown as RootState
+
+    ;(store.getState as jest.Mock).mockReturnValue(stateWithoutSyncToken)
+
+    const message = {
+      '/calendars/cal1/entry1': {}
+    }
+
+    updateCalendars(message, mockDispatch, mockAccumulators)
+
+    await waitFor(() => {
+      expect(emptyEventsCal).toHaveBeenCalledWith({
+        calId: 'cal1/entry1',
+        calType: undefined
+      })
+      expect(getCalendarDetailAsync).toHaveBeenCalledWith({
+        calId: 'cal1/entry1',
+        match: {
+          start: formatDateToYYYYMMDDTHHMMSS(mockRange.start),
+          end: formatDateToYYYYMMDDTHHMMSS(mockRange.end)
+        },
+        calType: undefined
+      })
+    })
 
     expect(refreshCalendarWithSyncToken).not.toHaveBeenCalled()
   })

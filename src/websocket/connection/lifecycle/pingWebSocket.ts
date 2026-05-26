@@ -54,12 +54,12 @@ export function setupWebSocketPing(
     onPongReceived
   } = config
 
-  let pingIntervalId: NodeJS.Timeout | null = null
-  let pongTimeoutId: NodeJS.Timeout | null = null
+  let pingIntervalId: ReturnType<typeof setInterval> | null = null
+  let pongTimeoutId: ReturnType<typeof setTimeout> | null = null
   let isWaitingForPong = false
   let isStopped = false
 
-  const cleanup = () => {
+  const cleanup = (): void => {
     if (pingIntervalId) {
       clearInterval(pingIntervalId)
       pingIntervalId = null
@@ -71,7 +71,7 @@ export function setupWebSocketPing(
     isWaitingForPong = false
   }
 
-  const sendPing = () => {
+  const sendPing = (): void => {
     if (isStopped || !socket || socket.readyState !== WebSocket.OPEN) {
       return
     }
@@ -109,7 +109,7 @@ export function setupWebSocketPing(
     }
   }
 
-  const handlePong = () => {
+  const handlePong = (): void => {
     if (pongTimeoutId) {
       clearTimeout(pongTimeoutId)
       pongTimeoutId = null
@@ -119,7 +119,7 @@ export function setupWebSocketPing(
   }
 
   // Start ping interval
-  const startPinging = () => {
+  const startPinging = (): void => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       console.warn('Cannot start pinging: socket is not open')
       return
@@ -163,7 +163,7 @@ export function setupWebSocketPing(
   startPinging()
 
   return {
-    stop: () => {
+    stop: (): void => {
       isStopped = true
       cleanup()
       // Restore original onmessage handler
@@ -171,7 +171,7 @@ export function setupWebSocketPing(
         socket.onmessage = originalOnMessage ?? null
       }
     },
-    sendPing: () => {
+    sendPing: (): void => {
       if (!isStopped) {
         sendPing()
       }
