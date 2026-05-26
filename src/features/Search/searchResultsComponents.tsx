@@ -24,6 +24,7 @@ interface TimeProps {
   allDay: boolean
   t: (key: string) => string
   timeZone: string
+  styles?: React.CSSProperties
 }
 
 interface TitleProps {
@@ -83,11 +84,19 @@ export const RenderTime: React.FC<TimeProps> = ({
   endDate,
   allDay,
   t,
-  timeZone
+  timeZone,
+  styles
 }) => {
   if (allDay) return null
   return (
-    <Typography sx={{ minWidth: '120px', fontSize: '16px', fontWeight: 400 }}>
+    <Typography
+      sx={{
+        minWidth: '120px',
+        fontSize: '16px',
+        fontWeight: 400,
+        ...(styles || {})
+      }}
+    >
       {startDate.toLocaleTimeString(t('locale'), {
         hour: '2-digit',
         minute: '2-digit',
@@ -240,5 +249,121 @@ export const RenderVideoJoin: React.FC<VideoJoinProps> = ({ url, t }) => {
     >
       {t('eventPreview.joinVideoShort')}
     </Button>
+  )
+}
+
+interface DayIndicatorProps {
+  isFirstRow: boolean
+  isToday: boolean
+  dayNum: string
+  dayName: string
+}
+
+export const RenderDayIndicator: React.FC<DayIndicatorProps> = ({
+  isFirstRow,
+  isToday,
+  dayNum,
+  dayName
+}) => {
+  const theme = useTheme()
+
+  if (!isFirstRow) {
+    return <Box sx={{ width: '80px', flexShrink: 0 }} />
+  }
+
+  return (
+    <Box
+      sx={{
+        width: '80px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        flexShrink: 0
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {isToday ? (
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              bgcolor: '#FB9E3A',
+              color: '#FFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px',
+              flexShrink: 0
+            }}
+          >
+            {dayNum}
+          </Box>
+        ) : (
+          <Typography
+            sx={{
+              fontSize: '22px',
+              color: theme.palette.grey[900],
+              minWidth: '32px',
+              textAlign: 'center'
+            }}
+          >
+            {dayNum}
+          </Typography>
+        )}
+        <Typography
+          sx={{
+            fontSize: '14px',
+            color: theme.palette.grey[500],
+            textTransform: 'uppercase'
+          }}
+        >
+          {dayName}
+        </Typography>
+      </Box>
+    </Box>
+  )
+}
+
+interface ListEventTimeProps {
+  allDay: boolean
+  startDate: Date
+  endDate: Date
+  timeZone: string
+  t: (key: string) => string
+}
+
+export const RenderListEventTime: React.FC<ListEventTimeProps> = ({
+  allDay,
+  startDate,
+  endDate,
+  timeZone,
+  t
+}) => {
+  if (allDay) {
+    return (
+      <Typography
+        sx={{
+          fontSize: '16px',
+          fontWeight: 400,
+          width: '120px',
+          flexShrink: 0
+        }}
+      >
+        {t('event.form.allDay')}
+      </Typography>
+    )
+  }
+
+  return (
+    <Box sx={{ width: '120px', flexShrink: 0 }}>
+      <RenderTime
+        startDate={startDate}
+        endDate={endDate}
+        allDay={false}
+        t={t}
+        timeZone={timeZone}
+      />
+    </Box>
   )
 }
