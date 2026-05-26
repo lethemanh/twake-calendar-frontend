@@ -1,4 +1,4 @@
-import { IconButton, Box } from '@linagora/twake-mui'
+import { IconButton, Box, Tooltip } from '@linagora/twake-mui'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import { useI18n } from 'twake-i18n'
 import { AppListMenu } from '@/components/Menubar/AppListMenu'
@@ -25,17 +25,19 @@ export const UtilButtons: React.FC<{ isIframe?: boolean }> = ({ isIframe }) => {
   return (
     <Box display="flex" alignItems="center">
       {supportLink && (
-        <IconButton
-          component="a"
-          href={supportLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ marginRight: 4 }}
-          aria-label={t('menubar.help')}
-          title={t('menubar.help')}
-        >
-          <HelpOutlineIcon fontSize="small" />
-        </IconButton>
+        <Tooltip title={t('menubar.help')}>
+          <IconButton
+            component="a"
+            href={supportLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginRight: 4 }}
+            aria-label={t('menubar.help')}
+            title={t('menubar.help')}
+          >
+            <HelpOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       )}
 
       <AppListMenu

@@ -18,6 +18,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { MouseEvent } from 'react'
 import { useI18n } from 'twake-i18n'
+import { Tooltip } from '../Tooltip'
 
 export type UserMenuProps = {
   anchorEl: HTMLElement | null
@@ -168,19 +169,26 @@ export function UserMenu({
 
   return (
     <>
-      <IconButton
-        onClick={!isIframe ? onUserMenuOpen : onSettingsClick}
-        aria-label={isIframe ? t('menubar.settings') : t('menubar.userProfile')}
+      <Tooltip
         title={isIframe ? t('menubar.settings') : t('menubar.userProfile')}
       >
-        {!isIframe ? (
-          <Avatar color={stringToGradient(displayName)} size={size}>
-            {getInitials(displayName)}
-          </Avatar>
-        ) : (
-          <SettingsOutlinedIcon />
-        )}
-      </IconButton>
+        <IconButton
+          onClick={!isIframe ? onUserMenuOpen : onSettingsClick}
+          aria-label={
+            isIframe ? t('menubar.settings') : t('menubar.userProfile')
+          }
+          title={isIframe ? t('menubar.settings') : t('menubar.userProfile')}
+        >
+          {!isIframe ? (
+            <Avatar color={stringToGradient(displayName)} size={size}>
+              {getInitials(displayName)}
+            </Avatar>
+          ) : (
+            <SettingsOutlinedIcon />
+          )}
+        </IconButton>
+      </Tooltip>
+
       <UserMenuPopup
         anchorEl={anchorEl}
         onClose={onClose}

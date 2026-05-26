@@ -98,17 +98,19 @@ export const DesktopMenubar: React.FC<SharedMenubarProps> = ({
           <>
             {supportLink && (
               <div className="menu-items">
-                <IconButton
-                  component="a"
-                  href={supportLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginRight: 8 }}
-                  aria-label={t('menubar.help')}
-                  title={t('menubar.help')}
-                >
-                  <HelpOutlineIcon />
-                </IconButton>
+                <Tooltip title={t('menubar.help')}>
+                  <IconButton
+                    component="a"
+                    href={supportLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ marginRight: 8 }}
+                    aria-label={t('menubar.help')}
+                    title={t('menubar.help')}
+                  >
+                    <HelpOutlineIcon />
+                  </IconButton>
+                </Tooltip>
               </div>
             )}
 

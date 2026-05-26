@@ -15,6 +15,7 @@ import { DatePickerMobile } from './components/DatePickerMobile'
 import { SmallNavigationControls } from './components/SmallNavigationControls'
 import './Menubar.styl'
 import MobileSearchBar from './MobileEventSearchBar'
+import { Tooltip } from '../Tooltip'
 
 export interface MobileMenubarProps {
   calendarRef: React.RefObject<CalendarApi | null>
@@ -82,6 +83,10 @@ export const MobileMenubar: React.FC<MobileMenubarProps> = ({
     )
   }
 
+  const toggleDatePickerTitle = openDatePicker
+    ? t('menubar.hideDatePicker')
+    : t('menubar.showDatePicker')
+
   return (
     <>
       <header className="menubar menubar--mobile">
@@ -120,27 +125,21 @@ export const MobileMenubar: React.FC<MobileMenubarProps> = ({
                   >
                     {dateLabel}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={onToggleDatePicker}
-                    aria-label={
-                      openDatePicker
-                        ? t('menubar.hideDatePicker')
-                        : t('menubar.showDatePicker')
-                    }
-                    title={
-                      openDatePicker
-                        ? t('menubar.hideDatePicker')
-                        : t('menubar.showDatePicker')
-                    }
-                    aria-expanded={openDatePicker}
-                  >
-                    {openDatePicker ? (
-                      <ArrowDropUpIcon />
-                    ) : (
-                      <ArrowDropDownIcon />
-                    )}
-                  </IconButton>
+                  <Tooltip title={toggleDatePickerTitle}>
+                    <IconButton
+                      size="small"
+                      onClick={onToggleDatePicker}
+                      aria-label={toggleDatePickerTitle}
+                      title={toggleDatePickerTitle}
+                      aria-expanded={openDatePicker}
+                    >
+                      {openDatePicker ? (
+                        <ArrowDropUpIcon />
+                      ) : (
+                        <ArrowDropDownIcon />
+                      )}
+                    </IconButton>
+                  </Tooltip>
                 </Stack>
               </div>
             </div>

@@ -449,6 +449,8 @@
     "registerOtherCalendars": "Register calendars",
     "registerResources": "Register resources",
     "collapse": "Collapse",
-    "expand": "Expand"
+    "expand": "Expand",
+    "nextMonth": "Next month",
+    "previousMonth": "Previous month"
   }
 }

@@ -450,6 +450,8 @@
     "registerOtherCalendars": "Зарегистрировать календари",
     "registerResources": "Зарегистрировать ресурсы",
     "collapse": "Свернуть",
-    "expand": "Развернуть"
+    "expand": "Развернуть",
+    "nextMonth": "Следующий месяц",
+    "previousMonth": "Предыдущий месяц"
   }
 }

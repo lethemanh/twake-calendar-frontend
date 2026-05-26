@@ -450,6 +450,8 @@
     "registerOtherCalendars": "Enregistrer des calendriers",
     "registerResources": "Enregistrer des ressources",
     "collapse": "Réduire",
-    "expand": "Développer"
+    "expand": "Développer",
+    "nextMonth": "Mois suivant",
+    "previousMonth": "Mois précédent"
   }
 }

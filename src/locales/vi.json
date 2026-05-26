@@ -448,6 +448,8 @@
     "registerOtherCalendars": "Đăng ký lịch",
     "registerResources": "Đăng ký tài nguyên",
     "collapse": "Thu gọn",
-    "expand": "Mở rộng"
+    "expand": "Mở rộng",
+    "nextMonth": "Tháng sau",
+    "previousMonth": "Tháng trước"
   }
 }

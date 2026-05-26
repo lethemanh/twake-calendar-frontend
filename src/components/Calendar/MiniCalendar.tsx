@@ -7,29 +7,103 @@ import { DateCalendar } from '@mui/x-date-pickers'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import moment from 'moment'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, forwardRef } from 'react'
 import { useI18n } from 'twake-i18n'
 import { CALENDAR_VIEWS } from './utils/constants'
+import { IconButton, SxProps } from '@linagora/twake-mui'
+import Tooltip from '../Tooltip'
+import {
+  PickerSelectionState,
+  PickerValue
+} from '@mui/x-date-pickers/internals'
 
-export function MiniCalendar({
-  calendarRef,
-  selectedDate,
-  setSelectedMiniDate
-}: {
+const NextIconButton = forwardRef<
+  HTMLButtonElement,
+  { sx?: SxProps; [key: string]: unknown }
+>((props, ref) => {
+  const { t } = useI18n()
+  const { sx: propSx, ...rest } = props
+  return (
+    <Tooltip title={t('tooltip.nextMonth')}>
+      <IconButton
+        {...rest}
+        ref={ref}
+        title=""
+        sx={{
+          ...(propSx as SxProps),
+          '&::after': {
+            display: 'none !important',
+            content: '"none !important"'
+          },
+          '&::before': {
+            display: 'none !important',
+            content: '"none !important"'
+          }
+        }}
+      />
+    </Tooltip>
+  )
+})
+NextIconButton.displayName = 'NextIconButton'
+
+const PreviousIconButton = forwardRef<
+  HTMLButtonElement,
+  { sx?: SxProps; [key: string]: unknown }
+>((props, ref) => {
+  const { t } = useI18n()
+  const { sx: propSx, ...rest } = props
+  return (
+    <Tooltip title={t('tooltip.previousMonth')}>
+      <IconButton
+        {...rest}
+        ref={ref}
+        title=""
+        sx={{
+          ...(propSx as SxProps),
+          '&::after': {
+            display: 'none !important',
+            content: '"none !important"'
+          },
+          '&::before': {
+            display: 'none !important',
+            content: '"none !important"'
+          }
+        }}
+      />
+    </Tooltip>
+  )
+})
+PreviousIconButton.displayName = 'PreviousIconButton'
+
+export const MiniCalendar: React.FC<{
   calendarRef: React.MutableRefObject<CalendarApi | null>
   selectedDate: Date
   setSelectedMiniDate: (d: Date) => void
-}) {
+}> = ({ calendarRef, selectedDate, setSelectedMiniDate }) => {
   const dispatch = useAppDispatch()
   const [visibleDate, setVisibleDate] = useState(selectedDate)
   const { t } = useI18n()
 
   useEffect(() => {
-    const handleVisibleDateChange = () => {
+    const handleVisibleDateChange = (): void => {
       setVisibleDate(selectedDate)
     }
     handleVisibleDateChange()
   }, [selectedDate])
+
+  const handleChange = (
+    dateMoment: PickerValue,
+    selectionState?: PickerSelectionState
+  ): void => {
+    if (!dateMoment) return
+    const date = dateMoment.toDate()
+    if (selectionState === 'finish') {
+      dispatch(setView('calendar'))
+      setSelectedMiniDate(date)
+      calendarRef.current?.gotoDate(date)
+    }
+  }
+
   return (
     <LocalizationProvider
       dateAdapter={AdapterMoment}
@@ -37,22 +111,16 @@ export function MiniCalendar({
     >
       <DateCalendar
         value={moment(visibleDate)}
-        onChange={async (dateMoment, selectionState) => {
-          if (!dateMoment) return
-          const date = dateMoment.toDate()
-          if (selectionState === 'finish') {
-            await dispatch(setView('calendar'))
-            setSelectedMiniDate(date)
-            calendarRef.current?.gotoDate(date)
-          }
-        }}
+        onChange={handleChange}
         showDaysOutsideCurrentMonth
         onMonthChange={month => {
           setVisibleDate(month.toDate())
         }}
         views={['month', 'day']}
         slots={{
-          switchViewIcon: KeyboardArrowDownIcon
+          switchViewIcon: KeyboardArrowDownIcon,
+          nextIconButton: NextIconButton,
+          previousIconButton: PreviousIconButton
         }}
         sx={{
           width: '100%',
@@ -77,7 +145,7 @@ export function MiniCalendar({
             const isInSelectedWeek =
               calendarRef.current?.view.type === CALENDAR_VIEWS.timeGridWeek ||
               calendarRef.current?.view.type === undefined
-                ? (() => {
+                ? ((): boolean => {
                     const startOfWeek = computeStartOfTheWeek(selected)
                     const endOfWeek = new Date(startOfWeek)
                     endOfWeek.setDate(startOfWeek.getDate() + 6)
