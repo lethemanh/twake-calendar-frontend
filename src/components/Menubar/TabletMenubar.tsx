@@ -13,6 +13,7 @@ import { MainTitle } from './MainTitle'
 import { SharedMenubarProps } from './Menubar'
 import MobileSearchBar from './MobileEventSearchBar'
 import { UserMenu } from './UserMenu'
+import Tooltip from '../Tooltip'
 
 export const TabletMenubar: React.FC<SharedMenubarProps> = ({
   calendarRef,
@@ -63,13 +64,15 @@ export const TabletMenubar: React.FC<SharedMenubarProps> = ({
   return (
     <header className="menubar">
       <div className="left-menu">
-        <IconButton
-          onClick={onToggleSidebar}
-          aria-label={t('menubar.toggleSidebar')}
-          title={t('menubar.toggleSidebar')}
-        >
-          <MenuIcon />
-        </IconButton>
+        <Tooltip title={t('menubar.toggleSidebar')}>
+          <IconButton
+            onClick={onToggleSidebar}
+            aria-label={t('menubar.toggleSidebar')}
+            title={t('menubar.toggleSidebar')}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Tooltip>
 
         {!isIframe && (
           <div className="menu-items">

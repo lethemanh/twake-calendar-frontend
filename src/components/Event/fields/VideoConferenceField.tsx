@@ -4,7 +4,7 @@ import {
   generateMeetingLink,
   removeVideoConferenceFromDescription
 } from '@/utils/videoConferenceUtils'
-import { Box, Button, IconButton } from '@linagora/twake-mui'
+import { Box, Button, IconButton, Tooltip } from '@linagora/twake-mui'
 import {
   Close as DeleteIcon,
   ContentCopy as CopyIcon
@@ -60,24 +60,28 @@ const VideoConferenceFieldInShortMode: React.FC<{
         >
           {t('event.form.joinVisioConference')}
         </Button>
-        <IconButton
-          onClick={() => void handleCopyMeetingLink()}
-          size="small"
-          sx={{ color: 'primary.main' }}
-          aria-label={t('event.form.copyMeetingLink')}
-          title={t('event.form.copyMeetingLink')}
-        >
-          <CopyIcon />
-        </IconButton>
-        <IconButton
-          onClick={handleDeleteVideoConference}
-          size="small"
-          sx={{ color: 'error.main' }}
-          aria-label={t('event.form.removeVideoConference')}
-          title={t('event.form.removeVideoConference')}
-        >
-          <DeleteIcon />
-        </IconButton>
+        <Tooltip title={t('event.form.copyMeetingLink')}>
+          <IconButton
+            onClick={() => void handleCopyMeetingLink()}
+            size="small"
+            sx={{ color: 'primary.main' }}
+            aria-label={t('event.form.copyMeetingLink')}
+            title={t('event.form.copyMeetingLink')}
+          >
+            <CopyIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={t('event.form.removeVideoConference')}>
+          <IconButton
+            onClick={handleDeleteVideoConference}
+            size="small"
+            sx={{ color: 'error.main' }}
+            aria-label={t('event.form.removeVideoConference')}
+            title={t('event.form.removeVideoConference')}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
     )
   }
@@ -136,24 +140,28 @@ const VideoConferenceFieldInExpandedMode: React.FC<{
           >
             {t('event.form.joinVisioConference')}
           </Button>
-          <IconButton
-            onClick={() => void handleCopyMeetingLink()}
-            size="small"
-            sx={{ color: 'primary.main' }}
-            aria-label={t('event.form.copyMeetingLink')}
-            title={t('event.form.copyMeetingLink')}
-          >
-            <CopyIcon />
-          </IconButton>
-          <IconButton
-            onClick={handleDeleteVideoConference}
-            size="small"
-            sx={{ color: 'error.main' }}
-            aria-label={t('event.form.removeVideoConference')}
-            title={t('event.form.removeVideoConference')}
-          >
-            <DeleteIcon />
-          </IconButton>
+          <Tooltip title={t('event.form.copyMeetingLink')}>
+            <IconButton
+              onClick={() => void handleCopyMeetingLink()}
+              size="small"
+              sx={{ color: 'primary.main' }}
+              aria-label={t('event.form.copyMeetingLink')}
+              title={t('event.form.copyMeetingLink')}
+            >
+              <CopyIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={t('event.form.removeVideoConference')}>
+            <IconButton
+              onClick={handleDeleteVideoConference}
+              size="small"
+              sx={{ color: 'error.main' }}
+              aria-label={t('event.form.removeVideoConference')}
+              title={t('event.form.removeVideoConference')}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </>
       )}
     </Box>

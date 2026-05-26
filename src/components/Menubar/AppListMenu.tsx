@@ -3,6 +3,7 @@ import { Dialog, IconButton, Popover } from '@linagora/twake-mui'
 import WidgetsOutlinedIcon from '@mui/icons-material/WidgetsOutlined'
 import { useI18n } from 'twake-i18n'
 import { AppIcon, AppIconProps } from './AppIcon'
+import Tooltip from '../Tooltip'
 
 const sharedPaperSx = {
   minWidth: 230,
@@ -65,14 +66,16 @@ export const AppListMenu: React.FC<{
 
   return (
     <>
-      <IconButton
-        onClick={onAppMenuOpen}
-        style={{ marginRight: 8 }}
-        aria-label={t('menubar.apps')}
-        title={t('menubar.apps')}
-      >
-        <WidgetsOutlinedIcon fontSize={iconSize} />
-      </IconButton>
+      <Tooltip title={t('menubar.apps')}>
+        <IconButton
+          onClick={onAppMenuOpen}
+          style={{ marginRight: 8 }}
+          aria-label={t('menubar.apps')}
+          title={t('menubar.apps')}
+        >
+          <WidgetsOutlinedIcon fontSize={iconSize} />
+        </IconButton>
+      </Tooltip>
       <AppListPopup
         anchorEl={anchorEl}
         onAppMenuClose={onAppMenuClose}

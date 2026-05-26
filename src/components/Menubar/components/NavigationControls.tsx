@@ -1,3 +1,4 @@
+import { Tooltip } from '@/components/Tooltip'
 import { Button, ButtonGroup } from '@linagora/twake-mui'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -17,25 +18,31 @@ export const NavigationControls: React.FC<{
           '& button:last-of-type': { borderRadius: '0 12px 12px 0' }
         }}
       >
-        <Button
-          sx={{ width: 20 }}
-          onClick={() => onNavigate('prev')}
-          aria-label={t('menubar.prev')}
-          title={t('menubar.prev')}
-        >
-          <ChevronLeftIcon sx={{ height: 20 }} />
-        </Button>
-        <Button onClick={() => onNavigate('today')}>
-          {t('menubar.today')}
-        </Button>
-        <Button
-          sx={{ width: 20 }}
-          onClick={() => onNavigate('next')}
-          aria-label={t('menubar.next')}
-          title={t('menubar.next')}
-        >
-          <ChevronRightIcon sx={{ height: 20 }} />
-        </Button>
+        <Tooltip title={t('menubar.prev')}>
+          <Button
+            sx={{ width: 20 }}
+            onClick={() => onNavigate('prev')}
+            aria-label={t('menubar.prev')}
+            title={t('menubar.prev')}
+          >
+            <ChevronLeftIcon sx={{ height: 20 }} />
+          </Button>
+        </Tooltip>
+        <Tooltip title={t('menubar.today')}>
+          <Button onClick={() => onNavigate('today')}>
+            {t('menubar.today')}
+          </Button>
+        </Tooltip>
+        <Tooltip title={t('menubar.next')}>
+          <Button
+            sx={{ width: 20 }}
+            onClick={() => onNavigate('next')}
+            aria-label={t('menubar.next')}
+            title={t('menubar.next')}
+          >
+            <ChevronRightIcon sx={{ height: 20 }} />
+          </Button>
+        </Tooltip>
       </ButtonGroup>
     </div>
   )
