@@ -1,5 +1,5 @@
 import { InfoRow } from '@/components/Event/InfoRow'
-import { Box, Button, Link, Typography } from '@linagora/twake-mui'
+import { Box, Typography } from '@linagora/twake-mui'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined'
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
@@ -8,13 +8,13 @@ import RepeatIcon from '@mui/icons-material/Repeat'
 import SubjectIcon from '@mui/icons-material/Subject'
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined'
 import { alpha, useTheme } from '@mui/material/styles'
-import { useMemo } from 'react'
 import { useI18n } from 'twake-i18n'
 import { CalendarEvent } from '../EventsTypes'
 import { EventPreviewAttendees } from './EventPreviewAttendees'
 import { makeRecurrenceString } from './utils/makeRecurrenceString'
 import { renderAttendeeBadge } from '@/components/Event/utils/eventUtils'
-import { userAttendee } from '@/features/User/models/attendee'
+import { VideoLink } from '@/components/Event/components/VideoLink'
+import { useFilterEventAttendees } from '@/components/Event/hooks/useFilterEventAttendees'
 
 interface EventPreviewDetailsProps {
   event: CalendarEvent
@@ -24,15 +24,16 @@ interface EventPreviewDetailsProps {
   calendarName?: string
 }
 
-export function EventPreviewDetails({
+export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
   event,
   isOwn,
   isNotPrivate,
   isResourceEventPreview,
   calendarName
-}: EventPreviewDetailsProps) {
+}) => {
   const { t } = useI18n()
   const theme = useTheme()
+
   const infoIconColor = alpha(theme.palette.grey[900], 0.9)
   const infoIconSx = {
     minWidth: '25px',
@@ -43,40 +44,17 @@ export function EventPreviewDetails({
     alignSelf: 'center'
   }
 
-  const resources = useMemo(
-    () =>
-      event?.attendee?.filter(
-        attendee =>
-          attendee.cutype === 'RESOURCE' &&
-          ((isResourceEventPreview && calendarName !== attendee.cn) ||
-            !isResourceEventPreview)
-      ),
-    [calendarName, event?.attendee, isResourceEventPreview]
-  )
-  const eventAttendees = useMemo(
-    () =>
-      event?.attendee?.filter(attendee => attendee.cutype !== 'RESOURCE') ?? [],
-    [event?.attendee]
-  )
-
-  const attendees =
-    eventAttendees?.filter(
-      a => a.cal_address !== event.organizer?.cal_address
-    ) || []
-  const organizer =
-    eventAttendees?.find(a => a.cal_address === event.organizer?.cal_address) ||
-    ({
-      ...event.organizer,
-      partstat: 'ACCEPTED',
-      role: 'CHAIR',
-      cutype: 'INDIVIDUAL',
-      rsvp: 'FALSE'
-    } as userAttendee)
+  const { resources, eventAttendees, attendees, organizer } =
+    useFilterEventAttendees({
+      event,
+      isResourceEventPreview,
+      calendarName
+    })
 
   const showDetails = isNotPrivate || isOwn
 
   const shouldShowAttendeesSection =
-    attendees.length > 0 || Boolean(organizer?.cal_address || organizer?.cn)
+    attendees.length > 0 || Boolean(organizer.cal_address || organizer?.cn)
 
   if (!showDetails) {
     return (
@@ -119,22 +97,7 @@ export function EventPreviewDetails({
               <VideocamOutlinedIcon />
             </Box>
           }
-          content={
-            <Link
-              href={event.x_openpass_videoconference}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ textDecoration: 'none' }}
-            >
-              <Button
-                variant="contained"
-                size="medium"
-                sx={{ borderRadius: '4px' }}
-              >
-                {t('eventPreview.joinVideo')}
-              </Button>
-            </Link>
-          }
+          content={<VideoLink meetingLink={event.x_openpass_videoconference} />}
         />
       )}
 

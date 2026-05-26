@@ -4,17 +4,15 @@ import {
   generateMeetingLink,
   removeVideoConferenceFromDescription
 } from '@/utils/videoConferenceUtils'
-import { Box, Button, IconButton, Tooltip } from '@linagora/twake-mui'
-import {
-  Close as DeleteIcon,
-  ContentCopy as CopyIcon
-} from '@mui/icons-material'
+import { Box, Button, IconButton } from '@linagora/twake-mui'
+import { Close as DeleteIcon } from '@mui/icons-material'
 import React from 'react'
 import { useI18n } from 'twake-i18n'
-import { SnackbarAlert } from '../../Loading/SnackBarAlert'
 import { FieldWithLabel } from '../components/FieldWithLabel'
 import { SectionPreviewRow } from '../components/SectionPreviewRow'
 import { useScreenSizeDetection } from '@/useScreenSizeDetection'
+import { VideoLink } from '../components/VideoLink'
+import Tooltip from '@/components/Tooltip'
 
 export interface VideoConferenceFieldProps {
   hasVideoConference: boolean
@@ -32,14 +30,12 @@ const VideoConferenceFieldInShortMode: React.FC<{
   hasVideoConference: boolean
   meetingLink: string | null
   cameraIcon: React.ReactNode
-  handleCopyMeetingLink: () => Promise<void>
   handleDeleteVideoConference: () => void
   handleAddVideoConference: () => void
 }> = ({
   hasVideoConference,
   meetingLink,
   cameraIcon,
-  handleCopyMeetingLink,
   handleDeleteVideoConference,
   handleAddVideoConference
 }) => {
@@ -48,29 +44,11 @@ const VideoConferenceFieldInShortMode: React.FC<{
   if (hasVideoConference && meetingLink) {
     return (
       <Box display="flex" gap={1} alignItems="center">
-        <Button
-          startIcon={cameraIcon}
-          onClick={() =>
-            window.open(meetingLink, '_blank', 'noopener,noreferrer')
-          }
-          size="medium"
-          variant="contained"
-          color="primary"
-          sx={{ borderRadius: '4px', mr: 1 }}
-        >
-          {t('event.form.joinVisioConference')}
-        </Button>
-        <Tooltip title={t('event.form.copyMeetingLink')}>
-          <IconButton
-            onClick={() => void handleCopyMeetingLink()}
-            size="small"
-            sx={{ color: 'primary.main' }}
-            aria-label={t('event.form.copyMeetingLink')}
-            title={t('event.form.copyMeetingLink')}
-          >
-            <CopyIcon />
-          </IconButton>
-        </Tooltip>
+        <VideoLink
+          meetingLink={meetingLink}
+          icon={cameraIcon}
+          label={t('event.form.joinVisioConference')}
+        />
         <Tooltip title={t('event.form.removeVideoConference')}>
           <IconButton
             onClick={handleDeleteVideoConference}
@@ -97,14 +75,12 @@ const VideoConferenceFieldInExpandedMode: React.FC<{
   hasVideoConference: boolean
   meetingLink: string | null
   cameraIcon: React.ReactNode
-  handleCopyMeetingLink: () => Promise<void>
   handleDeleteVideoConference: () => void
   handleAddVideoConference: () => void
 }> = ({
   hasVideoConference,
   meetingLink,
   cameraIcon,
-  handleCopyMeetingLink,
   handleDeleteVideoConference,
   handleAddVideoConference
 }) => {
@@ -128,29 +104,11 @@ const VideoConferenceFieldInExpandedMode: React.FC<{
 
       {hasVideoConference && meetingLink && (
         <>
-          <Button
-            startIcon={cameraIcon}
-            onClick={() =>
-              window.open(meetingLink, '_blank', 'noopener,noreferrer')
-            }
-            size="medium"
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: '4px', mr: 1 }}
-          >
-            {t('event.form.joinVisioConference')}
-          </Button>
-          <Tooltip title={t('event.form.copyMeetingLink')}>
-            <IconButton
-              onClick={() => void handleCopyMeetingLink()}
-              size="small"
-              sx={{ color: 'primary.main' }}
-              aria-label={t('event.form.copyMeetingLink')}
-              title={t('event.form.copyMeetingLink')}
-            >
-              <CopyIcon />
-            </IconButton>
-          </Tooltip>
+          <VideoLink
+            meetingLink={meetingLink}
+            icon={cameraIcon}
+            label={t('event.form.joinVisioConference')}
+          />
           <Tooltip title={t('event.form.removeVideoConference')}>
             <IconButton
               onClick={handleDeleteVideoConference}
@@ -181,8 +139,6 @@ export const VideoConferenceField: React.FC<VideoConferenceFieldProps> = ({
   const { t } = useI18n()
   const { isTooSmall: isMobile } = useScreenSizeDetection()
 
-  const [openToast, setOpenToast] = React.useState(false)
-
   const handleAddVideoConference = (): void => {
     const newMeetingLink = generateMeetingLink()
     const updatedDescription = addVideoConferenceToDescription(
@@ -194,16 +150,6 @@ export const VideoConferenceField: React.FC<VideoConferenceFieldProps> = ({
     setMeetingLink(newMeetingLink)
     if (showMore) {
       setShowDescription?.(true)
-    }
-  }
-
-  const handleCopyMeetingLink = async (): Promise<void> => {
-    if (!meetingLink) return
-    try {
-      await navigator.clipboard.writeText(meetingLink)
-      setOpenToast(true)
-    } catch (err) {
-      console.error('Failed to copy link:', err)
     }
   }
 
@@ -228,7 +174,6 @@ export const VideoConferenceField: React.FC<VideoConferenceFieldProps> = ({
             hasVideoConference={hasVideoConference}
             meetingLink={meetingLink}
             cameraIcon={cameraIcon}
-            handleCopyMeetingLink={handleCopyMeetingLink}
             handleDeleteVideoConference={handleDeleteVideoConference}
             handleAddVideoConference={handleAddVideoConference}
           />
@@ -237,18 +182,11 @@ export const VideoConferenceField: React.FC<VideoConferenceFieldProps> = ({
             hasVideoConference={hasVideoConference}
             meetingLink={meetingLink}
             cameraIcon={cameraIcon}
-            handleCopyMeetingLink={handleCopyMeetingLink}
             handleDeleteVideoConference={handleDeleteVideoConference}
             handleAddVideoConference={handleAddVideoConference}
           />
         )}
       </FieldWithLabel>
-
-      <SnackbarAlert
-        setOpen={setOpenToast}
-        open={openToast}
-        message={t('event.form.meetCopied')}
-      />
     </>
   )
 }
