@@ -21,7 +21,18 @@ export default defineConfig({
     distPath: {
       root: 'dist'
     },
-    minify: false
+    minify: true
+  },
+  performance: {
+    chunkSplit: {
+      strategy: 'split-by-experience',
+      forceSplitting: {
+        mui: /node_modules\/(@mui|@emotion)/,
+        fullcalendar: /node_modules\/@fullcalendar/,
+        sentry: /node_modules\/@sentry/,
+        date: /node_modules\/(moment|date-fns|dayjs)/
+      }
+    }
   },
   resolve: {
     alias: {

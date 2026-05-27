@@ -19,7 +19,7 @@ pipeline {
     stages {
       stage('Compile') {
           steps {
-            sh 'npm install'
+            sh 'npm ci'
           }
       }
       stage('Test') {

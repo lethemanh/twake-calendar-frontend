@@ -1,10 +1,24 @@
 FROM nginx:alpine
-RUN apk add gzip
+RUN apk add --no-cache gzip
 COPY nginx.conf /etc/nginx
 COPY dist /usr/share/nginx/html
+
+# Initialize cache_env.conf with defaults so Nginx configuration checks pass during build
+RUN echo "map \$uri \$static_cache_control { default \"no-cache\"; }" > /etc/nginx/conf.d/cache_env.conf && \
+    echo "map \$uri \$html_cache_control { default \"no-cache\"; }" >> /etc/nginx/conf.d/cache_env.conf
+
+# Compress static files at build-time (exclude runtime env config)
+RUN find /usr/share/nginx/html -type f ! -name '.env.js' -exec gzip -k -f {} \;
 
 # Record the exposed port
 EXPOSE 80
 
-# Before stating NGinx, re-zip all the content to ensure customizations are propagated
-CMD gzip -k -r -f /usr/share/nginx/html/ && nginx -g 'daemon off;'
+CMD sh -c 'if [ -f /usr/share/nginx/html/.env.js ] && grep -q -E "DEBUG\s*=\s*true" /usr/share/nginx/html/.env.js; then \
+             echo "map \$uri \$static_cache_control { default \"no-cache\"; }" > /etc/nginx/conf.d/cache_env.conf; \
+             echo "map \$uri \$html_cache_control { default \"no-cache\"; }" >> /etc/nginx/conf.d/cache_env.conf; \
+             echo "Debug mode detected. Disabling Nginx browser cache."; \
+           else \
+             echo "map \$uri \$static_cache_control { default \"public, max-age=31536000, immutable\"; }" > /etc/nginx/conf.d/cache_env.conf; \
+             echo "map \$uri \$html_cache_control { default \"no-store, no-cache, must-revalidate, proxy-revalidate\"; }" >> /etc/nginx/conf.d/cache_env.conf; \
+             echo "Production mode detected. Enabling Nginx browser cache."; \
+           fi && nginx -g "daemon off;"'
