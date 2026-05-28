@@ -188,10 +188,15 @@ function ResponsiveDialog({
       open={open}
       onClose={handleClose}
       maxWidth={false}
-      fullScreen={isMobile && open}
+      fullScreen={isMobile}
       fullWidth
       transitionDuration={isExpanded ? 0 : 300}
-      sx={[baseSx, ...(Array.isArray(sx) ? sx : [sx])]}
+      sx={
+        [
+          ...(baseSx ? [baseSx] : []),
+          ...(Array.isArray(sx) ? (sx as SxProps<Theme>[]) : sx ? [sx] : [])
+        ] as SxProps<Theme>
+      }
       style={isExpanded ? { zIndex: 1200 } : undefined}
       {...otherDialogProps}
     >
@@ -236,10 +241,16 @@ function ResponsiveDialog({
       </DialogTitle>
       <DialogContent
         dividers={dividers}
-        sx={[
-          baseContentSx,
-          ...(Array.isArray(contentSx) ? contentSx : [contentSx])
-        ]}
+        sx={
+          [
+            baseContentSx,
+            ...(Array.isArray(contentSx)
+              ? (contentSx as SxProps<Theme>[])
+              : contentSx
+                ? [contentSx]
+                : [])
+          ] as SxProps<Theme>
+        }
         {...dialogContentProps}
       >
         {isExpanded ? (
