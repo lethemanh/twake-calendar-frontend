@@ -1,3 +1,5 @@
+import { stringAvatar } from '@/components/Event/utils/eventUtils'
+import Tooltip from '@/components/Tooltip'
 import {
   alpha,
   Avatar,
@@ -120,62 +122,68 @@ export const RenderTitle: React.FC<TitleProps> = ({
   const theme = useTheme()
 
   return (
-    <Box
-      display="flex"
-      flexDirection="row"
-      gap={1}
-      sx={{ minWidth: 0, maxWidth: '150px', alignItems: 'center' }}
-    >
-      <Typography
-        sx={{
-          fontWeight: 500,
-          fontSize: '17px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}
+    <Tooltip title={summary || t('event.untitled')}>
+      <Box
+        display="flex"
+        flexDirection="row"
+        gap={1}
+        sx={{ minWidth: 0, width: '150px', alignItems: 'center' }}
       >
-        {summary || t('event.untitled')}
-      </Typography>
-      {isRecurrent && (
-        <RepeatIcon
-          sx={{ flexShrink: 0, color: alpha(theme.palette.grey[900], 0.9) }}
-        />
-      )}
-    </Box>
+        <Typography
+          sx={{
+            fontWeight: 500,
+            fontSize: '17px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {summary || t('event.untitled')}
+        </Typography>
+        {isRecurrent && (
+          <RepeatIcon
+            sx={{ flexShrink: 0, color: alpha(theme.palette.grey[900], 0.9) }}
+          />
+        )}
+      </Box>
+    </Tooltip>
   )
 }
 
 export const RenderOrganizer: React.FC<OrganizerProps> = ({ organizer }) => {
   if (!organizer?.cn && !organizer?.email) return null
+
+  const organizerName = organizer.cn || organizer.email
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        minWidth: '150px',
-        maxWidth: '150px'
-      }}
-    >
-      <Avatar
-        alt={organizer.cn || organizer.email}
-        sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
-      >
-        {(organizer.cn || organizer.email || '').charAt(0).toUpperCase()}
-      </Avatar>
-      <Typography
-        variant="body1"
+    <Tooltip title={organizerName}>
+      <Box
         sx={{
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          flex: 1
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          minWidth: '150px',
+          maxWidth: '150px'
         }}
       >
-        {organizer.cn || organizer.email}
-      </Typography>
-    </Box>
+        <Avatar
+          alt={organizerName}
+          sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
+          {...stringAvatar(organizerName || '')}
+        />
+        <Typography
+          variant="body1"
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            flex: 1
+          }}
+        >
+          {organizerName}
+        </Typography>
+      </Box>
+    </Tooltip>
   )
 }
 
