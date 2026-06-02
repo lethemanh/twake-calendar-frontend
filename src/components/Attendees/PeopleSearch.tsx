@@ -19,7 +19,6 @@ import { useI18n } from 'twake-i18n'
 import { User } from './types'
 import { AttendeeChip, type AttendeeChipProps } from './AttendeeChip'
 import { SearchState } from '../Calendar/utils/tempSearchUtil'
-import { useScreenSizeDetection } from '@/useScreenSizeDetection'
 import {
   usePeopleSearchState,
   normaliseUser,
@@ -159,7 +158,6 @@ export const PeopleSearch: React.FC<PeopleSearchProps> = ({
   inputStyles
 }) => {
   const { t } = useI18n()
-  const { isTooSmall: isMobile } = useScreenSizeDetection()
   const searchPlaceholder = placeholder ?? t('peopleSearch.placeholder')
 
   const searchState = usePeopleSearchState({
@@ -232,7 +230,6 @@ export const PeopleSearch: React.FC<PeopleSearchProps> = ({
               inputError={searchState.inputError}
               searchPlaceholder={searchPlaceholder}
               inputSlot={inputSlot}
-              isMobile={isMobile}
             />
           )
         }

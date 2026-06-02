@@ -6,6 +6,7 @@ import {
 } from '@linagora/twake-mui'
 import PeopleOutlineOutlinedIcon from '@mui/icons-material/PeopleOutlineOutlined'
 import { useI18n } from 'twake-i18n'
+import { useResponsiveInputSize } from '@/hooks/useResponsiveInputSize'
 
 export interface ExtendedAutocompleteRenderInputParams extends AutocompleteRenderInputParams {
   error?: boolean
@@ -24,7 +25,6 @@ export interface PeopleSearchInputProps {
   inputError: string | null
   searchPlaceholder: string
   inputSlot?: (params: ExtendedAutocompleteRenderInputParams) => ReactNode
-  isMobile: boolean
 }
 
 export const PeopleSearchInput: React.FC<PeopleSearchInputProps> = ({
@@ -35,10 +35,11 @@ export const PeopleSearchInput: React.FC<PeopleSearchInputProps> = ({
   isOpen,
   inputError,
   searchPlaceholder,
-  inputSlot,
-  isMobile
+  inputSlot
 }) => {
   const { t } = useI18n()
+
+  const inputSize = useResponsiveInputSize()
 
   const inputProps = {
     ...params.InputProps,
@@ -118,7 +119,7 @@ export const PeopleSearchInput: React.FC<PeopleSearchInputProps> = ({
         {...enhancedParams}
         {...defaultTextFieldProps}
         InputProps={inputProps}
-        size={isMobile ? 'medium' : 'small'}
+        size={inputSize}
         sx={{
           '& .MuiInputBase-input': {
             maxWidth: '90%'
