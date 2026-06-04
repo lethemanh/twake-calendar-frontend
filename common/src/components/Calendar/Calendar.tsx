@@ -1,0 +1,777 @@
+import { useAppDispatch, useAppSelector } from '@common/app/hooks'
+import { setIsMobileSearchOpen } from '@common/features/Calendars/CalendarSlice'
+import EventPopover from '@common/features/Events/EventModal'
+import EventPreviewModal from '@common/components/EventPreview'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import ImportAlert from '@common/features/Events/ImportAlert'
+import SearchResultsPage from '@common/features/Search/SearchResultsPage'
+import { setTimeZone } from '@common/features/Settings/SettingsSlice'
+import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
+import { setDisplayedDateAndRange } from '@common/utils/CalendarRangeManager'
+import { extractEventBaseUuid } from '@common/utils/extractEventBaseUuid'
+import { setSelectedCalendars as setSelectedCalendarsToStorage } from '@common/utils/storage/setSelectedCalendars'
+import { useSelectedCalendars } from '@common/utils/storage/useSelectedCalendars'
+import { browserDefaultTimeZone } from '@common/utils/timezone'
+import type {
+  EventApi,
+  LocaleInput,
+  MoreLinkArg,
+  SlotLabelContentArg
+} from '@fullcalendar/core'
+import { CalendarApi, DateSelectArg } from '@fullcalendar/core'
+import frLocale from '@fullcalendar/core/locales/fr'
+import ruLocale from '@fullcalendar/core/locales/ru'
+import viLocale from '@fullcalendar/core/locales/vi'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import momentTimezonePlugin from '@fullcalendar/moment-timezone'
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import listPlugin from '@fullcalendar/list'
+import { Fab, CircularProgress, Box, Typography } from '@linagora/twake-mui'
+import Tooltip from '@common/components/Tooltip'
+import AddIcon from '@mui/icons-material/Add'
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react'
+import moment from 'moment-timezone'
+import { useI18n } from 'twake-i18n'
+import { useCalendarDataLoader } from '@common/features/Calendars/useCalendarLoader'
+import { User } from '@common/components/Attendees/types'
+import { EventErrorSnackbar } from '@common/components/Error/ErrorSnackbar'
+import { EventErrorHandler } from '@common/components/Error/EventErrorHandler'
+import { EditModeDialog } from '@common/components/Event/EditModeDialog'
+import { Menubar, MenubarProps } from '@common/components/Menubar/Menubar'
+import { TimezoneSelector } from '@common/components/Timezone/TimezoneSelector'
+import './Calendar.styl'
+import './CustomCalendar.styl'
+import { useCalendarEventHandlers } from './hooks/useCalendarEventHandlers'
+import { useCalendarViewHandlers } from './hooks/useCalendarViewHandlers'
+import { useSwipeNavigation } from './hooks/useSwipeNavigation'
+import Sidebar from './Sidebar/SideBar'
+import TempSearchDialog from './TempSearchDialog'
+import { useTouchListener } from './hooks/useTouchListener'
+import {
+  eventToFullCalendarFormat,
+  extractEvents,
+  sortEventsByDateTime,
+  updateSlotLabelVisibility
+} from './utils/calendarUtils'
+import { CALENDAR_VIEWS } from './utils/constants'
+import ViewMoreEvents from './ViewMoreEvents'
+import { TimezoneChangeAlert } from '@common/components/Timezone/TimezoneChangeAlert'
+import { useFindUpcommingEvent } from './hooks/useFindUpcommingEvent'
+import { useAutoScrollToUpcommingEvent } from '@common/components/Event/hooks/useAutoScrollToUpcommingEvent'
+import { usePreserveScrollPositionInScheduleView } from './hooks/usePreserveScrollPositionInScheduleView'
+
+const localeMap: Record<string, LocaleInput | undefined> = {
+  fr: frLocale,
+  ru: ruLocale,
+  vi: viLocale,
+  en: undefined
+}
+
+interface CalendarAppProps {
+  calendarRef: MutableRefObject<CalendarApi | null>
+  onDateChange?: (date: Date) => void
+  onViewChange: (view: string) => void
+  menubarProps?: MenubarProps
+  openSidebar: boolean
+  onCloseSidebar: () => void
+  setCurrentView: (view: string) => void
+  currentView: string
+}
+
+const CalendarApp: React.FC<CalendarAppProps> = ({
+  calendarRef,
+  onDateChange,
+  onViewChange,
+  menubarProps,
+  openSidebar,
+  onCloseSidebar,
+  setCurrentView,
+  currentView
+}: CalendarAppProps) => {
+  const { t, lang } = useI18n()
+
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [debouncedDate, setDebouncedDate] = useState(new Date())
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedDate(selectedDate), 300)
+    return (): void => clearTimeout(t)
+  }, [selectedDate])
+  const [selectedMiniDate, setSelectedMiniDate] = useState(new Date())
+  const calendarWrapperRef = useRef<HTMLDivElement>(null)
+  const userId = useAppSelector(state => state.user.userData?.openpaasId) ?? ''
+  const dispatch = useAppDispatch()
+  const view = useAppSelector(state => state.settings.view)
+  const userData = useAppSelector(state => state.user.userData)
+  const workingDays: number[] | undefined = useAppSelector(
+    state => state.settings.businessHours?.daysOfWeek
+  )
+  const hideWorkingDays = useAppSelector(state => state.settings.workingDays)
+
+  const hideDeclinedEvents = useAppSelector(
+    state => state.settings.hideDeclinedEvents
+  )
+
+  const { isTablet, isTooSmall: isMobile } = useScreenSizeDetection()
+
+  const hiddenDays = useMemo(() => {
+    if (!hideWorkingDays || !workingDays || workingDays.length === 0) return []
+    const validWorkingDays = workingDays.filter(d => d >= 0 && d <= 6)
+    if (validWorkingDays.length === 0) return []
+    return [0, 1, 2, 3, 4, 5, 6].filter(d => !validWorkingDays.includes(d))
+  }, [hideWorkingDays, workingDays])
+
+  const calendars = useAppSelector(state => state.calendars.list)
+  const isPending = useAppSelector(state => state.calendars.pending)
+  const displayWeekNumbers = useAppSelector(
+    state => state.settings.displayWeekNumbers
+  )
+  const tempcalendars = useAppSelector(state => state.calendars.templist)
+  const storedCalendars = useSelectedCalendars()
+  const [selectedCalendars, setSelectedCalendars] =
+    useState<string[]>(storedCalendars)
+
+  const calendarIdsString = useMemo(
+    () =>
+      Object.keys(calendars || {})
+        .sort()
+        .join(','),
+    [calendars]
+  )
+  const calendarIds = useMemo(
+    () => (calendarIdsString ? calendarIdsString.split(',') : []),
+    [calendarIdsString]
+  )
+
+  const timezone =
+    useAppSelector(state => state.settings.timeZone) ?? browserDefaultTimeZone
+
+  // Auto-select personal calendars when first loaded
+  const initialLoadRef = useRef(true)
+  const [eventErrors, setEventErrors] = useState<string[]>([])
+  const errorHandler = useRef(new EventErrorHandler())
+
+  useEffect(() => {
+    const handler = errorHandler.current
+    handler.setErrorCallback(setEventErrors)
+    return (): void => handler.setErrorCallback(() => {})
+  }, [])
+
+  const handleErrorClose = (): void => {
+    setEventErrors([])
+    errorHandler.current.clearAll()
+  }
+
+  useEffect(() => {
+    const updateSelectedCalendars = (): void => {
+      const isValid = initialLoadRef.current && calendarIds.length > 0 && userId
+      if (isValid) {
+        const cached = localStorage.getItem('selectedCalendars')
+        if (cached && cached.length > 0) {
+          const parsed = JSON.parse(cached) as string[]
+          const valid = parsed.filter(id => calendars[id])
+          setSelectedCalendars(valid)
+        } else {
+          const personalCalendarIds = calendarIds.filter(
+            id => extractEventBaseUuid(id) === userId
+          )
+          setSelectedCalendars(personalCalendarIds)
+        }
+        initialLoadRef.current = false
+      }
+    }
+    updateSelectedCalendars()
+  }, [calendarIds, calendars, userId])
+
+  // Save selected cals to cache
+  useEffect(() => {
+    if (calendarIds.length > 0) {
+      setSelectedCalendarsToStorage(selectedCalendars)
+    }
+  }, [selectedCalendars, calendarIds.length])
+
+  useEffect(() => {
+    const updateSelectedCalendarsOnCalendarChange = (): void => {
+      if (calendarIds.length === 0) return
+      const validCalendarIds = new Set(calendarIds)
+      setSelectedCalendars(prev => {
+        const filtered = prev.filter(calId => validCalendarIds.has(calId))
+        if (filtered.length === prev.length) {
+          const unchanged = filtered.every((id, index) => id === prev[index])
+          if (unchanged) {
+            return prev
+          }
+        }
+        return filtered
+      })
+    }
+    updateSelectedCalendarsOnCalendarChange()
+  }, [calendarIds])
+
+  const sortedSelectedCalendars = useMemo(
+    () => [...selectedCalendars].sort(),
+    [selectedCalendars]
+  )
+
+  const tempCalendarIdsString = useMemo(
+    () =>
+      Object.keys(tempcalendars || {})
+        .sort()
+        .join(','),
+    [tempcalendars]
+  )
+  const tempCalendarIds = useMemo(
+    () => (tempCalendarIdsString ? tempCalendarIdsString.split(',') : []),
+    [tempCalendarIdsString]
+  )
+
+  useCalendarDataLoader({
+    selectedDate: debouncedDate,
+    currentView,
+    selectedCalendars,
+    sortedSelectedCalendars,
+    calendarIds,
+    calendarIdsString,
+    tempCalendarIds
+  })
+
+  const filteredEvents: CalendarEvent[] = extractEvents(
+    selectedCalendars,
+    calendars || {},
+    userData?.email,
+    hideDeclinedEvents
+  )
+
+  const filteredTempEvents: CalendarEvent[] = extractEvents(
+    tempCalendarIds,
+    tempcalendars || {},
+    userData?.email,
+    hideDeclinedEvents
+  )
+
+  const fullCalendarEvents = useMemo(() => {
+    return eventToFullCalendarFormat({
+      filteredEvents,
+      filteredTempEvents,
+      userId,
+      userAddress: userData?.email,
+      pending: isPending,
+      calendars,
+      t
+    })
+  }, [
+    filteredEvents,
+    filteredTempEvents,
+    userId,
+    userData?.email,
+    isPending,
+    calendars,
+    t
+  ])
+
+  const filteredCalendarEvents = useMemo(() => {
+    if (currentView !== CALENDAR_VIEWS.listWeek) {
+      return fullCalendarEvents
+    }
+
+    const now = moment().tz(timezone)
+    const startOfToday = now.clone().startOf('day')
+
+    return fullCalendarEvents.filter(event => {
+      if (!event.start) return false
+
+      const eventEnd = event.end
+        ? moment(event.end).tz(timezone)
+        : moment(event.start).tz(timezone)
+      // Keep events that end today or in the future (includes multi-day events that are still ongoing)
+      return eventEnd.isSameOrAfter(startOfToday, 'day')
+    })
+  }, [fullCalendarEvents, currentView, timezone])
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const [openEventDisplay, setOpenEventDisplay] = useState(false)
+  const [eventDisplayedId, setEventDisplayedId] = useState('')
+  const [eventDisplayedTemp, setEventDisplayedTemp] = useState(false)
+  const [eventDisplayedCalId, setEventDisplayedCalId] = useState('')
+
+  // Listen for eventModalError event to reopen modal on API failure
+  useEffect(() => {
+    const handleEventModalError = (e: Event): void => {
+      const event = e as CustomEvent<{
+        type: 'create' | 'update'
+        eventId: string
+        calId: string
+        typeOfAction: string
+      }>
+      if (event.detail?.type === 'create') {
+        // Reopen create event modal
+        setAnchorEl(document.body)
+      } else if (event.detail?.type === 'update') {
+        // Store update modal info to sessionStorage for EventDisplayPreview to pick up
+        try {
+          sessionStorage.setItem(
+            'eventUpdateModalReopen',
+            JSON.stringify({
+              eventId: event.detail.eventId,
+              calId: event.detail.calId,
+              typeOfAction: event.detail.typeOfAction,
+              timestamp: Date.now()
+            })
+          )
+
+          // Open EventDisplayPreview if it's not already open with matching event, so it can pick up the sessionStorage
+          const isCurrentlyDisplayedEvent =
+            openEventDisplay &&
+            eventDisplayedId === event.detail.eventId &&
+            eventDisplayedCalId === event.detail.calId
+          if (!isCurrentlyDisplayedEvent) {
+            setEventDisplayedId(event.detail.eventId)
+            setEventDisplayedCalId(event.detail.calId)
+            setEventDisplayedTemp(false)
+            setOpenEventDisplay(true)
+          } else {
+            // If EventDisplayPreview is already open, trigger reopen by dispatching a custom event
+            window.dispatchEvent(
+              new CustomEvent('eventUpdateModalReopen', {
+                detail: {
+                  eventId: event.detail.eventId,
+                  calId: event.detail.calId,
+                  typeOfAction: event.detail.typeOfAction
+                }
+              })
+            )
+          }
+        } catch {
+          // Ignore sessionStorage errors
+        }
+      }
+    }
+
+    window.addEventListener(
+      'eventModalError',
+      handleEventModalError as EventListener
+    )
+    return (): void => {
+      window.removeEventListener(
+        'eventModalError',
+        handleEventModalError as EventListener
+      )
+    }
+  }, [openEventDisplay, eventDisplayedId, eventDisplayedCalId])
+
+  const [openEditModePopup, setOpenEditModePopup] = useState<string | null>(
+    null
+  )
+  const [, setTypeOfAction] = useState<'solo' | 'all' | undefined>(undefined)
+  const [afterChoiceFunc, setAfterChoiceFunc] = useState<
+    ((type: 'solo' | 'all' | undefined) => void) | undefined
+  >()
+  const [, setSelectedEvent] = useState<CalendarEvent>({} as CalendarEvent)
+  const [selectedRange, setSelectedRange] = useState<DateSelectArg | null>(null)
+
+  const [tempUsers, setTempUsers] = useState<User[]>([])
+  const [tempEvent, setTempEvent] = useState<CalendarEvent>({} as CalendarEvent)
+
+  const [isMoreEventsDrawerOpen, setIsMoreEventsDrawerOpen] = useState(false)
+  const [moreEvents, setMoreEvents] = useState<EventApi[]>([])
+
+  const handleMoreLinkClick = (arg: MoreLinkArg): string | void => {
+    if (!isMobile) return
+
+    setMoreEvents(arg.hiddenSegs.map(seg => seg.event))
+    setIsMoreEventsDrawerOpen(true)
+
+    return 'none'
+  }
+
+  useEffect(() => {
+    if (view !== 'calendar') return
+    const targetView =
+      currentView ||
+      (isTablet ? CALENDAR_VIEWS.timeGridDay : CALENDAR_VIEWS.timeGridWeek)
+
+    if (calendarRef.current?.view.type === targetView) return
+    const id = requestAnimationFrame(() => {
+      if (calendarRef.current?.view.type !== targetView) {
+        calendarRef.current?.changeView(targetView)
+      }
+    })
+    return (): void => cancelAnimationFrame(id)
+  }, [view, isTablet, currentView, calendarRef])
+
+  const upcommingEventId = useFindUpcommingEvent(
+    fullCalendarEvents,
+    currentView
+  )
+
+  useAutoScrollToUpcommingEvent(upcommingEventId)
+
+  // When the preview modal opens in the schedule view, FullCalendar
+  // re-renders event content because getEventAsync updates the calendars store.
+  // This re-render resets the list scroller to the top. We save the current
+  // scroll position immediately and restore it after the re-render settles.
+  usePreserveScrollPositionInScheduleView(openEventDisplay, currentView)
+
+  // Event handlers
+  const eventHandlers = useCalendarEventHandlers({
+    setSelectedRange,
+    setAnchorEl,
+    calendarRef,
+    dispatch,
+    setOpenEventDisplay,
+    setEventDisplayedId,
+    setEventDisplayedCalId,
+    setEventDisplayedTemp,
+    calendars,
+    setSelectedEvent,
+    setAfterChoiceFunc,
+    setOpenEditModePopup,
+    tempUsers,
+    setTempEvent,
+    timezone
+  })
+
+  // View handlers
+  const viewHandlers = useCalendarViewHandlers({
+    calendarRef,
+    setSelectedDate,
+    setSelectedMiniDate,
+    onViewChange: setCurrentView,
+    calendars,
+    tempcalendars,
+    // Note: To preserve current logic, this will temporarily disable eslint for react-hooks/refs
+    // eslint-disable-next-line react-hooks/refs
+    errorHandler: errorHandler.current,
+    timezone,
+    isTablet,
+    isMobile,
+    t,
+    upcommingEventId
+  })
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      window.__calendarRef = calendarRef
+    }
+  }, [calendarRef])
+
+  // Safari (WebKit) sometimes leaves orphaned, absolutely-positioned event
+  // chips on the grid when the event set shrinks — e.g. when a shared calendar
+  // is deselected. The chips' DOM nodes are not repainted away until a reflow
+  // is forced. updateSize() re-runs FullCalendar's layout, forcing the reflow
+  // that clears the stale chips. Scoped to WebKit so other browsers don't pay
+  // for the extra layout pass.
+  useEffect(() => {
+    const isWebKit =
+      typeof navigator !== 'undefined' &&
+      /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    if (!isWebKit) return
+
+    const api = calendarRef.current
+    const wrapper = calendarWrapperRef.current
+    if (!api || !wrapper) return
+
+    const raf = requestAnimationFrame(() => {
+      api.updateSize()
+      wrapper.style.transform = 'translateZ(0)'
+      requestAnimationFrame(() => {
+        wrapper.style.transform = ''
+      })
+    })
+    return (): void => cancelAnimationFrame(raf)
+  }, [sortedSelectedCalendars, fullCalendarEvents, calendarRef])
+
+  useTouchListener(
+    eventHandlers.handleDateSelect,
+    isTablet || isMobile,
+    calendarWrapperRef
+  )
+
+  const { handlers } = useSwipeNavigation(calendarRef, calendarWrapperRef)
+
+  return (
+    <main
+      className={`main-layout calendar-layout ${menubarProps?.isIframe ? ' isInIframe' : ''}`}
+    >
+      <TimezoneChangeAlert />
+      <Sidebar
+        open={openSidebar}
+        onClose={onCloseSidebar}
+        calendarRef={calendarRef}
+        isIframe={menubarProps?.isIframe}
+        onCreateEvent={() => eventHandlers.handleDateSelect(null)}
+        onViewChange={onViewChange}
+        selectedMiniDate={selectedMiniDate}
+        setSelectedMiniDate={setSelectedMiniDate}
+        selectedCalendars={selectedCalendars}
+        setSelectedCalendars={setSelectedCalendars}
+        tempUsers={tempUsers}
+        setTempUsers={setTempUsers}
+        currentView={currentView}
+        onDateChange={onDateChange}
+      />
+      <div className="calendar">
+        <ImportAlert />
+        {menubarProps?.isIframe && <Menubar {...menubarProps} />}
+
+        {view === 'calendar' && (
+          <>
+            {(isTablet || isMobile) && (
+              <Tooltip title={t('tooltip.createEvent')}>
+                <Fab
+                  color="primary"
+                  aria-label={t('event.createEvent')}
+                  onClick={() => eventHandlers.handleDateSelect(null)}
+                  sx={{
+                    position: 'fixed',
+                    bottom: 24,
+                    right: 24,
+                    zIndex: 20,
+                    borderRadius: '16px'
+                  }}
+                >
+                  <AddIcon />
+                </Fab>
+              </Tooltip>
+            )}
+            <div
+              ref={calendarWrapperRef}
+              className={isTablet || isMobile ? 'calendar-swipe-container' : ''}
+              style={{
+                height: '100%',
+                ...(isTablet || isMobile ? { touchAction: 'pan-y' } : {})
+              }}
+              {...(isTablet || isMobile ? handlers : {})}
+            >
+              <FullCalendar
+                key={hiddenDays.join(',')}
+                ref={ref => {
+                  calendarRef.current = ref ? ref.getApi() : null
+                }}
+                plugins={[
+                  dayGridPlugin,
+                  timeGridPlugin,
+                  interactionPlugin,
+                  momentTimezonePlugin,
+                  listPlugin
+                ]}
+                initialView={
+                  currentView ||
+                  (isTablet
+                    ? CALENDAR_VIEWS.timeGridDay
+                    : CALENDAR_VIEWS.timeGridWeek)
+                }
+                initialDate={selectedDate}
+                firstDay={1}
+                editable={true}
+                locale={localeMap[lang]}
+                hiddenDays={hiddenDays}
+                selectable={true}
+                timeZone={timezone}
+                height="100%"
+                select={eventHandlers.handleDateSelect}
+                nowIndicator
+                slotLabelClassNames={arg => [
+                  updateSlotLabelVisibility(new Date(), arg, timezone)
+                ]}
+                nowIndicatorContent={viewHandlers.handleNowIndicatorContent}
+                noEventsContent={(): React.ReactNode => {
+                  return (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '24px'
+                      }}
+                    >
+                      {isPending ? (
+                        <CircularProgress size={24} />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          {t('event.noEventsToDisplay')}
+                        </Typography>
+                      )}
+                    </Box>
+                  )
+                }}
+                noEventsText=""
+                headerToolbar={false}
+                views={{
+                  timeGridWeek: {
+                    titleFormat: { month: 'long', year: 'numeric' }
+                  }
+                }}
+                dayMaxEvents={true}
+                moreLinkClick={handleMoreLinkClick}
+                events={filteredCalendarEvents}
+                eventOrder={(a: unknown, b: unknown) =>
+                  sortEventsByDateTime(a as EventApi, b as EventApi)
+                }
+                weekNumbers={
+                  currentView === CALENDAR_VIEWS.timeGridWeek ||
+                  currentView === CALENDAR_VIEWS.timeGridDay
+                }
+                weekNumberFormat={{ week: 'long' }}
+                weekNumberContent={arg => {
+                  return (
+                    <div className="weekSelector">
+                      {displayWeekNumbers && (
+                        <>
+                          <div>
+                            {t('menubar.views.week')} {arg.num}
+                          </div>
+                          <TimezoneSelector
+                            value={timezone}
+                            referenceDate={
+                              calendarRef.current?.getDate() ?? new Date()
+                            }
+                            onChange={(newTimezone: string) =>
+                              dispatch(setTimeZone(newTimezone))
+                            }
+                          />
+                        </>
+                      )}
+                    </div>
+                  )
+                }}
+                dayCellContent={arg => {
+                  const month = arg.date.toLocaleDateString(t('locale'), {
+                    month: 'short',
+                    timeZone: timezone
+                  })
+                  if (arg.view.type === CALENDAR_VIEWS.dayGridMonth) {
+                    return (
+                      <span
+                        className={`fc-daygrid-day-number ${
+                          arg.isToday ? 'current-date' : ''
+                        }`}
+                      >
+                        {arg.dayNumberText === '1' ? month : ''}{' '}
+                        {arg.dayNumberText}
+                      </span>
+                    )
+                  }
+                }}
+                slotDuration="00:30:00"
+                slotLabelInterval="01:00:00"
+                scrollTimeReset={false}
+                unselectAuto={false}
+                allDayText=""
+                slotLabelFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false
+                }}
+                datesSet={arg => {
+                  onViewChange?.(arg.view.type)
+                  const calendarCurrentDate =
+                    calendarRef.current?.getDate() || new Date(arg.start)
+                  setDisplayedDateAndRange(calendarCurrentDate)
+
+                  if (arg.view.type === CALENDAR_VIEWS.dayGridMonth) {
+                    const start = new Date(arg.start).getTime()
+                    const end = new Date(arg.end).getTime()
+                    const middle = start + (end - start) / 2
+                    setSelectedDate(new Date(middle))
+                    setSelectedMiniDate(calendarCurrentDate)
+                  } else {
+                    setSelectedDate(calendarCurrentDate)
+                    setSelectedMiniDate(calendarCurrentDate)
+                  }
+
+                  // Always use the calendar's current date for consistency
+                  if (onDateChange) {
+                    onDateChange(calendarCurrentDate)
+                  }
+
+                  // Notify parent about view change
+                  setCurrentView(arg.view.type)
+
+                  // Update slot label visibility when view changes
+                  setTimeout(() => {
+                    updateSlotLabelVisibility(
+                      new Date(),
+                      {} as SlotLabelContentArg,
+                      timezone
+                    )
+                  }, 100)
+                }}
+                dayHeaderContent={viewHandlers.handleDayHeaderContent}
+                dayHeaderDidMount={viewHandlers.handleDayHeaderDidMount}
+                dayHeaderWillUnmount={viewHandlers.handleDayHeaderWillUnmount}
+                viewDidMount={viewHandlers.handleViewDidMount}
+                viewWillUnmount={viewHandlers.handleViewWillUnmount}
+                eventClick={eventHandlers.handleEventClick}
+                eventAllow={eventHandlers.handleEventAllow}
+                eventDrop={arg => {
+                  void eventHandlers.handleEventDrop(arg)
+                }}
+                eventResize={arg => {
+                  void eventHandlers.handleEventResize(arg)
+                }}
+                eventContent={viewHandlers.handleEventContent}
+                eventDidMount={viewHandlers.handleEventDidMount}
+              />
+            </div>
+          </>
+        )}
+        {view === 'search' && <SearchResultsPage />}
+        <EventPopover
+          open={Boolean(anchorEl)}
+          onClose={eventHandlers.handleClosePopover}
+          selectedRange={selectedRange}
+          setSelectedRange={setSelectedRange}
+          calendarRef={calendarRef}
+          event={tempEvent}
+        />
+        <EditModeDialog
+          type={openEditModePopup}
+          setOpen={setOpenEditModePopup}
+          eventAction={(type: 'solo' | 'all' | undefined) => {
+            setTypeOfAction(type)
+            if (afterChoiceFunc) {
+              afterChoiceFunc(type)
+            }
+          }}
+        />
+        {openEventDisplay && eventDisplayedId && eventDisplayedCalId && (
+          <EventPreviewModal
+            eventId={eventDisplayedId}
+            calId={eventDisplayedCalId}
+            tempEvent={eventDisplayedTemp}
+            open={openEventDisplay}
+            onClose={eventHandlers.handleCloseEventDisplay}
+          />
+        )}
+        <EventErrorSnackbar messages={eventErrors} onClose={handleErrorClose} />
+      </div>
+
+      {isMobile && (
+        <>
+          <TempSearchDialog
+            tempUsers={tempUsers}
+            setTempUsers={setTempUsers}
+            onClose={() => {
+              dispatch(setIsMobileSearchOpen(false))
+              onCloseSidebar()
+            }}
+            handleToggleEventPreview={() =>
+              eventHandlers.handleDateSelect(null as unknown as DateSelectArg)
+            }
+          />
+          <ViewMoreEvents
+            isOpen={isMoreEventsDrawerOpen}
+            onOpen={() => setIsMoreEventsDrawerOpen(true)}
+            onClose={() => setIsMoreEventsDrawerOpen(false)}
+            moreEvents={moreEvents}
+            handleEventClick={eventHandlers.handleEventClick}
+          />
+        </>
+      )}
+    </main>
+  )
+}
+
+export default CalendarApp

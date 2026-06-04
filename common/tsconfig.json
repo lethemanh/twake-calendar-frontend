@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@common/*": ["./src/*"],
+      "@injected/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "../*.d.ts"]
+}
