@@ -1,19 +1,19 @@
-import SettingsPage from '@/features/Settings/SettingsPage'
+import SettingsPage from '@common/features/Settings/SettingsPage'
 import settingsReducer, {
   setIsBrowserDefaultTimeZone,
   setTimeZone
-} from '@/features/Settings/SettingsSlice'
+} from '@common/features/Settings/SettingsSlice'
 import userReducer, {
   getOpenPaasUserDataAsync,
   setTimezone as setUserTimeZone
-} from '@/features/User/userSlice'
-import { api } from '@/utils/apiUtils'
-import { browserDefaultTimeZone } from '@/utils/timezone'
+} from '@common/features/User/userSlice'
+import { api } from '@common/utils/apiUtils'
+import { browserDefaultTimeZone } from '@common/utils/timezone'
 import { configureStore } from '@reduxjs/toolkit'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 describe('Timezone synchronization after getOpenPaasUserDataAsync', () => {
   let apiGetSpy: jest.SpyInstance

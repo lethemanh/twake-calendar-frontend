@@ -1,19 +1,19 @@
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { getCalendarsListAsync } from '@/features/Calendars/services/getCalendarsListAsync'
-import { CallbackResume } from '@/features/User/LoginCallback'
-import * as oidcAuth from '@/features/User/oidcAuth'
+import { useAppDispatch, useAppSelector } from '@common/app/hooks'
+import { getCalendarsListAsync } from '@common/features/Calendars/services/getCalendarsListAsync'
+import { CallbackResume } from '@common/features/User/LoginCallback'
+import * as oidcAuth from '@common/features/User/oidcAuth'
 import {
   getOpenPaasUserDataAsync,
   setTokens,
   setUserData
-} from '@/features/User/userSlice'
+} from '@common/features/User/userSlice'
 import { render, waitFor } from '@testing-library/react'
 import { replace } from 'redux-first-history'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
-import { setAppLoading } from '@/app/loadingSlice'
+import { setAppLoading } from '@common/app/loadingSlice'
 
 // Mocks
-jest.mock('@/app/hooks', () => ({
+jest.mock('@common/app/hooks', () => ({
   useAppDispatch: jest.fn(),
   useAppSelector: jest.fn(() => ({
     user: {
@@ -30,11 +30,11 @@ jest.mock('@/app/hooks', () => ({
   }))
 }))
 
-jest.mock('@/features/User/oidcAuth', () => ({
+jest.mock('@common/features/User/oidcAuth', () => ({
   Callback: jest.fn()
 }))
 
-jest.mock('@/features/User/userSlice', () => {
+jest.mock('@common/features/User/userSlice', () => {
   const mockGetUser = Object.assign(
     jest.fn(() => ({ type: 'GET_USER_ID' })),
     {
@@ -51,7 +51,7 @@ jest.mock('@/features/User/userSlice', () => {
   }
 })
 
-jest.mock('@/features/Calendars/services/getCalendarsListAsync', () => {
+jest.mock('@common/features/Calendars/services/getCalendarsListAsync', () => {
   const mockGetCalendars = Object.assign(
     jest.fn(() => ({ type: 'GET_CALENDARS' })),
     {

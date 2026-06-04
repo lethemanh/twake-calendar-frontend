@@ -1,8 +1,8 @@
-import { makeSeriesJCal } from '@/features/Events/transformers/makeSeriesJCal'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { makeSearchEventParam } from '@/features/Events/transformers/makeSearchEventParam'
-import { clientConfig } from '@/features/User/oidcAuth'
-import { VCalComponent } from '@/features/Calendars/types/CalendarData'
+import { makeSeriesJCal } from '@common/features/Events/transformers/makeSeriesJCal'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { makeSearchEventParam } from '@common/features/Events/transformers/makeSearchEventParam'
+import { clientConfig } from '@common/features/User/oidcAuth'
+import { VCalComponent } from '@common/features/Calendars/types/CalendarData'
 
 clientConfig.url = 'https://example.com'
 

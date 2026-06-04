@@ -1,4 +1,4 @@
-import { detectUrls } from '@/components/Event/utils/detectUrls'
+import { detectUrls } from '@common/components/Event/utils/detectUrls'
 import React from 'react'
 
 describe('detectUrls', () => {

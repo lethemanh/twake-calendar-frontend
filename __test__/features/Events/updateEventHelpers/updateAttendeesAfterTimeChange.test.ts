@@ -1,7 +1,7 @@
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { updateAttendeesAfterTimeChange } from '@/features/Events/updateEventHelpers/updateAttendeesAfterTimeChange'
-import { userAttendee } from '@/features/User/models/attendee'
-import { userOrganiser } from '@/features/User/userDataTypes'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { updateAttendeesAfterTimeChange } from '@common/features/Events/updateEventHelpers/updateAttendeesAfterTimeChange'
+import { userAttendee } from '@common/features/User/models/attendee'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 describe('updateAttendeesAfterTimeChange', () => {
   const mockAttendee: userAttendee = {

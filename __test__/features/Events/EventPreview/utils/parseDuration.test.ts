@@ -1,4 +1,4 @@
-import { translateDuration } from '@/features/Events/EventPreview/utils/parseDuration'
+import { translateDuration } from '@common/components/EventPreview/utils/parseDuration'
 
 describe('translateDuration', () => {
   const mockT = jest.fn(

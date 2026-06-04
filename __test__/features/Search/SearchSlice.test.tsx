@@ -1,12 +1,12 @@
-import * as EventDao from '@/features/Events/EventDao'
+import * as EventDao from '@common/features/Events/EventDao'
 import searchResultReducer, {
   searchEventsAsync,
   setHits,
   setResults
-} from '@/features/Search/SearchSlice'
+} from '@common/features/Search/SearchSlice'
 import { configureStore } from '@reduxjs/toolkit'
 
-jest.mock('@/features/Events/EventDao')
+jest.mock('@common/features/Events/EventDao')
 
 describe('SearchSlice', () => {
   let store: any

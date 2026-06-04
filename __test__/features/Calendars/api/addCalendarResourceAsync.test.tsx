@@ -1,12 +1,12 @@
-import { addCalendarResourceAsync } from '@/features/Calendars/services'
-import { calendarAction } from '@/features/Calendars/CalendarDAO'
-import { fetchOwnerOfResource } from '@/features/Calendars/services/helpers'
-import { toRejectedError } from '@/utils/errorUtils'
+import { addCalendarResourceAsync } from '@common/features/Calendars/services'
+import { calendarAction } from '@common/features/Calendars/CalendarDAO'
+import { fetchOwnerOfResource } from '@common/features/Calendars/services/helpers'
+import { toRejectedError } from '@common/utils/errorUtils'
 import { configureStore } from '@reduxjs/toolkit'
 
-jest.mock('@/features/Calendars/CalendarDAO')
-jest.mock('@/features/Calendars/services/helpers')
-jest.mock('@/utils/errorUtils')
+jest.mock('@common/features/Calendars/CalendarDAO')
+jest.mock('@common/features/Calendars/services/helpers')
+jest.mock('@common/utils/errorUtils')
 
 const mockedCalendarAction = calendarAction as jest.Mock
 const mockedFetchOwnerOfResource = fetchOwnerOfResource as jest.Mock

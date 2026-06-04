@@ -1,4 +1,4 @@
-import CalendarLayout from '@/components/Calendar/CalendarLayout'
+import CalendarLayout from '@common/components/Calendar/CalendarLayout'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 

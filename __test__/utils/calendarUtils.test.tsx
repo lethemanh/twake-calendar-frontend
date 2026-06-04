@@ -1,11 +1,11 @@
 import {
   eventToFullCalendarFormat,
   getCalendarVisibility
-} from '@/components/Calendar/utils/calendarUtils'
-import { Calendar, DelegationAccess } from '@/features/Calendars/CalendarTypes'
-import { AclEntry } from '@/features/Calendars/types/CalendarData'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { userOrganiser } from '@/features/User/userDataTypes'
+} from '@common/components/Calendar/utils/calendarUtils'
+import { Calendar, DelegationAccess } from '@common/types/CalendarTypes'
+import { AclEntry } from '@common/features/Calendars/types/CalendarData'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 describe('getCalendarVisibility', () => {
   it("returns 'public' when {DAV:}authenticated has {DAV:}read", () => {

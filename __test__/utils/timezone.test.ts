@@ -1,0 +1,34 @@
+import { convertEventDateTimeToISO } from '@common/utils/timezone'
+
+describe('convertEventDateTimeToISO', () => {
+  it('should format a basic date-time string in UTC correctly', () => {
+    const result = convertEventDateTimeToISO('20240405T150000Z', 'UTC')
+    expect(result).toBe('2024-04-05T15:00:00Z')
+  })
+
+  it('should format a basic date-time string with numeric offset correctly', () => {
+    const result = convertEventDateTimeToISO(
+      '20240308T170000+0100',
+      'Europe/Paris'
+    )
+    expect(result).toBe('2024-03-08T17:00:00+01:00')
+  })
+
+  it('should format a basic floating date-time string in a timezone correctly to local moment ISO', () => {
+    const result = convertEventDateTimeToISO('20240308T170000', 'Europe/Paris')
+    expect(result).toBe('2024-03-08T16:00:00.000Z') // UTC-normalized equivalent of Europe/Paris winter time (UTC+1)
+  })
+
+  it('should leave an already normalized extended ISO string in UTC unchanged', () => {
+    const result = convertEventDateTimeToISO('2024-04-05T15:00:00Z', 'UTC')
+    expect(result).toBe('2024-04-05T15:00:00Z')
+  })
+
+  it('should leave an already normalized extended ISO string with offset unchanged', () => {
+    const result = convertEventDateTimeToISO(
+      '2024-03-08T17:00:00+01:00',
+      'Europe/Paris'
+    )
+    expect(result).toBe('2024-03-08T17:00:00+01:00')
+  })
+})

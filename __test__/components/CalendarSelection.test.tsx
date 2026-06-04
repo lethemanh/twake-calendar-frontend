@@ -1,5 +1,5 @@
-import CalendarSelection from '@/components/Calendar/CalendarSelection'
-import * as calendarThunks from '@/features/Calendars/services'
+import CalendarSelection from '@common/components/Calendar/CalendarSelection'
+import * as calendarThunks from '@common/features/Calendars/services'
 import '@testing-library/jest-dom'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'

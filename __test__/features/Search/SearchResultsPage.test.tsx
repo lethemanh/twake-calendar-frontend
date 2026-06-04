@@ -1,4 +1,4 @@
-import SearchResultsPage from '@/features/Search/SearchResultsPage'
+import SearchResultsPage from '@common/features/Search/SearchResultsPage'
 import { screen } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 

@@ -1,12 +1,12 @@
-import { CALENDAR_VIEWS } from '@/components/Calendar/utils/constants'
-import { Menubar } from '@/components/Menubar/Menubar'
-import * as oidcAuth from '@/features/User/oidcAuth'
-import { redirectTo } from '@/utils/navigation'
+import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
+import { Menubar } from '@common/components/Menubar/Menubar'
+import * as oidcAuth from '@common/features/User/oidcAuth'
+import { redirectTo } from '@common/utils/navigation'
 import '@testing-library/jest-dom'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/utils/navigation', () => ({
+jest.mock('@common/utils/navigation', () => ({
   redirectTo: jest.fn()
 }))
 

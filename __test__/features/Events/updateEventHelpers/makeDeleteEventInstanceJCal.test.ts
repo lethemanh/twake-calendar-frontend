@@ -1,9 +1,9 @@
 import {
   VObjectProperty,
   VCalComponent
-} from '@/features/Calendars/types/CalendarData'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { makeDeleteEventInstanceJCal } from '@/features/Events/transformers'
+} from '@common/features/Calendars/types/CalendarData'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { makeDeleteEventInstanceJCal } from '@common/features/Events/transformers'
 
 /** Minimal jCal VEVENT with no recurrence-id → master event */
 function makeMasterVEvent(extraProps: VObjectProperty[] = []): VCalComponent {

@@ -1,7 +1,7 @@
-import { api } from '@/utils/apiUtils'
-import { fetchWebSocketTicket } from '@/websocket/api/fetchWebSocketTicket'
+import { api } from '@common/utils/apiUtils'
+import { fetchWebSocketTicket } from '@common/websocket/api/fetchWebSocketTicket'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 describe('fetchWebSocketTicket', () => {
   const mockTicket = {

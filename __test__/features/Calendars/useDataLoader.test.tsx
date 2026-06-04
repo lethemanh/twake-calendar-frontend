@@ -12,23 +12,23 @@ import {
   mergeInterval,
   subtractIntervals,
   Interval
-} from '@/features/Calendars/useCalendarLoader'
+} from '@common/features/Calendars/useCalendarLoader'
 
 const mockDispatch = jest.fn()
 const mockGetState = jest.fn()
 
-jest.mock('@/app/hooks', () => ({
+jest.mock('@common/app/hooks', () => ({
   useAppDispatch: () => mockDispatch,
   useAppSelector: (selector: (s: unknown) => unknown) =>
     selector(mockGetState())
 }))
 
 const mockGetCalendarDetailAsync = jest.fn()
-jest.mock('@/features/Calendars/services', () => ({
+jest.mock('@common/features/Calendars/services', () => ({
   getCalendarDetailAsync: (args: unknown) => mockGetCalendarDetailAsync(args)
 }))
 
-jest.mock('@/utils/dateUtils', () => ({
+jest.mock('@common/utils/dateUtils', () => ({
   formatDateToYYYYMMDDTHHMMSS: (d: Date) => d.toISOString(),
   getViewRange: (_date: Date, _view: string) => ({
     start: new Date('2024-01-01T00:00:00Z'),
@@ -40,7 +40,7 @@ jest.mock('@/utils/dateUtils', () => ({
   })
 }))
 
-jest.mock('@/components/Calendar/utils/constants', () => ({
+jest.mock('@common/components/Calendar/utils/constants', () => ({
   CALENDAR_VIEWS: { dayGridMonth: 'dayGridMonth' }
 }))
 

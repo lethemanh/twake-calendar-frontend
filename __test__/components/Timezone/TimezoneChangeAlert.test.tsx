@@ -1,9 +1,9 @@
 import { screen, fireEvent, act } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
-import TimezoneChangeAlert from '@/components/Timezone/TimezoneChangeAlert'
+import TimezoneChangeAlert from '@common/components/Timezone/TimezoneChangeAlert'
 
-jest.mock('@/features/User/userSlice', () => {
-  const actual = jest.requireActual('@/features/User/userSlice')
+jest.mock('@common/features/User/userSlice', () => {
+  const actual = jest.requireActual('@common/features/User/userSlice')
   return {
     ...actual,
     updateUserConfigurationsAsync: jest.fn().mockImplementation(() => {

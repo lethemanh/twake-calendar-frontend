@@ -1,5 +1,5 @@
-import { makeRecurrenceString } from '@/features/Events/EventPreview/utils/makeRecurrenceString'
-import { RepetitionObject } from '@/features/Events/EventsTypes'
+import { makeRecurrenceString } from '@common/components/EventPreview/utils/makeRecurrenceString'
+import { RepetitionObject } from '@common/types/EventsTypes'
 
 describe('makeRecurrenceString', () => {
   const mockT = jest.fn((key: string, params?: any) => {

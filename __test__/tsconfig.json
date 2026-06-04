@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["jest", "@testing-library/jest-dom"],
+    "paths": {
+      "@/common/*": ["../common/src/*"],
+      "@common/*": ["../common/src/*"],
+      "@/*": ["../apps/calendar/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../common/src/*.d.ts"]
+}

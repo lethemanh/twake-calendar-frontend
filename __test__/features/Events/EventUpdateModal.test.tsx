@@ -1,12 +1,12 @@
-import * as CalendarDAO from '@/features/Calendars/CalendarDAO'
-import * as EventDao from '@/features/Events/EventDao'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import EventUpdateModal from '@/features/Events/EventUpdateModal'
+import * as CalendarDAO from '@common/features/Calendars/CalendarDAO'
+import * as EventDao from '@common/features/Events/EventDao'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import EventUpdateModal from '@common/features/Events/EventUpdateModal'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/features/Events/EventDao')
-jest.mock('@/features/Calendars/CalendarDAO')
+jest.mock('@common/features/Events/EventDao')
+jest.mock('@common/features/Calendars/CalendarDAO')
 
 describe('EventUpdateModal Timezone Handling', () => {
   const mockOnClose = jest.fn()

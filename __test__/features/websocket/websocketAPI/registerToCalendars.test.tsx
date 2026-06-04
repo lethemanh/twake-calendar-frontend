@@ -1,4 +1,4 @@
-import { registerToCalendars } from '@/websocket/operations/registerToCalendars'
+import { registerToCalendars } from '@common/websocket/operations/registerToCalendars'
 
 describe('registerToCalendars', () => {
   let mockSocket: any

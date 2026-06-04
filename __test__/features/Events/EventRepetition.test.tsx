@@ -1,19 +1,19 @@
-import { RootState } from '@/app/store'
+import { RootState } from '@common/app/store'
 import {
   createEventHandlers,
   EventHandlersProps
-} from '@/components/Calendar/handlers/eventHandlers'
-import { EditModeDialog } from '@/components/Event/EditModeDialog'
-import * as eventThunks from '@/features/Calendars/services'
-import * as EventDao from '@/features/Events/EventDao'
-import EventPreviewModal from '@/features/Events/EventPreview'
-import EventUpdateModal from '@/features/Events/EventUpdateModal'
+} from '@common/components/Calendar/handlers/eventHandlers'
+import { EditModeDialog } from '@common/components/Event/EditModeDialog'
+import * as eventThunks from '@common/features/Calendars/services'
+import * as EventDao from '@common/features/Events/EventDao'
+import EventPreviewModal from '@common/components/EventPreview'
+import EventUpdateModal from '@common/features/Events/EventUpdateModal'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
-import { VcalendarProperties } from '@/features/Calendars/types/VcalendarProperties'
+import { VcalendarProperties } from '@common/features/Calendars/types/VcalendarProperties'
 
-jest.mock('@/components/Event/utils/eventUtils', () => {
-  const actual = jest.requireActual('@/components/Event/utils/eventUtils')
+jest.mock('@common/components/Event/utils/eventUtils', () => {
+  const actual = jest.requireActual('@common/components/Event/utils/eventUtils')
   return {
     ...actual,
     refreshCalendars: jest.fn(() => Promise.resolve()),
@@ -1021,7 +1021,7 @@ describe('handleRSVP function', () => {
 
     const {
       handleRSVP
-    } = require('@/components/Event/eventHandlers/eventHandlers')
+    } = require('@common/components/Event/eventHandlers/eventHandlers')
 
     jest.spyOn(eventThunks, 'putEventAsync').mockImplementation(payload => {
       const promise = Promise.resolve(payload)
@@ -1073,7 +1073,7 @@ describe('handleDelete function', () => {
 
     const {
       handleDelete
-    } = require('@/components/Event/eventHandlers/eventHandlers')
+    } = require('@common/components/Event/eventHandlers/eventHandlers')
 
     jest.spyOn(eventThunks, 'deleteEventAsync').mockImplementation(payload => {
       return () => Promise.resolve(payload) as any
@@ -1107,7 +1107,7 @@ describe('handleDelete function', () => {
 
     const {
       handleDelete
-    } = require('@/components/Event/eventHandlers/eventHandlers')
+    } = require('@common/components/Event/eventHandlers/eventHandlers')
 
     jest
       .spyOn(eventThunks, 'deleteEventInstanceAsync')
@@ -1138,7 +1138,7 @@ describe('handleDelete function', () => {
 
     const {
       handleDelete
-    } = require('@/components/Event/eventHandlers/eventHandlers')
+    } = require('@common/components/Event/eventHandlers/eventHandlers')
 
     jest.spyOn(eventThunks, 'deleteEventAsync').mockImplementation(payload => {
       return () => Promise.resolve(payload) as any

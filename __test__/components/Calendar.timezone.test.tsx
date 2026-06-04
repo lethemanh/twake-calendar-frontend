@@ -1,5 +1,5 @@
-import CalendarLayout from '@/components/Calendar/CalendarLayout'
-import { CALENDAR_VIEWS } from '@/components/Calendar/utils/constants'
+import CalendarLayout from '@common/components/Calendar/CalendarLayout'
+import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
 import { act, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 

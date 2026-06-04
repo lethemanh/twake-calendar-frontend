@@ -1,16 +1,16 @@
-import * as CalendarDAO from '@/features/Calendars/CalendarDAO'
-import reducer from '@/features/Calendars/CalendarSlice'
-import { Calendar } from '@/features/Calendars/CalendarTypes'
+import * as CalendarDAO from '@common/features/Calendars/CalendarDAO'
+import reducer from '@common/features/Calendars/CalendarSlice'
+import { Calendar } from '@common/types/CalendarTypes'
 import {
   refreshCalendarWithSyncToken,
   SyncTokenUpdates
-} from '@/features/Calendars/services/refreshCalendar'
-import * as EventDao from '@/features/Events/EventDao'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
+} from '@common/features/Calendars/services/refreshCalendar'
+import * as EventDao from '@common/features/Events/EventDao'
+import { CalendarEvent } from '@common/types/EventsTypes'
 import { configureStore } from '@reduxjs/toolkit'
 
-jest.mock('@/features/Calendars/CalendarDAO')
-jest.mock('@/features/Events/EventDao')
+jest.mock('@common/features/Calendars/CalendarDAO')
+jest.mock('@common/features/Events/EventDao')
 
 describe('refreshCalendarWithSyncToken', () => {
   const mockCalendar: Calendar = {

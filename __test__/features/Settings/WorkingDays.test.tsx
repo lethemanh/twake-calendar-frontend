@@ -1,15 +1,15 @@
-import SettingsPage from '@/features/Settings/SettingsPage'
-import settingsReducer from '@/features/Settings/SettingsSlice'
+import SettingsPage from '@common/features/Settings/SettingsPage'
+import settingsReducer from '@common/features/Settings/SettingsSlice'
 import userReducer, {
   getOpenPaasUserDataAsync
-} from '@/features/User/userSlice'
-import { api } from '@/utils/apiUtils'
+} from '@common/features/User/userSlice'
+import { api } from '@common/utils/apiUtils'
 import { configureStore } from '@reduxjs/toolkit'
 import '@testing-library/jest-dom'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 const basePreloadedState = {
   user: {

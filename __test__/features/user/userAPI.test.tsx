@@ -1,19 +1,19 @@
-import { clientConfig } from '@/features/User/oidcAuth'
-import { fetchResourceById } from '@/features/User/ResourceDAO'
+import { clientConfig } from '@common/features/User/oidcAuth'
+import { fetchResourceById } from '@common/features/User/ResourceDAO'
 import {
   getOpenPaasUser,
   getUserDetails,
   updateUserConfigurations
-} from '@/features/User/userAPI'
+} from '@common/features/User/userAPI'
 import {
   fetchCurrentUser,
   fetchUserById,
   patchConfigurations
-} from '@/features/User/UserDao'
-import { api } from '@/utils/apiUtils'
+} from '@common/features/User/UserDao'
+import { api } from '@common/utils/apiUtils'
 
-jest.mock('@/features/User/UserDao')
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/features/User/UserDao')
+jest.mock('@common/utils/apiUtils')
 
 clientConfig.url = 'https://example.com'
 

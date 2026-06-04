@@ -1,5 +1,5 @@
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { makeVevent } from '@/features/Events/utils'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { makeVevent } from '@common/features/Events/utils'
 
 const TZID = 'Europe/Paris'
 const OWNER = 'owner@example.com'

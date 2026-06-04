@@ -1,15 +1,15 @@
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { AttendanceValidation } from '@/features/Events/AttendanceValidation/AttendanceValidation'
-import { ContextualizedEvent } from '@/features/Events/EventsTypes'
-import { userAttendee } from '@/features/User/models/attendee'
-import { userData } from '@/features/User/userDataTypes'
+import { Calendar } from '@common/types/CalendarTypes'
+import { AttendanceValidation } from '@common/features/Events/AttendanceValidation/AttendanceValidation'
+import { ContextualizedEvent } from '@common/types/EventsTypes'
+import { userAttendee } from '@common/features/User/models/attendee'
+import { userData } from '@common/features/User/userDataTypes'
 import { render } from '@testing-library/react'
 
 jest.mock('twake-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key })
 }))
 
-jest.mock('@/app/hooks', () => ({
+jest.mock('@common/app/hooks', () => ({
   useAppDispatch: () => jest.fn(),
   useAppSelector: jest.fn()
 }))

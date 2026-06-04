@@ -1,23 +1,25 @@
-import { AppDispatch, RootState, store } from '@/app/store'
-import { refreshCalendarWithSyncToken } from '@/features/Calendars/services/refreshCalendar'
-import { getDisplayedCalendarRange } from '@/utils/CalendarRangeManager'
-import { updateCalendars } from '@/websocket/messaging/updateCalendars'
-import { WS_INBOUND_EVENTS } from '@/websocket/protocols'
+import { AppDispatch, RootState, store } from '@common/app/store'
+import { refreshCalendarWithSyncToken } from '@common/features/Calendars/services/refreshCalendar'
+import { getDisplayedCalendarRange } from '@common/utils/CalendarRangeManager'
+import { updateCalendars } from '@common/websocket/messaging/updateCalendars'
+import { WS_INBOUND_EVENTS } from '@common/websocket/protocols'
 import { waitFor } from '@testing-library/dom'
-import { getCalendarDetailAsync } from '@/features/Calendars/services/getCalendarDetailAsync'
-import { emptyEventsCal } from '@/features/Calendars/CalendarSlice'
-import { formatDateToYYYYMMDDTHHMMSS } from '@/utils/dateUtils'
+import { getCalendarDetailAsync } from '@common/features/Calendars/services/getCalendarDetailAsync'
+import { emptyEventsCal } from '@common/features/Calendars/CalendarSlice'
+import { formatDateToYYYYMMDDTHHMMSS } from '@common/utils/dateUtils'
 
-jest.mock('@/features/Calendars/services/refreshCalendar')
-jest.mock('@/utils/CalendarRangeManager')
-jest.mock('@/features/Calendars/services/getCalendarDetailAsync', () => ({
+jest.mock('@common/features/Calendars/services/refreshCalendar')
+jest.mock('@common/utils/CalendarRangeManager')
+jest.mock('@common/features/Calendars/services/getCalendarDetailAsync', () => ({
   getCalendarDetailAsync: jest.fn(args => ({
     type: 'mock/getCalendarDetailAsync',
     payload: args
   }))
 }))
-jest.mock('@/features/Calendars/CalendarSlice', () => {
-  const original = jest.requireActual('@/features/Calendars/CalendarSlice')
+jest.mock('@common/features/Calendars/CalendarSlice', () => {
+  const original = jest.requireActual(
+    '@common/features/Calendars/CalendarSlice'
+  )
   return {
     ...original,
     emptyEventsCal: jest.fn(args => ({
@@ -26,7 +28,7 @@ jest.mock('@/features/Calendars/CalendarSlice', () => {
     }))
   }
 })
-jest.mock('@/app/store', () => ({
+jest.mock('@common/app/store', () => ({
   store: {
     getState: jest.fn()
   }

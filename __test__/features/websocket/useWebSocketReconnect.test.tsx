@@ -1,14 +1,14 @@
-import { getRetryDelay } from '@/utils/getRetryDelay'
+import { getRetryDelay } from '@common/utils/getRetryDelay'
 import {
   MAX_RECONNECT_ATTEMPTS,
   RECONNECT_CONFIG,
   useWebSocketReconnect
-} from '@/websocket/connection/lifecycle/useWebSocketReconnect'
+} from '@common/websocket/connection/lifecycle/useWebSocketReconnect'
 import { act, renderHook } from '@testing-library/react'
 import { MutableRefObject } from 'react'
 
 // Mock the retry delay utility
-jest.mock('@/utils/getRetryDelay')
+jest.mock('@common/utils/getRetryDelay')
 const mockGetRetryDelay = getRetryDelay as jest.MockedFunction<
   typeof getRetryDelay
 >
