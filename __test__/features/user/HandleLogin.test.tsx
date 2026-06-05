@@ -1,6 +1,6 @@
 import * as appHooks from '@common/app/hooks'
 import { AppDispatch, setupStore } from '@common/app/store'
-import HandleLogin from '@common/features/User/HandleLogin'
+import HandleLogin from '@private/features/User/HandleLogin'
 import * as oidcAuth from '@common/features/User/oidcAuth'
 import { clientConfig } from '@common/features/User/oidcAuth'
 import { useInitializeApp } from '@common/features/User/useInitializeApp'

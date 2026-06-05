@@ -2,16 +2,55 @@ import { useAppDispatch, useAppSelector } from '@common/app/hooks'
 import { useEffect, useRef } from 'react'
 import { replace } from 'redux-first-history'
 import { getCalendarsListAsync } from '@common/features/Calendars/services'
-import { Callback } from './oidcAuth'
+import { Callback } from '@common/features/User/oidcAuth'
 import {
   getOpenPaasUserDataAsync,
   setTokens,
   setUserData,
   setUserError
-} from './userSlice'
+} from '@common/features/User/userSlice'
 import { setAppLoading } from '@common/app/loadingSlice'
 
-export function CallbackResume() {
+interface RedirectState {
+  code_verifier: string
+  state: string
+}
+
+const getSavedRedirectState = (): RedirectState | null => {
+  const item = sessionStorage.getItem('redirectState')
+  if (!item) return null
+  try {
+    const parsed = JSON.parse(item) as RedirectState
+
+    if (parsed.code_verifier && parsed.state) {
+      return parsed
+    }
+  } catch {
+    console.error('Invalid redirectState')
+  }
+  return null
+}
+
+const hasSavedToken = (): boolean => {
+  return sessionStorage.getItem('tokenSet') !== null
+}
+
+const getErrorMessage = (error: unknown): string => {
+  return error instanceof Error ? error.message : 'OAuth callback failed'
+}
+
+const processCallbackData = async (
+  codeVerifier: string,
+  state: string
+): Promise<{ userinfo: User; tokenSet: TokenSet }> => {
+  const data = await Callback(codeVerifier, state)
+  if (!data?.userinfo || !data?.tokenSet) {
+    throw new Error('OAuth callback failed')
+  }
+  return data
+}
+
+export const CallbackResume: React.FC = () => {
   const dispatch = useAppDispatch()
   const hasRun = useRef(false)
   const hasNavigated = useRef(false)
@@ -25,27 +64,16 @@ export function CallbackResume() {
     }
     hasRun.current = true
 
-    const runCallback = async () => {
-      // Read redirectState inside useEffect to avoid stale closures
-      const saved = sessionStorage.getItem('redirectState')
-        ? JSON.parse(sessionStorage.getItem('redirectState') ?? '{}')
-        : null
-
-      // Check if we have saved tokens (already logged in)
-      const savedToken = sessionStorage.getItem('tokenSet')
-        ? JSON.parse(sessionStorage.getItem('tokenSet') ?? '{}')
-        : null
+    const runCallback = async (): Promise<void> => {
+      const saved = getSavedRedirectState()
+      const savedToken = hasSavedToken()
 
       // If no redirectState but we have saved session, just go home
       // This can happen if user refreshes callback page or gets redirected here after already logged in
-      if (!saved?.code_verifier) {
-        if (savedToken) {
-          sessionStorage.removeItem('redirectState')
-          dispatch(replace('/'))
-          return
+      if (!saved) {
+        if (!savedToken) {
+          console.warn('Missing redirectState')
         }
-
-        console.warn('Missing redirectState')
         sessionStorage.removeItem('redirectState')
         dispatch(replace('/'))
         return
@@ -54,11 +82,7 @@ export function CallbackResume() {
       try {
         dispatch(setAppLoading(true))
 
-        const data = await Callback(saved.code_verifier, saved.state)
-
-        if (!data || !data.userinfo || !data.tokenSet) {
-          throw new Error('OAuth callback failed')
-        }
+        const data = await processCallbackData(saved.code_verifier, saved.state)
 
         // IMPORTANT: Save tokens to sessionStorage FIRST before making any API calls
         // because API calls will read token from sessionStorage
@@ -75,14 +99,12 @@ export function CallbackResume() {
       } catch (e) {
         console.error('OIDC callback error:', e)
         dispatch(setAppLoading(false))
-        dispatch(
-          setUserError(e instanceof Error ? e.message : 'OAuth callback failed')
-        )
+        dispatch(setUserError(getErrorMessage(e)))
         dispatch(replace('/error'))
       }
     }
 
-    runCallback()
+    void runCallback()
   }, [dispatch])
 
   // Navigate to /calendar only when all data is ready

@@ -58,7 +58,10 @@ export async function Logout() {
 export async function Callback(
   code_verifier: string,
   state: string | undefined
-) {
+): Promise<{
+  tokenSet: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
+  userinfo: client.UserInfoResponse
+} | void> {
   try {
     const openIdClientConfig = await getClientConfig()
     const currentLocation = getLocation()

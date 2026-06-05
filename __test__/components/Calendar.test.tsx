@@ -1,5 +1,5 @@
 import CalendarApp from '@common/components/Calendar/Calendar'
-import CalendarLayout from '@common/components/Calendar/CalendarLayout'
+import CalendarLayout from '@private/components/Calendar/CalendarLayout'
 import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
 import * as calendarDetailThunks from '@common/features/Calendars/services'
 import * as servicesModule from '@common/features/Calendars/services'

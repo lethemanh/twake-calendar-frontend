@@ -57,6 +57,7 @@
     "test": "jest",
     "lint": "eslint apps common",
     "lint:fix": "eslint apps common --fix",
+    "copy-from-common": "node scripts/copy-from-common.js",
     "jest-preview": "jest-preview"
   },
   "browserslist": {

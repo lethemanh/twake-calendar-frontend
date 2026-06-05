@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { push } from 'redux-first-history'
 import { setAppLoading } from '@common/app/loadingSlice'
 
-export function HandleLogin() {
+export const HandleLogin: React.FC = () => {
   const userData = useAppSelector(state => state.user)
   const calendars = useAppSelector(state => state.calendars)
   const dispatch = useAppDispatch()

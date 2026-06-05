@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@common/app/hooks'
 import { getCalendarsListAsync } from '@common/features/Calendars/services/getCalendarsListAsync'
-import { CallbackResume } from '@common/features/User/LoginCallback'
+import { CallbackResume } from '@private/features/User/LoginCallback'
 import * as oidcAuth from '@common/features/User/oidcAuth'
 import {
   getOpenPaasUserDataAsync,

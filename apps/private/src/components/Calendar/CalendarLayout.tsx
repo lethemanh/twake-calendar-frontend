@@ -9,8 +9,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ErrorSnackbar } from '@common/components/Error/ErrorSnackbar'
 import { refreshCalendars } from '@common/components/Event/utils/eventUtils'
 import { Menubar, MenubarProps } from '@common/components/Menubar/Menubar'
-import CalendarApp from './Calendar'
-import { CALENDAR_VIEWS } from './utils/constants'
+import CalendarApp from '@common/components/Calendar/Calendar'
+import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
 import { setView } from '@common/features/Settings/SettingsSlice'
 
 export default function CalendarLayout(): JSX.Element {
