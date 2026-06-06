@@ -456,6 +456,32 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
     }
   }, [calendarRef])
 
+  // Safari (WebKit) sometimes leaves orphaned, absolutely-positioned event
+  // chips on the grid when the event set shrinks — e.g. when a shared calendar
+  // is deselected. The chips' DOM nodes are not repainted away until a reflow
+  // is forced. updateSize() re-runs FullCalendar's layout, forcing the reflow
+  // that clears the stale chips. Scoped to WebKit so other browsers don't pay
+  // for the extra layout pass.
+  useEffect(() => {
+    const isWebKit =
+      typeof navigator !== 'undefined' &&
+      /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    if (!isWebKit) return
+
+    const api = calendarRef.current
+    const wrapper = calendarWrapperRef.current
+    if (!api || !wrapper) return
+
+    const raf = requestAnimationFrame(() => {
+      api.updateSize()
+      wrapper.style.transform = 'translateZ(0)'
+      requestAnimationFrame(() => {
+        wrapper.style.transform = ''
+      })
+    })
+    return (): void => cancelAnimationFrame(raf)
+  }, [sortedSelectedCalendars, fullCalendarEvents, calendarRef])
+
   useTouchListener(
     eventHandlers.handleDateSelect,
     isTablet || isMobile,
