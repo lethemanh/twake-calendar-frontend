@@ -10,6 +10,6 @@
       "@injected/*": ["../../common/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "../../common/**/**.d.ts"],
   "references": [{ "path": "../../common" }]
 }

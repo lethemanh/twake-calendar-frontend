@@ -23,5 +23,5 @@ export function getInjectedAliases(
     {} as Record<string, string>
   )
 
-  return { ...baseAliases, ...resolvedOverrides }
+  return { ...resolvedOverrides, ...baseAliases }
 }

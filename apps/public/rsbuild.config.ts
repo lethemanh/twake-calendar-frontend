@@ -1,3 +1,4 @@
+import path from 'path'
 import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginStylus } from '@rsbuild/plugin-stylus'
@@ -42,9 +43,11 @@ export default defineConfig({
     }
   },
   resolve: {
+    aliasStrategy: 'prefer-alias',
     alias: {
       ...getInjectedAliases(__dirname, injectedAliases),
-      '@': './src',
+      '@': path.resolve(__dirname, './src'),
+      '@common': path.resolve(__dirname, '../../common/src'),
       react: require.resolve('react'),
       'react-dom': require.resolve('react-dom')
     }
