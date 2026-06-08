@@ -1,0 +1,71 @@
+import { OpenPaasUserData } from '@common/features/User/type/OpenPaasUserData'
+import { toRejectedError } from '@common/utils/errorUtils'
+import { createAsyncThunk } from '@reduxjs/toolkit'
+import { calendarAction } from '@common/features/Calendars/CalendarDAO'
+import { makeAddSharedCalendarBody } from '@common/features/Calendars/transformers'
+import { CalendarInput } from '@common/features/Calendars/types/CalendarData'
+import { RejectedError } from '@common/features/Calendars/types/RejectedError'
+import { User } from '@common/components/Attendees/types'
+import { fetchOwnerOfResource } from './helpers'
+
+export const addCalendarResourceAsync = createAsyncThunk<
+  {
+    calId: string
+    color: Record<string, string>
+    link: string
+    name: string
+    desc: string
+    owner: OpenPaasUserData
+  },
+  {
+    userId: string
+    calId: string
+    cal: Omit<CalendarInput, 'owner'> & {
+      owner?: Omit<User, 'email'> & { email?: string }
+    }
+  },
+  { rejectValue: RejectedError }
+>(
+  'calendars/addCalendarResource',
+  async ({ userId, calId, cal }, { rejectWithValue }) => {
+    const resourceId = cal.cal._links.self?.href
+      ?.replace('/calendars/', '')
+      ?.replace('.json', '')
+      ?.split('/')[0]
+
+    let owner: OpenPaasUserData = {
+      firstname: '',
+      lastname: cal.cal['dav:name'] ?? '',
+      emails: [],
+      resource: true
+    }
+    try {
+      const body = makeAddSharedCalendarBody(calId, cal)
+      await calendarAction('POST', `/calendars/${userId}.json`, body)
+
+      if (resourceId) {
+        try {
+          owner = {
+            ...(await fetchOwnerOfResource(resourceId)),
+            resource: true
+          }
+        } catch (e) {
+          console.error('Error while fetching owner of resource: ', e)
+        }
+      }
+
+      return {
+        calId: cal.cal._links.self?.href
+          ?.replace('/calendars/', '')
+          .replace('.json', ''),
+        color: cal.color,
+        link: `/calendars/${userId}/${calId}.json`,
+        desc: cal.cal['caldav:description'] ?? '',
+        name: cal.cal['dav:name'] ?? '',
+        owner
+      }
+    } catch (err) {
+      return rejectWithValue(toRejectedError(err))
+    }
+  }
+)

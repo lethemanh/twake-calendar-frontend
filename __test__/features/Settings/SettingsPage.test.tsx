@@ -1,11 +1,11 @@
-import SettingsPage from '@/features/Settings/SettingsPage'
-import { api } from '@/utils/apiUtils'
-import * as timezoneUtils from '@/utils/timezone'
+import SettingsPage from '@common/features/Settings/SettingsPage'
+import { api } from '@common/utils/apiUtils'
+import * as timezoneUtils from '@common/utils/timezone'
 import '@testing-library/jest-dom'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 describe('SettingsPage', () => {
   beforeEach(() => {

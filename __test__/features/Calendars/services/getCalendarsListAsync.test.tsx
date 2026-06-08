@@ -1,14 +1,14 @@
-import { fetchCalendars } from '@/features/Calendars/CalendarDAO'
-import { getCalendarsListAsync } from '@/features/Calendars/services/getCalendarsListAsync'
-import { getOwnerOrResourceData } from '@/features/Calendars/services/helpers'
-import { normalizeCalendar } from '@/features/Calendars/utils/normalizeCalendar'
-import { fetchCurrentUser } from '@/features/User/UserDao'
-import { formatReduxError } from '@/utils/errorUtils'
+import { fetchCalendars } from '@common/features/Calendars/CalendarDAO'
+import { getCalendarsListAsync } from '@common/features/Calendars/services/getCalendarsListAsync'
+import { getOwnerOrResourceData } from '@common/features/Calendars/services/helpers'
+import { normalizeCalendar } from '@common/features/Calendars/utils/normalizeCalendar'
+import { fetchCurrentUser } from '@common/features/User/UserDao'
+import { formatReduxError } from '@common/utils/errorUtils'
 
-jest.mock('@/features/User/UserDao')
-jest.mock('@/features/Calendars/services/helpers', () => {
+jest.mock('@common/features/User/UserDao')
+jest.mock('@common/features/Calendars/services/helpers', () => {
   const originalModule = jest.requireActual(
-    '@/features/Calendars/services/helpers'
+    '@common/features/Calendars/services/helpers'
   )
   return {
     __esModule: true,
@@ -16,10 +16,10 @@ jest.mock('@/features/Calendars/services/helpers', () => {
     getOwnerOrResourceData: jest.fn()
   }
 })
-jest.mock('@/features/Calendars/CalendarDAO')
-jest.mock('@/utils/errorUtils')
-jest.mock('@/features/Calendars/utils/normalizeCalendar')
-jest.mock('@/utils/getAccessiblePair', () => ({
+jest.mock('@common/features/Calendars/CalendarDAO')
+jest.mock('@common/utils/errorUtils')
+jest.mock('@common/features/Calendars/utils/normalizeCalendar')
+jest.mock('@common/utils/getAccessiblePair', () => ({
   getAccessiblePair: jest.fn().mockReturnValue('#FFF')
 }))
 
@@ -159,7 +159,7 @@ describe('getCalendarsListAsync', () => {
     })
 
     // toRejectedError is imported from a mocked module; provide the expected return
-    const { toRejectedError } = jest.requireMock('@/utils/errorUtils')
+    const { toRejectedError } = jest.requireMock('@common/utils/errorUtils')
     toRejectedError.mockReturnValueOnce({
       status: 500,
       message: 'Server Error'

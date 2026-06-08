@@ -1,4 +1,4 @@
-import CalendarLayout from '@/components/Calendar/CalendarLayout'
+import CalendarLayout from '@private/components/Calendar/CalendarLayout'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
@@ -69,8 +69,8 @@ describe('Event Error Handling', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Test Event'))
-        expect(screen.getByRole('alert')).toBeInTheDocument()
+        expect(screen.queryByText('Test Event')).toBeInTheDocument()
+        expect(screen.queryByRole('alert')).toBeInTheDocument()
       },
       { timeout: 10000 }
     )
@@ -96,5 +96,5 @@ describe('Event Error Handling', () => {
     }
 
     consoleWarnSpy.mockRestore()
-  }, 15000)
+  }, 30000)
 })

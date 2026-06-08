@@ -1,17 +1,17 @@
-import { setSelectedCalendars } from '@/utils/storage/setSelectedCalendars'
-import { createWebSocketConnection } from '@/websocket/connection/createConnection'
-import { registerToCalendars } from '@/websocket/operations/registerToCalendars'
-import { unregisterToCalendars } from '@/websocket/operations/unregisterToCalendars'
-import { WebSocketGate } from '@/websocket/WebSocketGate'
+import { setSelectedCalendars } from '@common/utils/storage/setSelectedCalendars'
+import { createWebSocketConnection } from '@common/websocket/connection/createConnection'
+import { registerToCalendars } from '@common/websocket/operations/registerToCalendars'
+import { unregisterToCalendars } from '@common/websocket/operations/unregisterToCalendars'
+import { WebSocketGate } from '@common/websocket/WebSocketGate'
 import { configureStore, Store } from '@reduxjs/toolkit'
 import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { I18nContext } from 'twake-i18n'
 
-jest.mock('@/websocket/connection/createConnection')
-jest.mock('@/websocket/operations/registerToCalendars')
-jest.mock('@/websocket/operations/unregisterToCalendars')
-jest.mock('@/websocket/connection/lifecycle/pingWebSocket')
+jest.mock('@common/websocket/connection/createConnection')
+jest.mock('@common/websocket/operations/registerToCalendars')
+jest.mock('@common/websocket/operations/unregisterToCalendars')
+jest.mock('@common/websocket/connection/lifecycle/pingWebSocket')
 
 function TestWrapper({ store }: { store: Store }) {
   return (

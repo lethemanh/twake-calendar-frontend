@@ -4,7 +4,7 @@ import {
   DATETIME_WITH_SECONDS_LENGTH,
   DATETIME_FORMAT_WITH_SECONDS,
   DATETIME_FORMAT_WITHOUT_SECONDS
-} from '@/components/Event/utils/dateTimeHelpers'
+} from '@common/components/Event/utils/dateTimeHelpers'
 
 describe('dateTimeHelpers', () => {
   describe('Constants', () => {

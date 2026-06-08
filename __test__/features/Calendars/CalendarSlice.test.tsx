@@ -1,12 +1,12 @@
-import * as calDAO from '@/features/Calendars/CalendarDAO'
+import * as calDAO from '@common/features/Calendars/CalendarDAO'
 import reducer, {
   addEvent,
   createCalendar,
   removeEvent,
   removeTempCal,
   updateEventLocal
-} from '@/features/Calendars/CalendarSlice'
-import { Calendar } from '@/features/Calendars/CalendarTypes'
+} from '@common/features/Calendars/CalendarSlice'
+import { Calendar } from '@common/types/CalendarTypes'
 import {
   addSharedCalendarAsync,
   createCalendarAsync,
@@ -15,17 +15,17 @@ import {
   getEventAsync,
   getTempCalendarsListAsync,
   patchACLCalendarAsync
-} from '@/features/Calendars/services'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import * as userAPI from '@/features/User/userAPI'
-import userReducer, { setUserData } from '@/features/User/userSlice'
+} from '@common/features/Calendars/services'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import * as userAPI from '@common/features/User/userAPI'
+import userReducer, { setUserData } from '@common/features/User/userSlice'
 import { configureStore } from '@reduxjs/toolkit'
 
-jest.mock('@/features/Calendars/CalendarDAO')
-jest.mock('@/features/User/userAPI')
-jest.mock('@/features/Events/EventDao')
-jest.mock('@/features/Events/utils')
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/features/Calendars/CalendarDAO')
+jest.mock('@common/features/User/userAPI')
+jest.mock('@common/features/Events/EventDao')
+jest.mock('@common/features/Events/utils')
+jest.mock('@common/utils/apiUtils')
 
 describe('CalendarSlice', () => {
   const initialState = {

@@ -2,19 +2,15 @@ import {
   fetchOwnerData,
   fetchOwnerOfResource,
   extractResourceOwnerIds
-} from '@/features/Calendars/services/helpers'
-import { fetchUserById } from '@/features/User/UserDao'
-import { fetchResourceById } from '@/features/User/ResourceDAO'
+} from '@common/features/Calendars/services/helpers'
+import { fetchUserById } from '@common/features/User/UserDao'
+import { fetchResourceById } from '@common/features/User/ResourceDAO'
 
-jest.mock('@/features/User/UserDao')
-jest.mock('@/features/User/ResourceDAO')
+jest.mock('@common/features/User/UserDao')
+jest.mock('@common/features/User/ResourceDAO')
 
-const mockedFetchUserById = fetchUserById as jest.MockedFunction<
-  typeof fetchUserById
->
-const mockedFetchResourceById = fetchResourceById as jest.MockedFunction<
-  typeof fetchResourceById
->
+const mockedFetchUserById = fetchUserById
+const mockedFetchResourceById = fetchResourceById
 
 describe('helpers', () => {
   beforeEach(() => {

@@ -2,7 +2,7 @@ import {
   isDateInPast,
   validateEventForm,
   ValidationParams
-} from '@/components/Event/utils/formValidation'
+} from '@common/components/Event/utils/formValidation'
 
 const FROZEN_TODAY = '2025-06-15'
 const YESTERDAY = '2025-06-14'

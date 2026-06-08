@@ -1,8 +1,8 @@
-import { createEventContext } from '@/features/Events/createEventContext'
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { userData } from '@/features/User/userDataTypes'
-import { userAttendee } from '@/features/User/models/attendee'
+import { createEventContext } from '@common/features/Events/createEventContext'
+import { Calendar } from '@common/types/CalendarTypes'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { userData } from '@common/features/User/userDataTypes'
+import { userAttendee } from '@common/features/User/models/attendee'
 
 const makeUser = (email: string): userData => ({
   email,

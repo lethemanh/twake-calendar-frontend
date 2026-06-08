@@ -1,10 +1,13 @@
-import { ResourceSearch, Resource } from '@/components/Attendees/ResourceSearch'
-import { searchUsers } from '@/features/User/userAPI'
+import {
+  ResourceSearch,
+  Resource
+} from '@common/components/Attendees/ResourceSearch'
+import { searchUsers } from '@common/features/User/userAPI'
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/features/User/userAPI')
+jest.mock('@common/features/User/userAPI')
 const mockedSearchUsers = searchUsers as jest.MockedFunction<typeof searchUsers>
 
 describe('ResourceSearch', () => {

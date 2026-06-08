@@ -1,4 +1,4 @@
-import { getCalendarRange } from '@/utils/dateUtils'
+import { getCalendarRange } from '@common/utils/dateUtils'
 
 describe('getCalendarRange', () => {
   it('Nov 2025 (5 weeks): 2025-10-27 to 2025-11-30', () => {

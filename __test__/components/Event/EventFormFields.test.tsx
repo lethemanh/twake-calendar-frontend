@@ -1,4 +1,4 @@
-import EventPopover from '@/features/Events/EventModal'
+import EventPopover from '@common/features/Events/EventModal'
 import { DateSelectArg } from '@fullcalendar/core'
 import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'

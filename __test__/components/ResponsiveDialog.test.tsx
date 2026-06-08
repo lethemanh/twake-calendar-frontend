@@ -1,4 +1,4 @@
-import { ResponsiveDialog } from '@/components/Dialog'
+import { ResponsiveDialog } from '@common/components/Dialog'
 import { Button, TextField, TwakeMuiThemeProvider } from '@linagora/twake-mui'
 import { fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'

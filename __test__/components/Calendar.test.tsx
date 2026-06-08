@@ -1,15 +1,14 @@
-import CalendarApp from '@/components/Calendar/Calendar'
-import CalendarLayout from '@/components/Calendar/CalendarLayout'
-import { CALENDAR_VIEWS } from '@/components/Calendar/utils/constants'
-import * as calendarDetailThunks from '@/features/Calendars/services'
-import * as servicesModule from '@/features/Calendars/services'
-import { searchUsers } from '@/features/User/userAPI'
+import CalendarApp from '@common/components/Calendar/Calendar'
+import CalendarLayout from '@private/components/Calendar/CalendarLayout'
+import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
+import * as calendarDetailThunks from '@common/features/Calendars/services'
+import * as servicesModule from '@common/features/Calendars/services'
+import { searchUsers } from '@common/features/User/userAPI'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { useRef } from 'react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/features/User/userAPI')
+jest.mock('@common/features/User/userAPI')
 const mockedSearchUsers = searchUsers as jest.MockedFunction<typeof searchUsers>
 
 // Test wrapper component to provide calendarRef
@@ -321,8 +320,8 @@ describe('calendar Availability search', () => {
     const input = screen.getByPlaceholderText(
       'peopleSearch.availabilityPlaceholder'
     )
-    act(() => {
-      userEvent.type(input, 'New')
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'New' } })
     })
     const option = await screen.findByText('New User')
     await act(async () => {
@@ -354,7 +353,9 @@ describe('calendar Availability search', () => {
     const input = screen.getByPlaceholderText(
       'peopleSearch.availabilityPlaceholder'
     )
-    await act(async () => userEvent.type(input, 'New'))
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'New' } })
+    })
 
     const option = await screen.findByText('New User')
 
@@ -398,7 +399,9 @@ describe('calendar Availability search', () => {
     const input = screen.getByPlaceholderText(
       'peopleSearch.availabilityPlaceholder'
     )
-    await act(async () => userEvent.type(input, 'New'))
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'New' } })
+    })
 
     const option = await screen.findByText('New User')
     await act(async () => {

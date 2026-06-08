@@ -1,10 +1,10 @@
 import {
   hasFreeBusyConflict,
   useAttendeesFreeBusy
-} from '@/components/Attendees/useFreeBusy'
-import * as CalendarDAO from '@/features/Calendars/CalendarDAO'
-import * as FreeBusyDao from '@/features/Events/FreeBusyDao'
-import * as UserDao from '@/features/User/UserDao'
+} from '@common/components/Attendees/useFreeBusy'
+import * as CalendarDAO from '@common/features/Calendars/CalendarDAO'
+import * as FreeBusyDao from '@common/features/Events/FreeBusyDao'
+import * as UserDao from '@common/features/User/UserDao'
 import { renderHook, waitFor } from '@testing-library/react'
 
 jest.mock('moment-timezone', () => {
@@ -12,9 +12,9 @@ jest.mock('moment-timezone', () => {
   return actual
 })
 
-jest.mock('@/features/Events/FreeBusyDao')
-jest.mock('@/features/User/UserDao')
-jest.mock('@/features/Calendars/CalendarDAO')
+jest.mock('@common/features/Events/FreeBusyDao')
+jest.mock('@common/features/User/UserDao')
+jest.mock('@common/features/Calendars/CalendarDAO')
 
 const mockGetUserData = UserDao.fetchUserByEmail as jest.MockedFunction<
   typeof UserDao.fetchUserByEmail

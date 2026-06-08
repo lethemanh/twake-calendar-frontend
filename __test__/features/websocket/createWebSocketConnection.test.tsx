@@ -1,10 +1,10 @@
-import { fetchWebSocketTicket } from '@/websocket/api/fetchWebSocketTicket'
-import { createWebSocketConnection } from '@/websocket/connection/createConnection'
-import { WS_INBOUND_EVENTS } from '@/websocket/protocols'
+import { fetchWebSocketTicket } from '@common/websocket/api/fetchWebSocketTicket'
+import { createWebSocketConnection } from '@common/websocket/connection/createConnection'
+import { WS_INBOUND_EVENTS } from '@common/websocket/protocols'
 import { waitFor } from '@testing-library/dom'
 import { setupWebsocket } from './utils/setupWebsocket'
 
-jest.mock('@/websocket/api/fetchWebSocketTicket')
+jest.mock('@common/websocket/api/fetchWebSocketTicket')
 
 describe('createWebSocketConnection', () => {
   let mockWebSocket: jest.Mock

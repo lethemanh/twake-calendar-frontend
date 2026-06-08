@@ -1,13 +1,13 @@
-import RegisterCalendars from '@/components/Calendar/RegisterCalendars'
-import * as CalendarDAO from '@/features/Calendars/CalendarDAO'
-import * as CalendarSlice from '@/features/Calendars/services'
-import { searchUsers } from '@/features/User/userAPI'
+import RegisterCalendars from '@common/components/Calendar/RegisterCalendars'
+import * as CalendarDAO from '@common/features/Calendars/CalendarDAO'
+import * as CalendarSlice from '@common/features/Calendars/services'
+import { searchUsers } from '@common/features/User/userAPI'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/features/User/userAPI')
-jest.mock('@/features/Calendars/CalendarDAO')
+jest.mock('@common/features/User/userAPI')
+jest.mock('@common/features/Calendars/CalendarDAO')
 
 const mockedSearchUsers = searchUsers as jest.MockedFunction<typeof searchUsers>
 const mockedFetchCalendars = CalendarDAO.fetchCalendars as jest.MockedFunction<

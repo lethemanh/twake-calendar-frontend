@@ -1,28 +1,28 @@
-import { AccessTab } from '@/components/Calendar/AccessTab'
+import { AccessTab } from '@common/components/Calendar/AccessTab'
 import {
   CalendarAccessRights,
   UserWithAccess
-} from '@/components/Calendar/CalendarAccessRights'
-import CalendarPopover from '@/components/Calendar/CalendarModal'
-import { updateDelegationCalendar } from '@/features/Calendars/CalendarDAO'
-import { AccessRight, Calendar } from '@/features/Calendars/CalendarTypes'
-import * as eventThunks from '@/features/Calendars/services'
-import * as delegationThunks from '@/features/Calendars/services/updateDelegationCalendarAsync'
-import { fetchUserById } from '@/features/User/UserDao'
-import { accessRightToDavProp } from '@/utils/accessRightToDavProp'
-import { api } from '@/utils/apiUtils'
+} from '@common/components/Calendar/CalendarAccessRights'
+import CalendarPopover from '@common/components/Calendar/CalendarModal'
+import { updateDelegationCalendar } from '@common/features/Calendars/CalendarDAO'
+import { AccessRight, Calendar } from '@common/types/CalendarTypes'
+import * as eventThunks from '@common/features/Calendars/services'
+import * as delegationThunks from '@common/features/Calendars/services/updateDelegationCalendarAsync'
+import { fetchUserById } from '@common/features/User/UserDao'
+import { accessRightToDavProp } from '@common/utils/accessRightToDavProp'
+import { api } from '@common/utils/apiUtils'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/utils/apiUtils', () => ({
+jest.mock('@common/utils/apiUtils', () => ({
   api: { post: jest.fn() }
 }))
 
-jest.mock('@/features/User/UserDao', () => ({
+jest.mock('@common/features/User/UserDao', () => ({
   fetchUserById: jest.fn()
 }))
 
-jest.mock('@/features/Calendars/CalendarDAO', () => ({
+jest.mock('@common/features/Calendars/CalendarDAO', () => ({
   fetchSecretLink: jest.fn().mockResolvedValue({ secretLink: '' }),
   fetchCalendarExport: jest.fn(),
   updateDelegationCalendar: jest.fn()

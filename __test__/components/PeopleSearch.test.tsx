@@ -1,11 +1,11 @@
-import { PeopleSearch } from '@/components/Attendees/PeopleSearch'
-import { User } from '@/components/Attendees/types'
-import { searchUsers } from '@/features/User/userAPI'
+import { PeopleSearch } from '@common/components/Attendees/PeopleSearch'
+import { User } from '@common/components/Attendees/types'
+import { searchUsers } from '@common/features/User/userAPI'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/features/User/userAPI')
+jest.mock('@common/features/User/userAPI')
 const mockedSearchUsers = searchUsers as jest.MockedFunction<typeof searchUsers>
 
 describe('PeopleSearch', () => {

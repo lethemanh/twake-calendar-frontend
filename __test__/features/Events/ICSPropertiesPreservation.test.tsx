@@ -1,15 +1,18 @@
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { VObjectProperty } from '@/features/Calendars/types/CalendarData'
-import { fetchAllRecurrentVevents, putEvent } from '@/features/Events/EventDao'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { makeEventWithOverrides } from '@/features/Events/transformers/makeEventWithOverrides'
+import { Calendar } from '@common/types/CalendarTypes'
+import { VObjectProperty } from '@common/features/Calendars/types/CalendarData'
+import {
+  fetchAllRecurrentVevents,
+  putEvent
+} from '@common/features/Events/EventDao'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { makeEventWithOverrides } from '@common/features/Events/transformers/makeEventWithOverrides'
 import {
   calendarEventToJCal,
   makeVevent,
   parseCalendarEvent
-} from '@/features/Events/utils'
+} from '@common/features/Events/utils'
 
-jest.mock('@/features/Events/EventDao')
+jest.mock('@common/features/Events/EventDao')
 
 const MOCK_CALENDAR: Calendar = {
   id: 'cal-1',

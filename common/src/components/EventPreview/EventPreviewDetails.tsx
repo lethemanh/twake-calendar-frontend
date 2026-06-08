@@ -1,0 +1,259 @@
+import { InfoRow } from '@common/components/Event/InfoRow'
+import { Box, Typography } from '@linagora/twake-mui'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined'
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined'
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import RepeatIcon from '@mui/icons-material/Repeat'
+import SubjectIcon from '@mui/icons-material/Subject'
+import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined'
+import { alpha, useTheme } from '@mui/material/styles'
+import { useI18n } from 'twake-i18n'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { EventPreviewAttendees } from './EventPreviewAttendees'
+import { makeRecurrenceString } from './utils/makeRecurrenceString'
+import { translateDuration } from './utils/parseDuration'
+import { renderAttendeeBadge } from '@common/components/Event/utils/eventUtils'
+import { VideoLink } from '@common/components/Event/components/VideoLink'
+import { useFilterEventAttendees } from '@common/components/Event/hooks/useFilterEventAttendees'
+
+interface EventPreviewDetailsProps {
+  event: CalendarEvent
+  isOwn: boolean
+  isNotPrivate: boolean
+  isResourceEventPreview?: boolean
+  calendarName?: string
+}
+
+export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
+  event,
+  isOwn,
+  isNotPrivate,
+  isResourceEventPreview,
+  calendarName
+}) => {
+  const { t } = useI18n()
+  const theme = useTheme()
+
+  const infoIconColor = alpha(theme.palette.grey[900], 0.9)
+  const infoIconSx = {
+    minWidth: '25px',
+    marginRight: 2,
+    color: infoIconColor,
+    display: 'flex',
+    alignItems: 'center',
+    alignSelf: 'center'
+  }
+
+  const { resources, eventAttendees, attendees, organizer } =
+    useFilterEventAttendees({
+      event,
+      isResourceEventPreview,
+      calendarName
+    })
+
+  const showDetails = isNotPrivate || isOwn
+
+  const shouldShowAttendeesSection =
+    attendees.length > 0 || Boolean(organizer.cal_address || organizer?.cn)
+
+  if (!showDetails) {
+    return (
+      <Box
+        sx={{
+          backgroundColor: '#F3F4F6',
+          height: 48,
+          borderRadius: '8px',
+          gap: '16px',
+          paddingTop: '16px',
+          paddingBottom: '16px'
+        }}
+      >
+        <Typography
+          fontWeight={500}
+          fontSize="12px"
+          lineHeight="16px"
+          letterSpacing="0.5px"
+          textAlign="center"
+        >
+          {t('eventPreview.privateEvent.hiddenDetails')}
+        </Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        gap: '16px',
+        flexDirection: 'column'
+      }}
+    >
+      {/* Video */}
+      {event.x_openpass_videoconference && (
+        <InfoRow
+          icon={
+            <Box sx={infoIconSx}>
+              <VideocamOutlinedIcon />
+            </Box>
+          }
+          content={<VideoLink meetingLink={event.x_openpass_videoconference} />}
+        />
+      )}
+
+      {isResourceEventPreview &&
+        organizer &&
+        renderAttendeeBadge(organizer, 'org', t, true, true)}
+
+      {/* Attendees */}
+      {!isResourceEventPreview && shouldShowAttendeesSection && (
+        <EventPreviewAttendees
+          attendees={attendees}
+          organizer={organizer}
+          allAttendees={eventAttendees ?? []}
+          start={event.start}
+          end={event.end}
+          timezone={event.timezone}
+          eventUid={event.uid}
+        />
+      )}
+
+      {/* Location */}
+      {event.location && (
+        <InfoRow
+          icon={
+            <Box sx={infoIconSx}>
+              <LocationOnOutlinedIcon />
+            </Box>
+          }
+          text={event.location}
+        />
+      )}
+
+      {/* Resource */}
+      {resources?.length > 0 && (
+        <InfoRow
+          flexWrap="wrap"
+          icon={
+            <Box sx={infoIconSx}>
+              <LayersOutlinedIcon />
+            </Box>
+          }
+          content={resources.map((resource, index) => (
+            <Box
+              key={resource.cn}
+              sx={{
+                marginRight: '5px'
+              }}
+            >
+              <Typography
+                variant="body2"
+                color="textPrimary"
+                sx={{
+                  whiteSpace: 'pre-line',
+                  maxHeight: '33vh',
+                  overflowY: 'auto',
+                  width: '100%',
+                  overflowWrap: 'break-word'
+                }}
+              >
+                {resource.cn}
+                {index < resources.length - 1 ? ',' : ''}
+              </Typography>
+              <Typography
+                sx={{
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'pre-line',
+                  overflowY: 'auto',
+                  width: '100%',
+                  fontSize: '13px',
+                  color: '#717D96'
+                }}
+              >
+                {t(`eventPreview.attendingStatus.${resource.partstat}`)}
+              </Typography>
+            </Box>
+          ))}
+          style={{
+            fontSize: '16px'
+          }}
+        />
+      )}
+
+      {/* Description */}
+      {event.description && (
+        <InfoRow
+          alignItems="flex-start"
+          icon={
+            <Box
+              sx={{
+                ...infoIconSx,
+                alignItems: 'flex-start',
+                alignSelf: 'flex-start'
+              }}
+            >
+              <SubjectIcon />
+            </Box>
+          }
+          text={event.description}
+        />
+      )}
+
+      {/* Alarm */}
+      {event.alarm && (
+        <InfoRow
+          icon={
+            <Box sx={infoIconSx}>
+              <NotificationsNoneIcon />
+            </Box>
+          }
+          text={t('eventPreview.alarmText', {
+            trigger: translateDuration(event.alarm.trigger, t),
+            action: ((): string => {
+              if (!event.alarm.action) return ''
+              const translationKey = `event.form.notifications.${event.alarm.action}`
+              const translated = t(translationKey)
+              return translated === translationKey
+                ? event.alarm.action
+                : translated
+            })()
+          })}
+        />
+      )}
+
+      {/* Repetition */}
+      {event.repetition && (
+        <InfoRow
+          icon={
+            <Box sx={infoIconSx}>
+              <RepeatIcon />
+            </Box>
+          }
+          text={makeRecurrenceString({
+            repetition: event.repetition,
+            t,
+            startText: `${t('eventPreview.recurrentEvent')} · ${t(
+              `eventPreview.freq.${event.repetition.freq}`,
+              { defaultValue: event.repetition.freq }
+            )}`
+          })}
+        />
+      )}
+
+      {/* Error */}
+      {event.error && (
+        <InfoRow
+          alignItems="flex-start"
+          icon={
+            <Box sx={infoIconSx}>
+              <ErrorOutlineIcon color="error" />
+            </Box>
+          }
+          text={event.error}
+          error
+        />
+      )}
+    </Box>
+  )
+}

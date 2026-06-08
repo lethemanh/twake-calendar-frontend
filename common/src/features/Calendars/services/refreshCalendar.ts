@@ -1,0 +1,82 @@
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { buildDelegatedEventURL } from '@common/features/Events/utils'
+import { toRejectedError } from '@common/utils/errorUtils'
+import { createAsyncThunk } from '@reduxjs/toolkit'
+import pMap from 'p-map'
+import { fetchSyncTokenChanges } from '@common/features/Calendars/CalendarDAO'
+import { Calendar } from '@common/types/CalendarTypes'
+import { RejectedError } from '@common/features/Calendars/types/RejectedError'
+import { expandEventFunction } from '@common/features/Calendars/utils/expandEventFunction'
+import { processSyncUpdates } from '@common/features/Calendars/utils/processSyncTokenUpdates'
+
+export interface SyncTokenUpdates {
+  calId: string
+  deletedEvents: string[]
+  createdOrUpdatedEvents: CalendarEvent[]
+  calType?: 'temp'
+  syncToken?: string
+  syncStatus?: string
+}
+
+export const refreshCalendarWithSyncToken = createAsyncThunk<
+  SyncTokenUpdates,
+  {
+    calendar: Calendar
+    calType?: 'temp'
+    calendarRange: {
+      start: Date
+      end: Date
+    }
+    maxConcurrency?: number
+  },
+  {
+    rejectValue: RejectedError
+  }
+>(
+  'calendars/refreshWithSyncToken',
+  async (
+    { calendar, maxConcurrency = 8, calendarRange, calType },
+    { rejectWithValue }
+  ) => {
+    try {
+      if (!calendar?.syncToken) {
+        return {
+          calId: calendar.id,
+          deletedEvents: [],
+          createdOrUpdatedEvents: [],
+          calType,
+          syncStatus: 'NO_SYNC_TOKEN'
+        }
+      }
+
+      const response = await fetchSyncTokenChanges(calendar)
+      const newSyncToken = response['sync-token']
+      const updates = response?._embedded?.['dav:item'] ?? []
+
+      const { toDelete, toExpand } = processSyncUpdates(updates)
+
+      const createdOrUpdatedEvents = await pMap(
+        toExpand,
+        expandEventFunction(calendarRange, calendar),
+        { concurrency: maxConcurrency }
+      )
+
+      return {
+        calId: calendar.id,
+        deletedEvents: toDelete.map(eventURL =>
+          calendar.delegated
+            ? buildDelegatedEventURL(calendar, eventURL)
+            : eventURL
+        ),
+        createdOrUpdatedEvents: createdOrUpdatedEvents
+          .flat()
+          .filter(Boolean) as CalendarEvent[],
+        calType,
+        syncToken: newSyncToken,
+        syncStatus: newSyncToken ? 'SUCCESS' : 'NO_NEW_SYNC_TOKEN'
+      }
+    } catch (err) {
+      return rejectWithValue(toRejectedError(err))
+    }
+  }
+)

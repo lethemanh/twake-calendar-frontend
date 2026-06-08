@@ -5,14 +5,14 @@ import {
   fetchCalendars,
   fetchSecretLink,
   updateDelegationCalendar
-} from '@/features/Calendars/CalendarDAO'
-import { makeAddSharedCalendarBody } from '@/features/Calendars/transformers'
-import { clientConfig } from '@/features/User/oidcAuth'
-import { api } from '@/utils/apiUtils'
+} from '@common/features/Calendars/CalendarDAO'
+import { makeAddSharedCalendarBody } from '@common/features/Calendars/transformers'
+import { clientConfig } from '@common/features/User/oidcAuth'
+import { api } from '@common/utils/apiUtils'
 import { waitFor } from '@testing-library/dom'
 clientConfig.url = 'https://example.com'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 describe('Calendar DAO', () => {
   afterEach(() => {

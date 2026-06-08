@@ -8,7 +8,7 @@ import {
   RenderResult
 } from '@testing-library/react'
 import React from 'react'
-import { DatePickerMobile } from '@/components/Menubar/components/DatePickerMobile'
+import { DatePickerMobile } from '@common/components/Menubar/components/DatePickerMobile'
 
 jest.mock('twake-i18n', () => ({
   useI18n: (): { t: (key: string) => string; lang: string } => ({

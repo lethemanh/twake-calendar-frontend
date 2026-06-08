@@ -1,13 +1,13 @@
-import * as calDAO from '@/features/Calendars/CalendarDAO'
-import * as eventThunks from '@/features/Calendars/services'
-import EventPopover from '@/features/Events/EventModal'
-import { api } from '@/utils/apiUtils'
+import * as calDAO from '@common/features/Calendars/CalendarDAO'
+import * as eventThunks from '@common/features/Calendars/services'
+import EventPopover from '@common/features/Events/EventModal'
+import { api } from '@common/utils/apiUtils'
 import { DateSelectArg } from '@fullcalendar/core'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 describe('EventPopover', () => {
   beforeEach(() => {

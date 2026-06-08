@@ -1,0 +1,138 @@
+import cx from 'classnames'
+import { useAppDispatch, useAppSelector } from '@common/app/hooks'
+import SettingsPage from '@common/features/Settings/SettingsPage'
+import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
+import { getViewRange } from '@common/utils/dateUtils'
+import type { CalendarApi } from '@fullcalendar/core'
+import CozyBridge from 'cozy-external-bridge'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ErrorSnackbar } from '@common/components/Error/ErrorSnackbar'
+import { refreshCalendars } from '@common/components/Event/utils/eventUtils'
+import { Menubar, MenubarProps } from '@common/components/Menubar/Menubar'
+import CalendarApp from '@common/components/Calendar/Calendar'
+import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
+import { setView } from '@common/features/Settings/SettingsSlice'
+
+export default function CalendarLayout(): JSX.Element {
+  const calendarRef = useRef<CalendarApi | null>(null)
+  const dispatch = useAppDispatch()
+  const error = useAppSelector(state => state.calendars.error)
+  const selectedCalendars = useAppSelector(state => state.calendars.list)
+  const tempcalendars = useAppSelector(state => state.calendars.templist)
+  const view = useAppSelector(state => state.settings.view)
+
+  const { isTablet, isTooSmall: isMobile } = useScreenSizeDetection()
+  const [openSidebar, setOpenSideBar] = useState(false)
+
+  const [currentDate, setCurrentDate] = useState<Date>(new Date())
+  const [currentView, setCurrentView] = useState<string>(
+    isTablet || isMobile
+      ? CALENDAR_VIEWS.timeGridDay
+      : CALENDAR_VIEWS.timeGridWeek
+  )
+
+  const currentViewModeRef = useRef<string>()
+
+  useEffect(() => {
+    const setView = (): void => {
+      if (currentViewModeRef.current) return
+      const storedView =
+        isTablet || isMobile
+          ? CALENDAR_VIEWS.timeGridDay
+          : CALENDAR_VIEWS.timeGridWeek
+      setCurrentView(storedView)
+      currentViewModeRef.current = storedView
+    }
+
+    setView()
+  }, [isTablet, isMobile])
+
+  const isInIframe = useMemo(() => new CozyBridge().isInIframe(), [])
+
+  const handleRefresh = async (): Promise<void> => {
+    // Get current calendar range
+    if (calendarRef.current) {
+      const view = calendarRef.current.view
+      const calendarRange = getViewRange(view.activeStart, view.type)
+
+      // Refresh events for selected calendars
+      await refreshCalendars(
+        dispatch,
+        Object.values(selectedCalendars),
+        calendarRange
+      )
+      if (tempcalendars) {
+        await refreshCalendars(
+          dispatch,
+          Object.values(tempcalendars),
+          calendarRange,
+          'temp'
+        )
+      }
+    }
+  }
+
+  const handleDateChange = (date: Date): void => {
+    setCurrentDate(date)
+  }
+
+  const handleViewChange = (view: string): void => {
+    dispatch(setView('calendar'))
+
+    // Notify parent about view change
+    setCurrentView(view)
+
+    if (calendarRef.current) {
+      // Notify parent about date change after view change
+      const newDate = calendarRef.current.getDate()
+      handleDateChange(newDate)
+    }
+  }
+
+  // Hide topbar navigation elements when in settings view (same as fullscreen dialog mode)
+  useEffect(() => {
+    if (view === 'settings') {
+      document.body.classList.add('fullscreen-view')
+    } else {
+      document.body.classList.remove('fullscreen-view')
+    }
+
+    // Cleanup on unmount
+    return (): void => {
+      document.body.classList.remove('fullscreen-view')
+    }
+  }, [view])
+
+  const menubarProps: MenubarProps = {
+    calendarRef,
+    onRefresh: () => void handleRefresh(),
+    currentDate,
+    onDateChange: handleDateChange,
+    currentView,
+    onViewChange: handleViewChange,
+    isIframe: isInIframe,
+    onToggleSidebar: () => setOpenSideBar(true)
+  }
+
+  return (
+    <div className={cx('App ', { 'App--mobile': isMobile })}>
+      {!isInIframe && <Menubar {...menubarProps} />}
+      {(view === 'calendar' || view === 'search') && (
+        <CalendarApp
+          calendarRef={calendarRef}
+          onDateChange={handleDateChange}
+          onViewChange={handleViewChange}
+          menubarProps={menubarProps}
+          openSidebar={openSidebar}
+          onCloseSidebar={() => setOpenSideBar(false)}
+          setCurrentView={setCurrentView}
+          currentView={currentView}
+        />
+      )}
+      {view === 'settings' && (
+        <SettingsPage menubarProps={menubarProps} isInIframe={isInIframe} />
+      )}
+      <ErrorSnackbar error={error} type="calendar" />
+    </div>
+  )
+}

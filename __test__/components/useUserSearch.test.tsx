@@ -1,8 +1,8 @@
 import { renderHook, act } from '@testing-library/react'
-import { useUserSearch } from '@/components/Attendees/useUserSearch'
-import { searchUsers } from '@/features/User/userAPI'
+import { useUserSearch } from '@common/components/Attendees/useUserSearch'
+import { searchUsers } from '@common/features/User/userAPI'
 
-jest.mock('@/features/User/userAPI', () => ({
+jest.mock('@common/features/User/userAPI', () => ({
   searchUsers: jest.fn()
 }))
 

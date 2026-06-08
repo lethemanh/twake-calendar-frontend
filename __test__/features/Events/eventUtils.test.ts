@@ -1,6 +1,6 @@
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import { VObjectProperty } from '@/features/Calendars/types/CalendarData'
-import { CalendarEvent, RepetitionObject } from '@/features/Events/EventsTypes'
+import { Calendar } from '@common/types/CalendarTypes'
+import { VObjectProperty } from '@common/features/Calendars/types/CalendarData'
+import { CalendarEvent, RepetitionObject } from '@common/types/EventsTypes'
 import {
   calendarEventToJCal,
   combineMasterDateWithFormTime,
@@ -8,7 +8,7 @@ import {
   normalizeRepetition,
   normalizeTimezone,
   parseCalendarEvent
-} from '@/features/Events/utils'
+} from '@common/features/Events/utils'
 
 describe('parseCalendarEvent', () => {
   const baseColor = { light: '#00FF00' }

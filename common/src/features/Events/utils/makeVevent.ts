@@ -1,0 +1,177 @@
+import { extractEventBaseUuid } from '@common/utils/extractEventBaseUuid'
+import moment from 'moment'
+import { RepetitionRule } from '@common/features/Calendars/types/CalendarData'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { formatDateTimeToICal, formatDateToICal } from './formatDateToICal'
+
+export function makeVevent(
+  event: CalendarEvent,
+  tzid: string,
+  calOwnerEmail: string | undefined,
+  isMasterEvent?: boolean
+): [string, unknown[]] {
+  const vevent: [string, unknown[]] = [
+    'vevent',
+    [
+      ['uid', {}, 'text', extractEventBaseUuid(event.uid)],
+      ['transp', {}, 'text', event.transp ?? 'OPAQUE'],
+      [
+        'dtstart',
+        event.allday ? {} : { tzid },
+        event.allday ? 'date' : 'date-time',
+        event.allday
+          ? formatDateToICal(new Date(event.start))
+          : formatDateTimeToICal(new Date(event.start), tzid)
+      ],
+      ['class', {}, 'text', event.class ?? 'PUBLIC'],
+      ['sequence', {}, 'integer', event.sequence ?? 1],
+      [
+        'x-openpaas-videoconference',
+        {},
+        'unknown',
+        event.x_openpass_videoconference ?? null
+      ],
+      ['summary', {}, 'text', event.title ?? ''],
+      ['dtstamp', {}, 'date-time', formatDateTimeToICal(new Date())]
+    ]
+  ]
+  if (event.alarm?.trigger) {
+    const valarm = [
+      ['trigger', {}, 'duration', event.alarm.trigger],
+      ['action', {}, 'text', event.alarm.action],
+      ['attendee', {}, 'cal-address', `mailto:${calOwnerEmail}`],
+      ['summary', {}, 'text', event.title],
+      [
+        'description',
+        {},
+        'text',
+        'This is an automatic alarm sent by Twake Calendar'
+      ]
+    ]
+    vevent.push([['valarm', valarm]])
+  }
+
+  if (event.end) {
+    vevent[1].push([
+      'dtend',
+      event.allday ? {} : { tzid },
+      event.allday ? 'date' : 'date-time',
+      event.allday
+        ? formatDateToICal(new Date(event.end))
+        : formatDateTimeToICal(new Date(event.end), tzid)
+    ])
+  }
+  if (event.organizer) {
+    vevent[1].push([
+      'organizer',
+      { cn: event.organizer.cn },
+      'cal-address',
+      `mailto:${event.organizer.cal_address}`
+    ])
+  }
+  if (event.location) {
+    vevent[1].push(['location', {}, 'text', event.location])
+  }
+  if (event.recurrenceId && !isMasterEvent) {
+    vevent[1].push([
+      'recurrence-id',
+      event.allday ? {} : { tzid },
+      event.allday ? 'date' : 'date-time',
+      event.allday
+        ? formatDateToICal(new Date(event.recurrenceId))
+        : formatDateTimeToICal(new Date(event.recurrenceId), tzid)
+    ])
+  }
+  if (event.description) {
+    vevent[1].push(['description', {}, 'text', event.description])
+  }
+  if (event.repetition?.freq) {
+    const repetitionRule: RepetitionRule = { freq: event.repetition.freq }
+    if (event.repetition.interval) {
+      repetitionRule.interval = event.repetition.interval
+    }
+    if (event.repetition.occurrences) {
+      repetitionRule.count = event.repetition.occurrences
+    }
+    if (event.repetition.endDate) {
+      repetitionRule.until = formatUntilForRRule(
+        event.repetition.endDate,
+        event.allday ?? false,
+        tzid
+      )
+    }
+    if (
+      event.repetition.byday !== null &&
+      event.repetition.byday !== undefined
+    ) {
+      repetitionRule.byday = event.repetition.byday
+    }
+    if (event.repetition.wkst) {
+      repetitionRule.wkst = event.repetition.wkst
+    }
+    vevent[1].push(['rrule', {}, 'recur', repetitionRule])
+  }
+
+  event.attendee.forEach(att => {
+    const attendee: Record<string, string> = {
+      partstat: att.partstat,
+      rsvp: att.rsvp,
+      role: att.role,
+      cutype: att.cutype
+    }
+    if (att.cn) {
+      attendee.cn = att.cn
+    }
+    vevent[1].push([
+      'attendee',
+      attendee,
+      'cal-address',
+      `mailto:${att.cal_address}`
+    ])
+  })
+
+  if (event.exdates && event.exdates.length > 0) {
+    event.exdates.forEach(ex => {
+      vevent[1].push([
+        'exdate',
+        event.allday ? {} : { tzid },
+        event.allday ? 'date' : 'date-time',
+        event.allday
+          ? formatDateToICal(new Date(ex))
+          : formatDateTimeToICal(new Date(ex), tzid)
+      ])
+    })
+  }
+
+  if (event.passthroughProps?.length) {
+    const existingKeys = new Set(
+      vevent[1].map(p => (p as [string])[0].toLowerCase())
+    )
+    for (const prop of event.passthroughProps) {
+      if (!existingKeys.has(prop[0].toLowerCase())) {
+        vevent[1].push(prop)
+      }
+    }
+  }
+
+  return vevent
+}
+
+function formatUntilForRRule(
+  endDate: string,
+  allday: boolean,
+  tzid: string
+): string {
+  if (allday) {
+    return endDate.replace(/-/g, '')
+  }
+
+  // Take the date part of endDate, add end of day, convert to UTC
+  const datePart = endDate
+  const timePart = '23:59:59'
+
+  return moment
+    .tz(`${datePart}T${timePart}`, tzid)
+    .utc()
+    .format('YYYYMMDDTHHmmss[Z]')
+}

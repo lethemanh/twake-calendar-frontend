@@ -1,12 +1,12 @@
-import CalendarPopover from '@/components/Calendar/CalendarModal'
-import { fetchSecretLink } from '@/features/Calendars/CalendarDAO'
-import { Calendar } from '@/features/Calendars/CalendarTypes'
-import * as eventThunks from '@/features/Calendars/services'
-import * as delegationThunks from '@/features/Calendars/services/updateDelegationCalendarAsync'
+import CalendarPopover from '@common/components/Calendar/CalendarModal'
+import { fetchSecretLink } from '@common/features/Calendars/CalendarDAO'
+import { Calendar } from '@common/types/CalendarTypes'
+import * as eventThunks from '@common/features/Calendars/services'
+import * as delegationThunks from '@common/features/Calendars/services/updateDelegationCalendarAsync'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
-jest.mock('@/features/Calendars/CalendarDAO', () => ({
+jest.mock('@common/features/Calendars/CalendarDAO', () => ({
   fetchSecretLink: jest.fn()
 }))
 

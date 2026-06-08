@@ -1,5 +1,5 @@
-import SearchBar from '@/components/Menubar/EventSearchBar'
-import * as searchThunk from '@/features/Search/SearchSlice'
+import SearchBar from '@common/components/Menubar/EventSearchBar'
+import * as searchThunk from '@common/features/Search/SearchSlice'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../../utils/Renderwithproviders'

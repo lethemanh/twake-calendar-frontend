@@ -1,13 +1,13 @@
-import * as appHooks from '@/app/hooks'
-import * as EventDao from '@/features/Events/EventDao'
-import { AppDispatch } from '@/app/store'
-import CalendarApp from '@/components/Calendar/Calendar'
+import * as appHooks from '@common/app/hooks'
+import * as EventDao from '@common/features/Events/EventDao'
+import { AppDispatch } from '@common/app/store'
+import CalendarApp from '@common/components/Calendar/Calendar'
 import {
   createEventHandlers,
   EventHandlersProps
-} from '@/components/Calendar/handlers/eventHandlers'
-import * as eventThunks from '@/features/Calendars/services'
-import EventUpdateModal from '@/features/Events/EventUpdateModal'
+} from '@common/components/Calendar/handlers/eventHandlers'
+import * as eventThunks from '@common/features/Calendars/services'
+import EventUpdateModal from '@common/features/Events/EventUpdateModal'
 import { CalendarApi } from '@fullcalendar/core'
 import { jest } from '@jest/globals'
 import '@testing-library/jest-dom'

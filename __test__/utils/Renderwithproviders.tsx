@@ -1,5 +1,5 @@
-import type { AppStore, RootState } from '@/app/store'
-import { setupStore } from '@/app/store'
+import type { AppStore, RootState } from '@common/app/store'
+import { setupStore } from '@common/app/store'
 import { TwakeMuiThemeProvider } from '@linagora/twake-mui'
 import type { RenderOptions } from '@testing-library/react'
 import { render } from '@testing-library/react'

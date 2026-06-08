@@ -1,7 +1,7 @@
-import { RootState } from '@/app/store'
-import EventDuplication from '@/components/Event/EventDuplicate'
-import EventPreviewModal from '@/features/Events/EventPreview'
-import EventPopover from '@/features/Events/EventModal'
+import { RootState } from '@common/app/store'
+import EventDuplication from '@common/components/Event/EventDuplicate'
+import EventPreviewModal from '@common/components/EventPreview'
+import EventPopover from '@common/features/Events/EventModal'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 

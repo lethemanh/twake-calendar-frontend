@@ -3,12 +3,12 @@ import {
   importEvent,
   moveEvent,
   putEvent
-} from '@/features/Events/EventDao'
-import { CalendarEvent } from '@/features/Events/EventsTypes'
-import { calendarEventToJCal } from '@/features/Events/utils'
-import { api } from '@/utils/apiUtils'
+} from '@common/features/Events/EventDao'
+import { CalendarEvent } from '@common/types/EventsTypes'
+import { calendarEventToJCal } from '@common/features/Events/utils'
+import { api } from '@common/utils/apiUtils'
 
-jest.mock('@/utils/apiUtils')
+jest.mock('@common/utils/apiUtils')
 
 const day = new Date()
 

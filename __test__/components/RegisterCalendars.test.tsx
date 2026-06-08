@@ -1,13 +1,13 @@
-import RegisterCalendars from '@/components/Calendar/RegisterCalendars'
-import * as CalendarDAO from '@/features/Calendars/CalendarDAO'
-import * as CalendarSlice from '@/features/Calendars/services'
+import RegisterCalendars from '@common/components/Calendar/RegisterCalendars'
+import * as CalendarDAO from '@common/features/Calendars/CalendarDAO'
+import * as CalendarSlice from '@common/features/Calendars/services'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
 
-jest.mock('@/features/Calendars/CalendarDAO')
-jest.mock('@/features/Calendars/services/addCalendarResourceAsync')
+jest.mock('@common/features/Calendars/CalendarDAO')
+jest.mock('@common/features/Calendars/services/addCalendarResourceAsync')
 
-jest.mock('@/components/Attendees/PeopleSearch', () => ({
+jest.mock('@common/components/Attendees/PeopleSearch', () => ({
   PeopleSearch: ({
     onChange
   }: {

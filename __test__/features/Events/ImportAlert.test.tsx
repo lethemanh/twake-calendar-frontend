@@ -1,4 +1,4 @@
-import ImportAlert from '@/features/Events/ImportAlert'
+import ImportAlert from '@common/features/Events/ImportAlert'
 import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 

@@ -5,8 +5,8 @@ import {
   clientConfig,
   getClientConfig,
   Logout
-} from '@/features/User/oidcAuth'
-import * as apiUtils from '@/utils/apiUtils'
+} from '@common/features/User/oidcAuth'
+import * as apiUtils from '@common/utils/apiUtils'
 import * as client from 'openid-client'
 
 clientConfig.url = 'https://example.com'

@@ -1,19 +1,19 @@
-import type { AppDispatch, RootState } from '@/app/store'
-import { store } from '@/app/store'
-import { refreshCalendarWithSyncToken } from '@/features/Calendars/services'
-import { getDisplayedCalendarRange } from '@/utils'
-import { updateCalendars } from '@/websocket/messaging/updateCalendars'
+import type { AppDispatch, RootState } from '@common/app/store'
+import { store } from '@common/app/store'
+import { refreshCalendarWithSyncToken } from '@common/features/Calendars/services'
+import { getDisplayedCalendarRange } from '@common/utils'
+import { updateCalendars } from '@common/websocket/messaging/updateCalendars'
 
-jest.mock('@/features/Calendars/services', () => ({
+jest.mock('@common/features/Calendars/services', () => ({
   refreshCalendarWithSyncToken: jest.fn()
 }))
 
-jest.mock('@/utils', () => ({
+jest.mock('@common/utils', () => ({
   getDisplayedCalendarRange: jest.fn(),
-  findCalendarById: jest.requireActual('@/utils').findCalendarById
+  findCalendarById: jest.requireActual('@common/utils').findCalendarById
 }))
 
-jest.mock('@/app/store', () => ({
+jest.mock('@common/app/store', () => ({
   store: {
     getState: jest.fn()
   }

@@ -1,13 +1,13 @@
-import * as appHooks from '@/app/hooks'
-import { AppDispatch } from '@/app/store'
-import { InfoRow } from '@/components/Event/InfoRow'
+import * as appHooks from '@common/app/hooks'
+import { AppDispatch } from '@common/app/store'
+import { InfoRow } from '@common/components/Event/InfoRow'
 import {
   stringAvatar,
   stringToColor
-} from '@/components/Event/utils/eventUtils'
-import { DelegationAccess } from '@/features/Calendars/CalendarTypes'
-import * as eventThunks from '@/features/Calendars/services'
-import EventPreviewModal from '@/features/Events/EventPreview'
+} from '@common/components/Event/utils/eventUtils'
+import { DelegationAccess } from '@common/types/CalendarTypes'
+import * as eventThunks from '@common/features/Calendars/services'
+import EventPreviewModal from '@common/components/EventPreview'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 

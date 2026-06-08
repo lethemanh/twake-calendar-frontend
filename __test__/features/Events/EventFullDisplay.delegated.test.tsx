@@ -1,5 +1,5 @@
-import * as eventThunks from '@/features/Calendars/services'
-import EventUpdateModal from '@/features/Events/EventUpdateModal'
+import * as eventThunks from '@common/features/Calendars/services'
+import EventUpdateModal from '@common/features/Events/EventUpdateModal'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 
