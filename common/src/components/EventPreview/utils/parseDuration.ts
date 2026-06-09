@@ -51,3 +51,13 @@ export function translateDuration(
 
   return durationStr
 }
+
+export const translateAlarmAction = (
+  action: string,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string => {
+  if (!action) return ''
+  const translationKey = `event.form.notifications.${action}`
+  const translated = t(translationKey)
+  return translated === translationKey ? action : translated
+}

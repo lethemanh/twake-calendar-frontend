@@ -236,7 +236,8 @@
     "title": "Une erreur s'est produite",
     "unknown": "Une erreur inconnue s'est produite",
     "retry": "Réessayer",
-    "multipleEvents": "%{count} événements comportent des erreurs"
+    "multipleEvents": "%{count} événements comportent des erreurs",
+    "cannotLoadEvent": "Impossible de charger l'événement"
   },
   "editModeDialog": {
     "updateRecurrentEvent": "Mettre à jour l'événement récurrent",
@@ -452,5 +453,14 @@
     "expand": "Développer",
     "nextMonth": "Mois suivant",
     "previousMonth": "Mois précédent"
+  },
+  "publicLayout": {
+    "logoAlt": "Twake Calendar",
+    "title": "Agenda public par Twake Calendar.",
+    "useSubjectTo": "Votre utilisation est soumise à",
+    "privacyPolicy": "la Politique de confidentialité de Twake",
+    "and": "et aux",
+    "termsOfService": "Conditions d'utilisation",
+    "dot": "."
   }
 }

@@ -6,6 +6,7 @@
     "@linagora/twake-mui": "^1.6.1",
     "@sentry/react": "^8.55.1",
     "@calendar/common": "*",
+    "@mui/icons-material": "^7.1.2",
     "date-fns": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

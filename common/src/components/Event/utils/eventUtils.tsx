@@ -12,6 +12,7 @@ import { formatDateToYYYYMMDDTHHMMSS } from '@common/utils/dateUtils'
 import { Avatar, Badge, Box, Typography } from '@linagora/twake-mui'
 import CancelIcon from '@mui/icons-material/Cancel'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { ResourceIcon } from '@common/components/Attendees/ResourceIcon'
 
 export function renderAttendeeBadge(
   a: userAttendee,
@@ -43,28 +44,35 @@ export function renderAttendeeBadge(
           borderRadius: 1
         }}
       >
-        <Badge
-          overlap="circular"
-          sx={{ marginRight: 2 }}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          badgeContent={
-            classIcon && (
-              <Box
-                style={{
-                  fontSize: 14,
-                  lineHeight: 0,
-                  backgroundColor: 'white',
-                  borderRadius: '50%',
-                  padding: '1px'
-                }}
-              >
-                {classIcon}
-              </Box>
-            )
-          }
-        >
-          <Avatar {...stringAvatar(a.cn || a.cal_address)} />
-        </Badge>
+        {a.cutype === 'RESOURCE' && (
+          <Box sx={{ marginRight: 2 }}>
+            <ResourceIcon />
+          </Box>
+        )}
+        {a.cutype !== 'RESOURCE' && (
+          <Badge
+            overlap="circular"
+            sx={{ marginRight: 2 }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            badgeContent={
+              classIcon && (
+                <Box
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 0,
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    padding: '1px'
+                  }}
+                >
+                  {classIcon}
+                </Box>
+              )
+            }
+          >
+            <Avatar {...stringAvatar(a.cn || a.cal_address)} />
+          </Badge>
+        )}
         <Box style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <Typography variant="body2" noWrap>
             {a.cn || a.cal_address}
