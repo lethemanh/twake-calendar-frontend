@@ -1,38 +1,19 @@
-import { Box, SxProps, Theme } from '@linagora/twake-mui'
-import { alpha } from '@mui/material/styles'
+import { Box } from '@linagora/twake-mui'
 import React from 'react'
 import { useI18n } from 'twake-i18n'
-import { CalendarEvent } from '@common/types/EventsTypes'
 import { EventPreviewAttendees } from './EventPreviewAttendees'
 import { renderAttendeeBadge } from '@common/components/Event/utils/eventUtils'
 import { useFilterEventAttendees } from '@common/components/Event/hooks/useFilterEventAttendees'
-import { PrivateEventPreview } from './PrivateEventPreview'
+import { PrivateEventPreview } from '@common/components/EventPreview/PrivateEventPreview'
 import {
   EventVideoRow,
   EventLocationRow,
-  EventResourceRow,
   EventDescriptionRow,
   EventAlarmRow,
   EventRepetitionRow,
   EventErrorRow
-} from './EventDetailsRows'
-
-export interface EventPreviewDetailsProps {
-  event: CalendarEvent
-  isOwn: boolean
-  isNotPrivate: boolean
-  isResourceEventPreview?: boolean
-  calendarName?: string
-}
-
-export const infoIconSx = (theme: Theme): SxProps<Theme> => ({
-  minWidth: '25px',
-  marginRight: 2,
-  color: alpha(theme.palette.grey[900], 0.9),
-  display: 'flex',
-  alignItems: 'center',
-  alignSelf: 'center'
-})
+} from '@common/components/EventPreview/EventDetailsRows'
+import { EventPreviewDetailsProps } from '@common/components/EventPreview/EventPreviewDetails'
 
 export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
   event,
@@ -43,20 +24,17 @@ export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
 }) => {
   const { t } = useI18n()
 
-  const { resources, eventAttendees, attendees, organizer } =
-    useFilterEventAttendees({
-      event,
-      isResourceEventPreview,
-      calendarName
-    })
-
-  const showDetails = isNotPrivate || isOwn
+  const { attendees, organizer } = useFilterEventAttendees({
+    event,
+    isResourceEventPreview,
+    calendarName
+  })
 
   const shouldShowAttendeesSection =
     !isResourceEventPreview &&
-    (attendees.length > 0 || Boolean(organizer.cal_address || organizer?.cn))
+    (attendees.length > 0 || Boolean(organizer.cal_address || organizer.cn))
 
-  if (!showDetails) {
+  if (!(isNotPrivate || isOwn)) {
     return <PrivateEventPreview />
   }
 
@@ -70,6 +48,14 @@ export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
     >
       <EventVideoRow meetingLink={event.x_openpass_videoconference} />
 
+      <EventLocationRow location={event.location} />
+
+      <EventDescriptionRow description={event.description} />
+
+      <EventAlarmRow alarm={event.alarm} />
+
+      <EventRepetitionRow repetition={event.repetition} />
+
       {isResourceEventPreview &&
         organizer &&
         renderAttendeeBadge(organizer, 'org', t, true, true)}
@@ -78,23 +64,13 @@ export const EventPreviewDetails: React.FC<EventPreviewDetailsProps> = ({
         <EventPreviewAttendees
           attendees={attendees}
           organizer={organizer}
-          allAttendees={eventAttendees ?? []}
+          allAttendees={event.attendee ?? []}
           start={event.start}
           end={event.end}
           timezone={event.timezone}
           eventUid={event.uid}
         />
       )}
-
-      <EventLocationRow location={event.location} />
-
-      <EventResourceRow resources={resources} />
-
-      <EventDescriptionRow description={event.description} />
-
-      <EventAlarmRow alarm={event.alarm} />
-
-      <EventRepetitionRow repetition={event.repetition} />
 
       <EventErrorRow error={event.error} />
     </Box>

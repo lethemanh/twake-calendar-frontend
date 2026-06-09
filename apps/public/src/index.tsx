@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/react'
 import './index.styl'
 import App from './App'
 import { store } from '@common/app/store'
-import { initSentry, SentryErrorBoundary } from '@common/app/sentry'
+import { initSentry } from '@common/app/sentry'
 
 initSentry()
 

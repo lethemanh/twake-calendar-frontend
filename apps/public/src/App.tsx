@@ -8,6 +8,8 @@ import { Error as ErrorPage } from '@common/components/Error/Error'
 import { ErrorBoundary } from 'react-error-boundary'
 import { Loading } from '@common/components/Loading/Loading'
 import { AVAILABLE_LANGUAGES } from '@common/features/Settings/constants'
+import { PublicLayout } from './components/PublicLayout'
+import { EventPreviewPage } from './features/EventPreview/EventPreviewPage'
 
 import {
   enGB,
@@ -43,7 +45,6 @@ export default function App(): JSX.Element {
 
   return (
     <TwakeMuiThemeProvider>
-      {/* @ts-expect-error - twake-i18n types are incompatible with React 18 */}
       <I18n
         dictRequire={(lang: keyof typeof locale) => locale[lang]}
         lang={lang}
@@ -66,7 +67,14 @@ export default function App(): JSX.Element {
           <Suspense fallback={<Loading />}>
             <Router history={history}>
               <Routes>
-                <Route path="*" element={<div>Public Calendar App</div>} />
+                <Route
+                  path="/excal"
+                  element={
+                    <PublicLayout>
+                      <EventPreviewPage />
+                    </PublicLayout>
+                  }
+                />
               </Routes>
             </Router>
           </Suspense>

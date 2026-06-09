@@ -234,7 +234,8 @@
     "title": "Đã xảy ra lỗi",
     "unknown": "Có lỗi không xác định",
     "retry": "Thử lại",
-    "multipleEvents": "%{count} sự kiện gặp lỗi"
+    "multipleEvents": "%{count} sự kiện gặp lỗi",
+    "cannotLoadEvent": "Không thể tải sự kiện"
   },
   "editModeDialog": {
     "updateRecurrentEvent": "Cập nhật sự kiện lặp lại",
@@ -450,5 +451,14 @@
     "expand": "Mở rộng",
     "nextMonth": "Tháng sau",
     "previousMonth": "Tháng trước"
+  },
+  "publicLayout": {
+    "logoAlt": "Twake Calendar",
+    "title": "Lịch công khai bởi Twake Calendar.",
+    "useSubjectTo": "Việc sử dụng của bạn phải tuân theo",
+    "privacyPolicy": "Chính sách bảo mật của Twake",
+    "and": "và",
+    "termsOfService": "Điều khoản dịch vụ",
+    "dot": "."
   }
 }

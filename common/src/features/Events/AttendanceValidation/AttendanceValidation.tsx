@@ -15,13 +15,15 @@ interface AttendanceValidationProps {
     func: ((type: 'solo' | 'all' | undefined) => void) | undefined
   ) => void
   setOpenEditModePopup: Dispatch<SetStateAction<string | null>>
+  hideCounterProposalSection?: boolean
 }
 
 export function AttendanceValidation({
   contextualizedEvent,
   user,
   setAfterChoiceFunc,
-  setOpenEditModePopup
+  setOpenEditModePopup,
+  hideCounterProposalSection
 }: AttendanceValidationProps): JSX.Element | null {
   const { calendar } = contextualizedEvent
   const theme = useTheme()
@@ -68,10 +70,12 @@ export function AttendanceValidation({
         isResource={!!calendar.owner?.resource}
         commonButtonProps={commonButtonProps}
       />
-      <CounterProposalSection
-        isOrganizer={contextualizedEvent.isOrganizer}
-        onToggle={() => setOpenCounterModal(!openCounterModal)}
-      />
+      {!hideCounterProposalSection && (
+        <CounterProposalSection
+          isOrganizer={contextualizedEvent.isOrganizer}
+          onToggle={() => setOpenCounterModal(!openCounterModal)}
+        />
+      )}
       <EventCounterModal
         open={openCounterModal}
         setOpen={setOpenCounterModal}

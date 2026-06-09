@@ -236,7 +236,8 @@
     "title": "Что-то пошло не так",
     "unknown": "Произошла неизвестная ошибка",
     "retry": "Повторить",
-    "multipleEvents": "%{count} событий с ошибками"
+    "multipleEvents": "%{count} событий с ошибками",
+    "cannotLoadEvent": "Не удалось загрузить событие"
   },
   "editModeDialog": {
     "updateRecurrentEvent": "Обновить повторяющееся событие",
@@ -452,5 +453,14 @@
     "expand": "Развернуть",
     "nextMonth": "Следующий месяц",
     "previousMonth": "Предыдущий месяц"
+  },
+  "publicLayout": {
+    "logoAlt": "Twake Calendar",
+    "title": "Публичный календарь от Twake Calendar.",
+    "useSubjectTo": "Использование вами регулируется",
+    "privacyPolicy": "Политикой конфиденциальности Twake",
+    "and": "и",
+    "termsOfService": "Условиями обслуживания",
+    "dot": "."
   }
 }

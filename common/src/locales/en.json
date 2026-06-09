@@ -234,7 +234,8 @@
     "title": "Something went wrong",
     "unknown": "An unknown error occurred",
     "retry": "Try Again",
-    "multipleEvents": "%{count} events with errors"
+    "multipleEvents": "%{count} events with errors",
+    "cannotLoadEvent": "Unable to load event"
   },
   "editModeDialog": {
     "updateRecurrentEvent": "Update the recurrent event",
@@ -450,5 +451,14 @@
     "expand": "Expand",
     "nextMonth": "Next month",
     "previousMonth": "Previous month"
+  },
+  "publicLayout": {
+    "logoAlt": "Twake Calendar",
+    "title": "Public Agenda by Twake Calendar.",
+    "useSubjectTo": "Your use is subject to",
+    "privacyPolicy": "Twake's Privacy Policy",
+    "and": "and",
+    "termsOfService": "Terms of Service",
+    "dot": "."
   }
 }

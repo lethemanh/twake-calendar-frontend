@@ -20,6 +20,8 @@ declare global {
     MAIL_SPA_URL: string
     VIDEO_CONFERENCE_BASE_URL: string
     SUPPORT_URL: string
+    PRIVACY_URL: string
+    TERMS_URL: string
 
     SENTRY_DSN: string | undefined
 
