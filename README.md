@@ -6,74 +6,140 @@
 
 ## Goals
 
-This project aims at service a Single Page Application allowing a user to interact with its calendar.
+This project aims at serving a Single Page Application allowing a user to interact with its calendar.
 
-This frontend-only application will interact with:
+This frontend application is built in a monorepo structure with Rsbuild, React, and TypeScript. It interacts with:
 
 - [esn-sabre](https://github.com/linagora/esn-sabre/) CalDAV + CardDAV server, tailor made for LINAGORA needs.
 - [Twake Calendar side service](https://github.com/linagora/twake-calendar-side-service) that delivers additional backend features for Sabre.
 
-It is meant as a drop in replacement of [esn-frontend-calendar](https://github.com/linagora/esn-frontend-calendar).
+It is meant as a drop-in replacement of [esn-frontend-calendar](https://github.com/linagora/esn-frontend-calendar).
+
+---
+
+## Project Structure
+
+The repository is organized as a monorepo workspace:
+
+- **[`apps/private`](apps/private)**: The main private calendar application. Accessible by authenticated users.
+- **[`apps/public`](apps/public)**: The public calendar application. Used for public event previews and shared links.
+- **[`common`](common)**: Shared components, hooks, translation locales, and utility functions used by both applications.
+
+---
 
 ## Contributing
 
-### Formating
+### Formatting
 
-We use [Prettier](https://prettier.io/) to keep code style consistent.  
+We use [Prettier](https://prettier.io/) to keep code style consistent.
 A `.prettierrc` file is already included in the repo, so formatting rules are predefined.
 
 Before committing, make sure you format your files either using your IDE Prettier extension or Prettier CLI.
 
+---
+
 ## Running it
 
-Requirement: node 24+
+Requirement: **Node 24+**
 
-### Compile it and run it
+First, install the dependencies from the root directory:
 
-In the project directory, you can run:
+```bash
+npm install
+```
 
-### `npm start`
+### Development Mode
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+To start the applications in development mode, use the following commands:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- **Private Application**:
 
-### `npm test`
+  ```bash
+  npm run start:private
+  ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+  Runs the private app on [http://localhost:5000](http://localhost:5000).
 
-### `npm run build`
+- **Public Application**:
+  ```bash
+  npm run start:public
+  ```
+  Runs the public app on [http://localhost:5001](http://localhost:5001).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Production Build
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+To build the applications for production, run:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Build Both Apps**:
 
-### `npm run eject`
+  ```bash
+  npm run build
+  ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- **Build Private App Only**:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+  ```bash
+  npm run build:private
+  ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- **Build Public App Only**:
+  ```bash
+  npm run build:public
+  ```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+The production bundles will be compiled to `apps/private/dist` and `apps/public/dist` respectively.
 
-### Run it with docker
+### Serving Locally
 
-First, compile the project with npm:
+You can serve the built production assets locally using:
+
+- **Serve Private App**:
+
+  ```bash
+  npm run serve:private
+  ```
+
+  Serves on [http://localhost:5000](http://localhost:5000).
+
+- **Serve Public App**:
+  ```bash
+  npm run serve:public
+  ```
+  Serves on [http://localhost:5001](http://localhost:5001).
+
+### Running Tests
+
+Launches the Jest test runner:
+
+```bash
+npm test
+```
+
+### Linting
+
+To run the ESLint checks:
+
+```bash
+npm run lint
+```
+
+To automatically fix formatting and lint errors:
+
+```bash
+npm run lint:fix
+```
+
+---
+
+## Running with Docker
+
+First, build the applications:
 
 ```bash
 npm run build
 ```
 
-Then build the docker image for the specific application (private or public):
+Then build the Docker image for the specific application:
 
 ```bash
 # For private app:
@@ -92,21 +158,43 @@ docker run -d \
   linagora/twake-calendar-private
 ```
 
-And then visit [https://localhost:5000](https://localhost:5000).
+---
 
-## Configuring it
+## Configuring the Application
 
-### App grid
+The applications load configuration dynamically at runtime from static JavaScript files in the `public` directory.
 
-An applist is configurable in the public folder to setup the grid of app accessible within Twake Calendar.
+### Environment variables (`.env.js`)
+
+1. Copy `public/.env.example.js` to `public/.env.js`
+2. Customize the variables in `public/.env.js` to match your environment.
+
+#### Public App Configuration Guideline
+
+The **Public App** (`apps/public`) requires three specific environment variables to be defined in `.env.js` to configure external links in the user interface (such as help buttons and terms/privacy links in the page footers):
+
+- **`SUPPORT_URL`**: The URL for the "Need help" button located in the top-right header of the public layout.
+- **`PRIVACY_URL`**: The URL for the "Privacy Policy" link in the footer of the public layout.
+- **`TERMS_URL`**: The URL for the "Terms of Service" link in the footer of the public layout.
+
+Example `.env.js` snippet:
+
+```javascript
+var SUPPORT_URL = 'https://twake.com/help'
+var PRIVACY_URL = 'https://twake.com/privacy'
+var TERMS_URL = 'https://twake.com/terms'
+```
+
+### App list grid (`appList.js`)
+
+An applist is configurable in the public folder to setup the grid of apps accessible within Twake Calendar (private app).
 
 1. Copy `public/appList.example.js` to `public/appList.js`
 2. Place your app icons in `public/assets/images/svg/` directory
 3. Configure each app with three fields:
-
-- name: the app's name
-- icon: the path to the app's icon (relative to public folder, e.g., `/assets/images/svg/app-chat.svg`)
-- link: the app's link or URL
+   - `name`: the app's name
+   - `icon`: the path to the app's icon (relative to public folder, e.g., `/assets/images/svg/app-chat.svg`)
+   - `link`: the app's link or URL
 
 Example:
 
@@ -130,7 +218,9 @@ var appList = [
 ]
 ```
 
-**Note**: `appList.js` is gitignored, so each environment can have its own configuration. The icon files in `public/assets/images/svg/` should be committed to the repository.
+**Note**: `appList.js` and `.env.js` are gitignored, so each environment can have its own configuration.
+
+---
 
 ## Roadmap
 
