@@ -208,6 +208,15 @@ const PROPERTY_PARSERS: Record<
   },
   rrule: (params, value, event) => {
     parseRruleProperty(value, event)
+  },
+  attach: (params, value, event) => {
+    const paramsObj = (params ?? {}) as Record<string, string | undefined>
+    if (!event.attach) event.attach = []
+    event.attach.push({
+      uri: safeString(value),
+      fmttype: paramsObj.fmttype,
+      x_filename: paramsObj['x-filename']
+    })
   }
 }
 
