@@ -40,6 +40,10 @@ declare module '@linagora/twake-mui' {
   export const Avatar: import('react').FC<AvatarProps>
 
   export const radius: Record<string, string | number>
+
+  export const TwakeMuiThemeProvider: import('react').FC<
+    import('@mui/material/styles').ThemeProviderProps
+  >
 }
 
 declare const process: {
@@ -56,5 +60,6 @@ declare module 'twake-i18n' {
   }
   export const I18nContext: import('react').Context<any>
   export const DEFAULT_LANG: string
-  export default class I18n extends import('react').Component<any, any, any> {}
+  const I18n: import('react').ComponentType<any>
+  export default I18n
 }
