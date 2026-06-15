@@ -1,3 +1,4 @@
+import cx from 'classnames'
 import { useAppDispatch, useAppSelector } from '@common/app/hooks'
 import { setIsMobileSearchOpen } from '@common/features/Calendars/CalendarSlice'
 import EventPopover from '@common/features/Events/EventModal'
@@ -492,7 +493,10 @@ const CalendarApp: React.FC<CalendarAppProps> = ({
 
   return (
     <main
-      className={`main-layout calendar-layout ${menubarProps?.isIframe ? ' isInIframe' : ''}`}
+      className={cx('main-layout calendar-layout', {
+        isInIframe: Boolean(menubarProps?.isIframe),
+        'calendar-layout--desktop': !isMobile
+      })}
     >
       <TimezoneChangeAlert />
       <Sidebar
