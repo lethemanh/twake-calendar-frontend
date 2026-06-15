@@ -10,6 +10,7 @@ import {
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import React from 'react'
 import { useI18n } from 'twake-i18n'
+import { PublicLanguageSelector } from './PublicLanguageSelector'
 
 interface PublicLayoutProps {
   children?: React.ReactNode
@@ -38,9 +39,14 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
         sx={{
           position: 'absolute',
           top: { xs: 16, sm: 24 },
-          right: { xs: 16, sm: 24 }
+          right: { xs: 16, sm: 24 },
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
         }}
       >
+        <PublicLanguageSelector />
+
         <Button
           onClick={handleHelpClick}
           sx={{
