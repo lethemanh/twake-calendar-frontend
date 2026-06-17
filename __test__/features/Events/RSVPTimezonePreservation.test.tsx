@@ -125,4 +125,56 @@ describe('#1031 partstat update preserves DTSTART timezone', () => {
     // The lossy regeneration path (redux thunk) was not used.
     expect(dispatch).not.toHaveBeenCalled()
   })
+
+  it('falls back to regeneration when the attendee is absent from the event', async () => {
+    const noMatchJCal: VCalComponent = [
+      'vcalendar',
+      [],
+      [
+        [
+          'vevent',
+          [
+            ['uid', {}, 'text', 'event-abc-uid'],
+            [
+              'attendee',
+              { partstat: 'NEEDS-ACTION', cutype: 'INDIVIDUAL' },
+              'cal-address',
+              'mailto:someone-else@example.com'
+            ]
+          ],
+          []
+        ]
+      ]
+    ]
+    jest.spyOn(EventDao, 'fetchEventJCal').mockResolvedValue(noMatchJCal)
+    const putSpy = jest
+      .spyOn(EventDao, 'putEvent')
+      .mockResolvedValue({} as Response)
+    const dispatch = jest.fn()
+
+    await handleRSVP(dispatch, CALENDAR, USER, STALE_EVENT, 'TENTATIVE')
+
+    expect(putSpy).not.toHaveBeenCalled()
+    expect(dispatch).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to regeneration when there is no user email', async () => {
+    const fetchSpy = jest.spyOn(EventDao, 'fetchEventJCal')
+    const putSpy = jest
+      .spyOn(EventDao, 'putEvent')
+      .mockResolvedValue({} as Response)
+    const dispatch = jest.fn()
+
+    await handleRSVP(
+      dispatch,
+      CALENDAR,
+      {} as userData,
+      STALE_EVENT,
+      'TENTATIVE'
+    )
+
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(putSpy).not.toHaveBeenCalled()
+    expect(dispatch).toHaveBeenCalledTimes(1)
+  })
 })
