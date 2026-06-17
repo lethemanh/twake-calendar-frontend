@@ -71,14 +71,14 @@ export const ViewSwitcher: React.FC<
               </ListItemIcon>
               <ListItemText
                 primary={t(option.label)}
-                primaryTypographyProps={{
-                  sx: {
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    lineHeight: '20px',
-                    color: isSelected
-                      ? theme.palette.primary.main
-                      : theme.palette.text.primary
+                slotProps={{
+                  primary: {
+                    variant: 'h6',
+                    sx: {
+                      color: isSelected
+                        ? theme.palette.primary.main
+                        : theme.palette.text.primary
+                    }
                   }
                 }}
               />
