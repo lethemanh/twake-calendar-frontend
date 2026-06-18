@@ -144,7 +144,7 @@ export async function fetchEventJCal(
 ): Promise<VCalComponent> {
   const response = await api.get(`dav${event.URL}`)
   if (!response.ok) {
-    console.error(
+    throw new Error(
       `fetchEventJCal failed for ${event.URL} with status ${response.status}`
     )
   }

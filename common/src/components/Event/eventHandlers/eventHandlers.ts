@@ -145,11 +145,12 @@ async function handleDefaultRSVP({
   const matcher = makePartstatMatcher(calendar, user)
   if (matcher) {
     const jCal = await fetchEventJCal(event)
+    console.log('Fetched jCal for RSVP update:', jCal)
     const patched = updateEventPartstatJCal(jCal, matcher, rsvp)
     if (patched) {
       const response = await putEvent(event, patched)
       if (!response.ok) {
-        console.error(
+        throw new Error(
           `RSVP update failed for ${event.URL} with status ${response.status}`
         )
       }

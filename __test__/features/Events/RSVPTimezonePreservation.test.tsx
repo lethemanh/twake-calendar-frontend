@@ -102,7 +102,7 @@ describe('#1031 partstat update preserves DTSTART timezone', () => {
   it('updates only PARTSTAT in the stored jCal, leaving DTSTART intact', async () => {
     const putSpy = jest
       .spyOn(EventDao, 'putEvent')
-      .mockResolvedValue({} as Response)
+      .mockResolvedValue({ ok: true, status: 200 } as Response)
     const dispatch = jest.fn()
 
     await handleRSVP({
@@ -155,7 +155,7 @@ describe('#1031 partstat update preserves DTSTART timezone', () => {
     jest.spyOn(EventDao, 'fetchEventJCal').mockResolvedValue(noMatchJCal)
     const putSpy = jest
       .spyOn(EventDao, 'putEvent')
-      .mockResolvedValue({} as Response)
+      .mockResolvedValue({ ok: true, status: 200 } as Response)
     const dispatch = jest.fn()
 
     await handleRSVP({
@@ -174,7 +174,7 @@ describe('#1031 partstat update preserves DTSTART timezone', () => {
     const fetchSpy = jest.spyOn(EventDao, 'fetchEventJCal')
     const putSpy = jest
       .spyOn(EventDao, 'putEvent')
-      .mockResolvedValue({} as Response)
+      .mockResolvedValue({ ok: true, status: 200 } as Response)
     const dispatch = jest.fn()
 
     await handleRSVP({
