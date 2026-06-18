@@ -36,15 +36,18 @@ export interface EventHandlersProps {
   calendarRef: React.RefObject<CalendarApi | null>
   dispatch: AppDispatch
   setOpenEventDisplay: (open: boolean) => void
+  openEventDisplay: boolean
   setEventDisplayedId: (id: string) => void
+  eventDisplayedId: string
   setEventDisplayedCalId: (id: string) => void
+  eventDisplayedCalId: string
   setEventDisplayedTemp: (temp: boolean) => void
   calendars: Record<string, Calendar>
   setSelectedEvent: (event: CalendarEvent) => void
   setAfterChoiceFunc: (
     func: ((type: 'solo' | 'all' | undefined) => void) | undefined
   ) => void
-  setOpenEditModePopup: (open: string) => void
+  setOpenEditModePopup: (open: string | null) => void // Wait, in Calendar.tsx line 364, it's string | null
   tempUsers: User[]
   setTempEvent: (event: CalendarEvent) => void
   timezone: string
@@ -143,7 +146,7 @@ export const createEventHandlers = (
   const mapTempUserToAttendee = (user: User): userAttendee => {
     const attendeeOption: AttendeeOptions = {
       cal_address: user.email,
-      cn: user.displayName,
+      cn: user.displayName as string,
       rsvp: 'TRUE'
     }
 

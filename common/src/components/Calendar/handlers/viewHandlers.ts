@@ -7,6 +7,7 @@ import {
   DayHeaderContentArg,
   DayHeaderMountArg,
   EventContentArg,
+  EventInput,
   EventMountArg,
   NowIndicatorContentArg,
   ViewMountArg
@@ -31,6 +32,11 @@ export interface ViewHandlersProps {
   isMobile: boolean
   t: (key: string) => string
   upcommingEventId?: string
+  currentView?: string
+  view?: string
+  calendarWrapperRef?: React.RefObject<HTMLDivElement>
+  sortedSelectedCalendars?: string[]
+  fullCalendarEvents?: EventInput[]
 }
 
 export interface ViewHandlers {
