@@ -14,6 +14,7 @@ import {
   SlotLabelContentArg
 } from '@fullcalendar/core/index.js'
 import moment from 'moment-timezone'
+import { CALENDAR_VIEWS } from './constants'
 
 export const updateSlotLabelVisibility = (
   currentTime: Date,
@@ -432,4 +433,14 @@ export const sortEventsByDateTime = (
   const bPriority =
     (nextEvent.extendedProps as { priority?: number })?.priority ?? 0
   return aPriority - bPriority
+}
+
+export const getInitialCalendarView = (
+  currentView: string | undefined,
+  isTablet: boolean
+): string => {
+  return (
+    currentView ||
+    (isTablet ? CALENDAR_VIEWS.timeGridDay : CALENDAR_VIEWS.timeGridWeek)
+  )
 }

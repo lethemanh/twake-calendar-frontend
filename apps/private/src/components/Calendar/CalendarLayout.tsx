@@ -9,15 +9,23 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ErrorSnackbar } from '@common/components/Error/ErrorSnackbar'
 import { refreshCalendars } from '@common/components/Event/utils/eventUtils'
 import { Menubar, MenubarProps } from '@common/components/Menubar/Menubar'
-import CalendarApp from '@common/components/Calendar/Calendar'
+import CalendarController, {
+  CalendarControllerRef
+} from '@common/components/Calendar/CalendarController'
 import { CALENDAR_VIEWS } from '@common/components/Calendar/utils/constants'
 import { setView } from '@common/features/Settings/SettingsSlice'
+import Sidebar from '@common/components/Calendar/Sidebar/SideBar'
+import TempSearchDialog from '@common/components/Calendar/TempSearchDialog'
+import { setIsMobileSearchOpen } from '@common/features/Calendars/CalendarSlice'
+import { useManageCalendarSelection } from './hooks/useManageCalendarSelection'
 
 export default function CalendarLayout(): JSX.Element {
   const calendarRef = useRef<CalendarApi | null>(null)
+  const controllerRef = useRef<CalendarControllerRef | null>(null)
   const dispatch = useAppDispatch()
+
   const error = useAppSelector(state => state.calendars.error)
-  const selectedCalendars = useAppSelector(state => state.calendars.list)
+  const calendars = useAppSelector(state => state.calendars.list)
   const tempcalendars = useAppSelector(state => state.calendars.templist)
   const view = useAppSelector(state => state.settings.view)
 
@@ -34,7 +42,7 @@ export default function CalendarLayout(): JSX.Element {
   const currentViewModeRef = useRef<string>()
 
   useEffect(() => {
-    const setView = (): void => {
+    const setViewMode = (): void => {
       if (currentViewModeRef.current) return
       const storedView =
         isTablet || isMobile
@@ -44,21 +52,29 @@ export default function CalendarLayout(): JSX.Element {
       currentViewModeRef.current = storedView
     }
 
-    setView()
+    setViewMode()
   }, [isTablet, isMobile])
 
   const isInIframe = useMemo(() => new CozyBridge().isInIframe(), [])
 
+  // Manage calendar selection states
+  const {
+    selectedCalendars,
+    setSelectedCalendars,
+    tempUsers,
+    setTempUsers,
+    selectedMiniDate,
+    setSelectedMiniDate
+  } = useManageCalendarSelection()
+
   const handleRefresh = async (): Promise<void> => {
-    // Get current calendar range
     if (calendarRef.current) {
       const view = calendarRef.current.view
       const calendarRange = getViewRange(view.activeStart, view.type)
 
-      // Refresh events for selected calendars
       await refreshCalendars(
         dispatch,
-        Object.values(selectedCalendars),
+        Object.values(calendars || {}),
         calendarRange
       )
       if (tempcalendars) {
@@ -78,18 +94,14 @@ export default function CalendarLayout(): JSX.Element {
 
   const handleViewChange = (view: string): void => {
     dispatch(setView('calendar'))
-
-    // Notify parent about view change
     setCurrentView(view)
 
     if (calendarRef.current) {
-      // Notify parent about date change after view change
       const newDate = calendarRef.current.getDate()
       handleDateChange(newDate)
     }
   }
 
-  // Hide topbar navigation elements when in settings view (same as fullscreen dialog mode)
   useEffect(() => {
     if (view === 'settings') {
       document.body.classList.add('fullscreen-view')
@@ -97,7 +109,6 @@ export default function CalendarLayout(): JSX.Element {
       document.body.classList.remove('fullscreen-view')
     }
 
-    // Cleanup on unmount
     return (): void => {
       document.body.classList.remove('fullscreen-view')
     }
@@ -118,16 +129,60 @@ export default function CalendarLayout(): JSX.Element {
     <div className={cx('App ', { 'App--mobile': isMobile })}>
       {!isInIframe && <Menubar {...menubarProps} />}
       {(view === 'calendar' || view === 'search') && (
-        <CalendarApp
-          calendarRef={calendarRef}
-          onDateChange={handleDateChange}
-          onViewChange={handleViewChange}
-          menubarProps={menubarProps}
-          openSidebar={openSidebar}
-          onCloseSidebar={() => setOpenSideBar(false)}
-          setCurrentView={setCurrentView}
-          currentView={currentView}
-        />
+        <main
+          className={cx('main-layout calendar-layout', {
+            isInIframe: isInIframe,
+            'calendar-layout--desktop': !isMobile
+          })}
+        >
+          <Sidebar
+            open={openSidebar}
+            onClose={() => setOpenSideBar(false)}
+            calendarRef={calendarRef}
+            isIframe={isInIframe}
+            onCreateEvent={() => controllerRef.current?.handleCreateEvent()}
+            onViewChange={handleViewChange}
+            selectedMiniDate={selectedMiniDate}
+            setSelectedMiniDate={setSelectedMiniDate}
+            selectedCalendars={selectedCalendars}
+            setSelectedCalendars={setSelectedCalendars}
+            tempUsers={tempUsers}
+            setTempUsers={setTempUsers}
+            currentView={currentView}
+            onDateChange={handleDateChange}
+          />
+          <div className="calendar">
+            {isInIframe && <Menubar {...menubarProps} />}
+            <CalendarController
+              calendarRef={calendarRef}
+              controllerRef={controllerRef}
+              currentDate={currentDate}
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              selectedCalendars={selectedCalendars}
+              setSelectedCalendars={setSelectedCalendars}
+              tempUsers={tempUsers}
+              setTempUsers={setTempUsers}
+              selectedMiniDate={selectedMiniDate}
+              setSelectedMiniDate={setSelectedMiniDate}
+              onDateChange={handleDateChange}
+              onViewChange={handleViewChange}
+            />
+          </div>
+          {isMobile && (
+            <TempSearchDialog
+              tempUsers={tempUsers}
+              setTempUsers={setTempUsers}
+              onClose={() => {
+                dispatch(setIsMobileSearchOpen(false))
+                setOpenSideBar(false)
+              }}
+              handleToggleEventPreview={() =>
+                controllerRef.current?.handleCreateEvent()
+              }
+            />
+          )}
+        </main>
       )}
       {view === 'settings' && (
         <SettingsPage menubarProps={menubarProps} isInIframe={isInIframe} />

@@ -1,6 +1,6 @@
 import * as appHooks from '@common/app/hooks'
 import { AppDispatch } from '@common/app/store'
-import CalendarApp from '@common/components/Calendar/Calendar'
+import CalendarLayout from '@private/components/Calendar/CalendarLayout'
 import { jest } from '@jest/globals'
 import { screen } from '@testing-library/react'
 import { renderWithProviders } from '../utils/Renderwithproviders'
@@ -48,17 +48,7 @@ describe('MiniCalendar', () => {
       }
     }
     const mockCalendarRef = { current: null }
-    renderWithProviders(
-      <CalendarApp
-        setCurrentView={jest.fn()}
-        onViewChange={jest.fn()}
-        openSidebar={false}
-        onCloseSidebar={jest.fn()}
-        currentView="timeGridWeek"
-        calendarRef={mockCalendarRef}
-      />,
-      preloadedState
-    )
+    renderWithProviders(<CalendarLayout />, preloadedState)
   }
 
   it('renders mini calendar with today in orange', async () => {

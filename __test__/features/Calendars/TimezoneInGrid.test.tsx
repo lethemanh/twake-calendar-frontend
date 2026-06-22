@@ -1,4 +1,4 @@
-import CalendarApp from '@common/components/Calendar/Calendar'
+import CalendarLayout from '@private/components/Calendar/CalendarLayout'
 import * as calendarUtils from '@common/components/Calendar/utils/calendarUtils'
 import { updateSlotLabelVisibility } from '@common/components/Calendar/utils/calendarUtils'
 import EventPreviewModal from '@common/components/EventPreview'
@@ -42,17 +42,7 @@ describe('Calendar - Timezone Integration', () => {
   })
 
   it('renders TimezoneSelector in week view', async () => {
-    renderWithProviders(
-      <CalendarApp
-        setCurrentView={jest.fn()}
-        onViewChange={jest.fn()}
-        openSidebar={false}
-        onCloseSidebar={jest.fn()}
-        currentView="timeGridWeek"
-        calendarRef={mockCalendarRef}
-      />,
-      baseState
-    )
+    renderWithProviders(<CalendarLayout />, baseState)
 
     // Look for timezone selector button (should show offset)
     await waitFor(() => {
@@ -63,17 +53,7 @@ describe('Calendar - Timezone Integration', () => {
   it('dispatches setTimeZone action when timezone is changed', async () => {
     const setTimeZoneSpy = jest.spyOn(SettingsSlice, 'setTimeZone')
 
-    renderWithProviders(
-      <CalendarApp
-        setCurrentView={jest.fn()}
-        onViewChange={jest.fn()}
-        openSidebar={false}
-        onCloseSidebar={jest.fn()}
-        currentView="timeGridWeek"
-        calendarRef={mockCalendarRef}
-      />,
-      baseState
-    )
+    renderWithProviders(<CalendarLayout />, baseState)
 
     // Find and click timezone selector
     await waitFor(() => {
@@ -93,17 +73,7 @@ describe('Calendar - Timezone Integration', () => {
   it('bugfix : temp timezone opens event with the time offseted', async () => {
     const setTimeZoneSpy = jest.spyOn(SettingsSlice, 'setTimeZone')
 
-    renderWithProviders(
-      <CalendarApp
-        setCurrentView={jest.fn()}
-        onViewChange={jest.fn()}
-        openSidebar={false}
-        onCloseSidebar={jest.fn()}
-        currentView="timeGridWeek"
-        calendarRef={mockCalendarRef}
-      />,
-      baseState
-    )
+    renderWithProviders(<CalendarLayout />, baseState)
 
     // Find and click timezone selector
     await waitFor(() => {
