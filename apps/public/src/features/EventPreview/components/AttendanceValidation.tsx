@@ -85,7 +85,7 @@ export const AttendanceValidation: React.FC<AttendanceValidationProps> = ({
         onClick={() => void handleClick(rsvpValue, linkUrl)}
         disabled={!!clickedValue || !linkUrl}
       >
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {isThisLoading && <CircularProgress size={20} color="inherit" />}
           {t(`eventPreview.${rsvpValue}`)}
         </Box>
@@ -115,7 +115,7 @@ export const AttendanceValidation: React.FC<AttendanceValidationProps> = ({
             {t('eventPreview.attendingQuestion')}
           </Typography>
         )}
-        <Box display="flex" gap={1} mx={1} alignItems="center">
+        <Box sx={{ display: 'flex', gap: 1, mx: 1, alignItems: 'center' }}>
           {renderButton('ACCEPTED', links?.yes)}
           {renderButton('DECLINED', links?.no)}
           {renderButton('TENTATIVE', links?.maybe)}
