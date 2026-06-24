@@ -11,7 +11,7 @@ import {
 } from '@common/utils/eventFormTempStorage'
 import { assertThunkSuccess } from '@common/utils/assertThunkSuccess'
 import { putEvent } from '@common/features/Calendars/CalendarSlice'
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 import { userAttendee } from '@common/features/User/models/attendee'
 import { VAlarm } from '@common/types/VAlarm'
 

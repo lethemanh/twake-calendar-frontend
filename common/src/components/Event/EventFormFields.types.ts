@@ -2,7 +2,7 @@ import { Calendar } from '@common/types/CalendarTypes'
 import { CalendarEvent, RepetitionObject } from '@common/types/EventsTypes'
 import { Attachment } from '@common/types/Attachment'
 import { userAttendee } from '@common/features/User/models/attendee'
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 import { EventFormContext } from '@common/utils/eventFormTempStorage'
 
 // ---------------------------------------------------------------------------

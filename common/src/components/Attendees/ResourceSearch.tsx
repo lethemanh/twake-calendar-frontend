@@ -24,14 +24,7 @@ import {
   type SyntheticEvent
 } from 'react'
 import { useI18n } from 'twake-i18n'
-
-export interface Resource {
-  email?: string
-  displayName: string
-  avatarUrl?: string
-  openpaasId?: string
-  color?: Record<string, string>
-}
+import { Resource } from './types'
 
 export interface ExtendedAutocompleteRenderInputParams extends AutocompleteRenderInputParams {
   error?: boolean
@@ -73,7 +66,7 @@ export function ResourceSearch({
     listbox?: Partial<HTMLAttributes<HTMLUListElement>>
   }
   hideLabel?: boolean
-}) {
+}): JSX.Element {
   const { t } = useI18n()
   const searchPlaceholder = placeholder ?? t('resourceSearch.placeholder')
   const errorMessage = t('resourceSearch.searchError')
@@ -105,7 +98,7 @@ export function ResourceSearch({
         return
       }
       setInputError(null)
-      const newResource: Resource = { displayName: trimmed }
+      const newResource = new Resource({ displayName: trimmed })
       onChange(event, [...selectedResources, newResource])
       setQuery('')
     },
@@ -154,7 +147,9 @@ export function ResourceSearch({
         }
       }
 
-      const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const handleEnterKey = (
+        e: React.KeyboardEvent<HTMLInputElement>
+      ): void => {
         if (e.key === 'Enter' && onToggleEventPreview) {
           e.preventDefault()
           onToggleEventPreview()
@@ -254,11 +249,13 @@ export function ResourceSearch({
         value={selectedResources}
         inputValue={query}
         onInputChange={(_event, value: string) => setQuery(value)}
-        onChange={(event, value: string[] | Resource[]) => {
+        onChange={(event, value: (string | Resource)[]) => {
           setInputError(null)
           const mapped = value
             .map((v: string | Resource) =>
-              typeof v === 'string' ? { displayName: v.trim() } : v
+              typeof v === 'string'
+                ? new Resource({ displayName: v.trim() })
+                : v
             )
             .filter(v => v.displayName.trim().length > 0)
           onChange(event, mapped)
@@ -296,7 +293,7 @@ export function ResourceSearch({
             </ListItem>
           )
         }}
-        renderValue={(value: string[] | Resource[], getItemProps) =>
+        renderValue={(value: (string | Resource)[], getItemProps) =>
           value.map((option: string | Resource, index) => {
             const isString = typeof option === 'string'
             const label = isString ? option : option.displayName

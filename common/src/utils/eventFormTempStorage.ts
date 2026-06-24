@@ -1,4 +1,4 @@
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 import { userAttendee } from '@common/features/User/models/attendee'
 import { Attachment } from '@common/types/Attachment'
 import { RepetitionObject } from '@common/types/EventsTypes'
@@ -56,7 +56,11 @@ export function restoreEventFormDataFromTemp(
     const key = `${STORAGE_KEY_PREFIX}${modalType}`
     const data = sessionStorage.getItem(key)
     if (data) {
-      return JSON.parse(data) as EventFormTempData
+      const parsed = JSON.parse(data) as EventFormTempData
+      if (parsed.resources) {
+        parsed.resources = parsed.resources.map(res => new Resource(res))
+      }
+      return parsed
     }
     return null
   } catch (error) {
@@ -178,7 +182,9 @@ export function restoreFormDataFromTemp(
     setters.setHasEndDateChanged(tempData.hasEndDateChanged)
   }
   if (tempData.resources !== undefined) {
-    setters.setSelectedResources?.(tempData.resources)
+    setters.setSelectedResources?.(
+      tempData.resources.map(res => new Resource(res))
+    )
   }
   if (tempData.attachments !== undefined) {
     setters.setAttachments?.(

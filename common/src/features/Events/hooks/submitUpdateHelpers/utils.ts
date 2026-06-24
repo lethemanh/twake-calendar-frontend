@@ -1,4 +1,4 @@
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 import { EventFormValues } from '@common/components/Event/EventFormFields.types'
 import { resolveEventISORange } from '@common/components/Event/utils/dateRangeUtils'
 import { updateAttendeesAfterTimeChange } from '@common/features/Events/updateEventHelpers/updateAttendeesAfterTimeChange'

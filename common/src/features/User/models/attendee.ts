@@ -1,7 +1,7 @@
 import { User } from '@common/components/Attendees/types'
 import { VObjectProperty } from '@common/features/Calendars/types/CalendarData'
 import { userOrganiser } from '../userDataTypes'
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 
 export type AttendeeRole = 'CHAIR' | 'REQ-PARTICIPANT' | 'OPT-PARTICIPANT'
 export type CuType = 'INDIVIDUAL' | 'GROUP' | 'RESOURCE'

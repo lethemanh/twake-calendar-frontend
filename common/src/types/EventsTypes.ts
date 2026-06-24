@@ -1,4 +1,4 @@
-import { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Resource } from '@common/components/Attendees/types'
 import { Calendar } from '@common/types/CalendarTypes'
 import { VObjectProperty } from '@common/features/Calendars/types/CalendarData'
 import { userAttendee } from '@common/features/User/models/attendee'

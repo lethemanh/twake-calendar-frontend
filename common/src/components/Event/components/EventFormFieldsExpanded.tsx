@@ -2,12 +2,10 @@ import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
 import { FormControl, TextField } from '@linagora/twake-mui'
 import React from 'react'
 import { useI18n } from 'twake-i18n'
-import {
-  Resource,
-  ResourceSearch
-} from '@common/components/Attendees/ResourceSearch'
+import { ResourceSearch } from '@common/components/Attendees/ResourceSearch'
 import { EventFormFieldsSpecific } from './EventFormFieldsSpecific'
 import { FieldWithLabel } from './FieldWithLabel'
+import { Resource } from '@common/components/Attendees/types'
 
 interface EventFormFieldsExpandedProps {
   alarm: string
