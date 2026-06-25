@@ -64,6 +64,11 @@ function resolveOrganizerForCalendar(
   const ownerEmail = calendar.owner?.emails?.[0]
   if (!ownerEmail) {
     return originalOrganizer
+      ? new userOrganiser({
+          cal_address: originalOrganizer.cal_address,
+          cn: originalOrganizer.cn
+        })
+      : undefined
   }
 
   return new userOrganiser({
