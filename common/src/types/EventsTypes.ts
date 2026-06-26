@@ -37,8 +37,6 @@ export interface CalendarEvent {
   attach?: Attachment[]
 }
 
-
-
 export interface ContextualizedEvent {
   event: CalendarEvent
   calendar: Calendar
