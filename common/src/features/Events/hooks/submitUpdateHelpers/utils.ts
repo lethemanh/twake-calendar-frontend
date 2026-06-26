@@ -76,7 +76,11 @@ export function prepareUpdatedEvent({
     description: values.description,
     location: values.location,
     repetition: values.repetition?.freq
-      ? new RepetitionObject(values.repetition)
+      ? new RepetitionObject({
+          ...values.repetition,
+          allday: values.allday,
+          timezone: values.timezone
+        })
       : undefined,
     class: values.eventClass,
     organizer: event.organizer,

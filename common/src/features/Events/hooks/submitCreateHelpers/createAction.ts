@@ -58,7 +58,11 @@ export async function handleCreateEvent({
     location: values.location,
     class: values.eventClass,
     repetition: values.repetition?.freq
-      ? new RepetitionObject(values.repetition)
+      ? new RepetitionObject({
+          ...values.repetition,
+          allday: values.allday,
+          timezone: values.timezone
+        })
       : undefined,
     organizer,
     timezone: values.timezone,

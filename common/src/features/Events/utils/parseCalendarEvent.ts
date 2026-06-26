@@ -379,6 +379,14 @@ export function parseCalendarEvent({
 
   processEventDates(event, context.duration)
 
+  if (event.repetition) {
+    event.repetition = new RepetitionObject({
+      ...event.repetition,
+      allday: event.allday,
+      timezone: event.timezone
+    })
+  }
+
   event.passthroughProps = data.filter(
     ([key]) => !KNOWN_PROPS.has(key.toLowerCase())
   )

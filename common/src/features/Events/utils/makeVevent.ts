@@ -70,7 +70,7 @@ export function makeVevent(
     vevent[1].push(['description', {}, 'text', event.description])
   }
   if (event.repetition?.freq && !isOccurrence) {
-    vevent[1].push(event.repetition.asJcal(event.allday ?? false, tzid))
+    vevent[1].push(event.repetition.asJcal())
   }
 
   event.attendee.forEach(att => {

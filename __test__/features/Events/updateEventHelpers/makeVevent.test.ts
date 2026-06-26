@@ -28,10 +28,13 @@ function getAllProps(vevent: [string, unknown[]], name: string): unknown[][] {
 
 /** Minimal valid CalendarEvent to build on in each test. */
 function baseEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
-  const repetition =
-    overrides.repetition && !(overrides.repetition instanceof RepetitionObject)
-      ? new RepetitionObject(overrides.repetition)
-      : overrides.repetition
+  const repetition = overrides.repetition
+    ? new RepetitionObject({
+        ...overrides.repetition,
+        allday: overrides.allday ?? false,
+        timezone: overrides.timezone ?? 'Europe/Paris'
+      })
+    : undefined
   return {
     uid: 'base-uuid-1234',
     title: 'Test Event',

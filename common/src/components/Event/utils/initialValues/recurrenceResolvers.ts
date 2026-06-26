@@ -40,13 +40,16 @@ export function resolveRepetition(
   }
 
   return {
-    repetition: {
+    repetition: new RepetitionObject({
       freq: source.freq,
       interval: source.interval || 1,
       occurrences: source.occurrences,
       endDate: source.endDate,
-      byday: source.byday || null
-    },
+      byday: source.byday || null,
+      wkst: source.wkst || null,
+      allday: event.allday,
+      timezone: event.timezone
+    }),
     showRepeat: true
   }
 }

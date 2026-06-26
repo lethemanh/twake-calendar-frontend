@@ -11,6 +11,8 @@ export interface RepetitionData {
   occurrences?: number | null
   endDate?: string | null
   wkst?: string | null
+  allday?: boolean
+  timezone?: string
 }
 
 export type RepetitionOptions = Partial<RepetitionData>
@@ -22,6 +24,8 @@ export class RepetitionObject implements RepetitionData {
   occurrences?: number | null
   endDate?: string | null
   wkst?: string | null
+  allday?: boolean
+  timezone?: string
 
   constructor({
     freq,
@@ -29,7 +33,9 @@ export class RepetitionObject implements RepetitionData {
     byday,
     occurrences,
     endDate,
-    wkst
+    wkst,
+    allday,
+    timezone
   }: RepetitionOptions = {}) {
     this.freq = freq ?? ''
     this.interval = interval
@@ -37,9 +43,11 @@ export class RepetitionObject implements RepetitionData {
     this.occurrences = occurrences
     this.endDate = endDate
     this.wkst = wkst
+    this.allday = allday
+    this.timezone = timezone
   }
 
-  asJcal(allday: boolean, tzid: string): VObjectProperty {
+  asJcal(): VObjectProperty {
     const repetitionRule: RepetitionRule = { freq: this.freq }
     if (this.interval != null) {
       repetitionRule.interval = this.interval
@@ -48,7 +56,11 @@ export class RepetitionObject implements RepetitionData {
       repetitionRule.count = this.occurrences
     }
     if (this.endDate) {
-      repetitionRule.until = formatUntilForRRule(this.endDate, allday, tzid)
+      repetitionRule.until = formatUntilForRRule(
+        this.endDate,
+        this.allday ?? false,
+        this.timezone ?? 'UTC'
+      )
     }
     if (this.byday !== null && this.byday !== undefined) {
       repetitionRule.byday = this.byday

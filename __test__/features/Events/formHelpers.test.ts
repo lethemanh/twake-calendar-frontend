@@ -1,5 +1,6 @@
 import { populateFormFromEvent } from '@common/features/Events/formHelpers'
 import { CalendarEvent } from '@common/types/EventsTypes'
+import { RepetitionObject } from '@common/types/Repetition'
 
 describe('populateFormFromEvent', () => {
   it('correctly sets repetition data with wkst included', () => {
@@ -41,14 +42,18 @@ describe('populateFormFromEvent', () => {
 
     populateFormFromEvent(params)
 
-    expect(mockSetRepetition).toHaveBeenCalledWith({
-      freq: 'WEEKLY',
-      interval: 1,
-      occurrences: undefined,
-      endDate: undefined,
-      byday: ['MO'],
-      wkst: 'SU'
-    })
+    expect(mockSetRepetition).toHaveBeenCalledWith(
+      new RepetitionObject({
+        freq: 'WEEKLY',
+        interval: 1,
+        occurrences: undefined,
+        endDate: undefined,
+        byday: ['MO'],
+        wkst: 'SU',
+        allday: false,
+        timezone: 'Europe/Paris'
+      })
+    )
     expect(mockSetShowRepeat).toHaveBeenCalledWith(true)
   })
 
@@ -90,14 +95,18 @@ describe('populateFormFromEvent', () => {
 
     populateFormFromEvent(params)
 
-    expect(mockSetRepetition).toHaveBeenCalledWith({
-      freq: 'WEEKLY',
-      interval: 1,
-      occurrences: undefined,
-      endDate: undefined,
-      byday: ['MO'],
-      wkst: null
-    })
+    expect(mockSetRepetition).toHaveBeenCalledWith(
+      new RepetitionObject({
+        freq: 'WEEKLY',
+        interval: 1,
+        occurrences: undefined,
+        endDate: undefined,
+        byday: ['MO'],
+        wkst: null,
+        allday: false,
+        timezone: 'Europe/Paris'
+      })
+    )
     expect(mockSetShowRepeat).toHaveBeenCalledWith(true)
   })
 })

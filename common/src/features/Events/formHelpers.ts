@@ -149,7 +149,9 @@ export function populateFormFromEvent(
       occurrences: repetitionSource.occurrences,
       endDate: repetitionSource.endDate,
       byday: repetitionSource.byday || null,
-      wkst: repetitionSource.wkst || null
+      wkst: repetitionSource.wkst || null,
+      allday: isAllDay,
+      timezone: eventTimezone
     })
     setRepetition(repetitionData)
     setShowRepeat(true)

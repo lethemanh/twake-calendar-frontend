@@ -159,7 +159,11 @@ describe('eventDAO', () => {
 
     const event = {
       ...mockEvent,
-      repetition: new RepetitionObject(repetition)
+      repetition: new RepetitionObject({
+        ...repetition,
+        allday: mockEvent.allday ?? false,
+        timezone: mockEvent.timezone ?? 'Europe/Paris'
+      })
     }
     const jCal = calendarEventToJCal(event)
     await putEvent(event, jCal)

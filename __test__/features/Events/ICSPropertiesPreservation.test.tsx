@@ -78,7 +78,11 @@ function baseCalendarEvent(
     exdates: [],
     ...overrides,
     repetition: overrides.repetition?.freq
-      ? new RepetitionObject(overrides.repetition)
+      ? new RepetitionObject({
+          ...overrides.repetition,
+          allday: overrides.allday ?? false,
+          timezone: overrides.timezone ?? 'Europe/Paris'
+        })
       : undefined
   } as CalendarEvent
 }
