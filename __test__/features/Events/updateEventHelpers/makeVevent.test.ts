@@ -217,7 +217,10 @@ describe('RFC 5545 – LOCATION (§3.8.1.7)', () => {
 describe('RFC 5545 – ORGANIZER (§3.8.4.3)', () => {
   it('produces a mailto: cal-address', () => {
     const event = baseEvent({
-      organizer: new userOrganiser({ cn: 'Alice', cal_address: 'alice@example.com' })
+      organizer: new userOrganiser({
+        cn: 'Alice',
+        cal_address: 'alice@example.com'
+      })
     })
     const vevent = makeVevent(event, TZID)
     const org = getProp(vevent, 'organizer')
@@ -226,7 +229,10 @@ describe('RFC 5545 – ORGANIZER (§3.8.4.3)', () => {
 
   it('includes the CN parameter', () => {
     const event = baseEvent({
-      organizer: new userOrganiser({ cn: 'Alice', cal_address: 'alice@example.com' })
+      organizer: new userOrganiser({
+        cn: 'Alice',
+        cal_address: 'alice@example.com'
+      })
     })
     const vevent = makeVevent(event, TZID)
     const org = getProp(vevent, 'organizer')
