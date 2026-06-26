@@ -15,6 +15,7 @@ import { Calendar } from '@common/types/CalendarTypes'
 import { CalendarEvent, RepetitionObject } from '@common/types/EventsTypes'
 import { VAlarm } from '@common/types/VAlarm'
 import { Valarms } from '@common/types/Valarms'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 describe('parseCalendarEvent', () => {
   const baseColor = { light: '#00FF00' }
@@ -454,10 +455,10 @@ describe('calendarEventToJCal', () => {
       location: 'Room 101',
       description: 'Discuss project roadmap.',
       repetition: { freq: 'WEEKLY' },
-      organizer: {
+      organizer: new userOrganiser({
         cn: 'Alice',
         cal_address: 'alice@example.com'
-      },
+      }),
       attendee: [
         new userAttendee({
           cn: 'Bob',
@@ -622,10 +623,10 @@ describe('calendarEventToJCal', () => {
       location: 'Room 101',
       description: 'Discuss project roadmap.',
       repetition: { freq: 'WEEKLY', interval: 2 },
-      organizer: {
+      organizer: new userOrganiser({
         cn: 'Alice',
         cal_address: 'alice@example.com'
-      },
+      }),
       attendee: [
         new userAttendee({
           cn: 'Bob',

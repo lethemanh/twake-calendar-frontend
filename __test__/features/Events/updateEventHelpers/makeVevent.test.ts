@@ -15,14 +15,14 @@ function getProp(
 ): unknown[] | undefined {
   return (vevent[1] as unknown[][]).find(
     p => typeof p[0] === 'string' && p[0].toLowerCase() === name.toLowerCase()
-  ) as unknown[] | undefined
+  )
 }
 
 /** Pull every property tuple with a given name (e.g. multiple 'exdate'). */
 function getAllProps(vevent: [string, unknown[]], name: string): unknown[][] {
   return (vevent[1] as unknown[][]).filter(
     p => typeof p[0] === 'string' && p[0].toLowerCase() === name.toLowerCase()
-  ) as unknown[][]
+  )
 }
 
 /** Minimal valid CalendarEvent to build on in each test. */
@@ -32,6 +32,7 @@ function baseEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
     title: 'Test Event',
     start: '2024-06-01T10:00:00',
     end: '2024-06-01T11:00:00',
+    timezone: TZID,
     allday: false,
     attendee: [],
     ...overrides
@@ -184,20 +185,12 @@ describe('RFC 5545 – SUMMARY (§3.8.1.12)', () => {
 
 describe('RFC 5545 – DESCRIPTION (§3.8.1.5)', () => {
   it('is included when provided', () => {
-    const vevent = makeVevent(
-      baseEvent({ description: 'Details here' }),
-      TZID,
-      OWNER
-    )
+    const vevent = makeVevent(baseEvent({ description: 'Details here' }), TZID)
     expect(getProp(vevent, 'description')![3]).toBe('Details here')
   })
 
   it('is omitted when absent', () => {
-    const vevent = makeVevent(
-      baseEvent({ description: undefined }),
-      TZID,
-      OWNER
-    )
+    const vevent = makeVevent(baseEvent({ description: undefined }), TZID)
     expect(getProp(vevent, 'description')).toBeUndefined()
   })
 })
@@ -476,7 +469,7 @@ describe('VALARM (RFC 5545 §3.6.6)', () => {
     const event = baseEvent({
       alarms: new Valarms([new VAlarm({ trigger: '-PT15M', action: 'EMAIL' })])
     })
-    const vevent = makeVevent(event, TZID)
+    const vevent = makeVevent(event, TZID) as any
     // VALARM is appended as a nested array at the end of vevent
     const valarmEntry = vevent[2]?.find(
       (p: unknown) => Array.isArray(p) && (p as unknown[])[0] === 'valarm'
@@ -485,7 +478,7 @@ describe('VALARM (RFC 5545 §3.6.6)', () => {
   })
 
   it('is omitted when alarm is absent', () => {
-    const vevent = makeVevent(baseEvent(), TZID)
+    const vevent = makeVevent(baseEvent(), TZID) as any
     const hasValarm =
       vevent[2]?.some(
         (p: unknown) => Array.isArray(p) && (p as unknown[])[0] === 'valarm'
@@ -504,7 +497,7 @@ describe('VALARM (RFC 5545 §3.6.6)', () => {
         })
       ])
     })
-    const vevent = makeVevent(event, TZID)
+    const vevent = makeVevent(event, TZID) as any
     const valarmEntry = vevent[2]?.find(
       (p: unknown) => Array.isArray(p) && (p as unknown[])[0] === 'valarm'
     )
@@ -522,7 +515,7 @@ describe('VALARM (RFC 5545 §3.6.6)', () => {
         new VAlarm({ trigger: '-PT30M', action: 'DISPLAY' })
       ])
     })
-    const vevent = makeVevent(event, TZID)
+    const vevent = makeVevent(event, TZID) as any
 
     // Find all VALARM entries in subcomponents
     const valarmEntries = (vevent[2] ?? []).filter(
