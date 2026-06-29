@@ -8,6 +8,7 @@ import { CalendarEvent } from '@common/types/EventsTypes'
 import { calendarEventToJCal } from '@common/features/Events/utils'
 import { api } from '@common/utils/apiUtils'
 import { userAttendee } from '@common/features/User/models/attendee'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 jest.mock('@common/utils/apiUtils')
 
@@ -22,7 +23,7 @@ const mockEvent: CalendarEvent = {
   start: day.toISOString(),
   end: day.toISOString(),
   status: 'PUBLIC',
-  organizer: { cn: 'test', cal_address: 'test@test.com' },
+  organizer: new userOrganiser({ cn: 'test', cal_address: 'test@test.com' }),
   attendee: [
     new userAttendee({
       cn: 'test',

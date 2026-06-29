@@ -5,6 +5,7 @@ import EventUpdateModal from '@common/features/Events/EventUpdateModal'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 import { userAttendee } from '@common/features/User/models/attendee'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 jest.mock('@common/features/Events/EventDao')
 jest.mock('@common/features/Calendars/CalendarDAO')
@@ -66,7 +67,10 @@ describe('EventUpdateModal Timezone Handling', () => {
       end: new Date(eventDateUTC.getTime() + 3600000).toISOString(),
       timezone: 'Asia/Bangkok',
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
       ],
@@ -130,7 +134,10 @@ describe('EventUpdateModal Timezone Handling', () => {
       end: new Date(eventDateUTC.getTime() + 3600000).toISOString(),
       timezone: 'Asia/Bangkok',
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
       ],
@@ -182,7 +189,10 @@ describe('EventUpdateModal Timezone Handling', () => {
       end: new Date(eventDateUTC.getTime() + 3600000).toISOString(),
       timezone: 'Asia/Bangkok',
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' }),
         new userAttendee({
@@ -315,7 +325,10 @@ describe('EventUpdateModal Recurring to Non-Recurring Conversion', () => {
       end: new Date(eventDate.getTime() + 3600000).toISOString(),
       repetition: { freq: 'daily', interval: 1 },
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
       ],
@@ -483,7 +496,10 @@ describe('EventUpdateModal Recurring to Non-Recurring Conversion', () => {
       end: new Date(eventDate.getTime() + 3600000).toISOString(),
       repetition: { freq: 'weekly', interval: 1 },
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
       ],
@@ -636,7 +652,10 @@ describe('EventUpdateModal Recurring to Non-Recurring Conversion', () => {
       end: new Date(eventDate.getTime() + 3600000).toISOString(),
       repetition: { freq: 'monthly', interval: 1 },
       allday: false,
-      organizer: { cn: 'test', cal_address: 'test@test.com' },
+      organizer: new userOrganiser({
+        cn: 'test',
+        cal_address: 'test@test.com'
+      }),
       attendee: [
         new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
       ],

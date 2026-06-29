@@ -7,6 +7,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../../utils/Renderwithproviders'
 import { userAttendee } from '@common/features/User/models/attendee'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 jest.mock('@common/features/Events/EventDao')
 jest.mock('@common/features/Calendars/CalendarDAO')
@@ -77,7 +78,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         repetition: { freq: 'daily', interval: 1 },
         allday: false,
         timezone: 'America/New_York',
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         attendee: [{ cn: 'test', cal_address: 'test@test.com' }],
         URL: `/calendars/${calId}/${baseUID}.ics`
       } as CalendarEvent
@@ -182,7 +186,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         end: '2025-01-15T11:00:00.000Z',
         repetition: { freq: 'weekly', interval: 1 },
         allday: false,
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         URL: `/calendars/${calId}/${baseUID}.ics`
       }
 
@@ -231,7 +238,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         end: '2025-01-15T11:00:00.000Z',
         repetition: { freq: 'daily', interval: 1 },
         allday: false,
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         URL: `/calendars/${calId}/${baseUID}.ics`
       } as CalendarEvent
 
@@ -301,7 +311,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         end: '2025-01-15T11:00:00.000Z',
         repetition: { freq: 'weekly', interval: 1 },
         allday: false,
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         URL: `/calendars/${calId}/${baseUID}.ics`
       } as CalendarEvent
 
@@ -403,7 +416,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         repetition: { freq: 'daily', interval: 1 }, // Daily
         allday: false,
         timezone: 'America/New_York',
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         attendee: [
           new userAttendee({ cn: 'test', cal_address: 'test@test.com' })
         ],
@@ -614,7 +630,10 @@ describe("EventUpdateModal - Recurring Event 'Edit All' Handling", () => {
         repetition: { freq: 'daily', interval: 1 },
         allday: false,
         timezone: 'UTC',
-        organizer: { cn: 'test', cal_address: 'test@test.com' },
+        organizer: new userOrganiser({
+          cn: 'test',
+          cal_address: 'test@test.com'
+        }),
         URL: `/calendars/${calId}/${baseUID}.ics`
       } as CalendarEvent
 

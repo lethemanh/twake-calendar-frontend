@@ -6,6 +6,7 @@ import { clientConfig } from '@common/features/User/oidcAuth'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { VAlarm } from '@common/types/VAlarm'
 import { Valarms } from '@common/types/Valarms'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 clientConfig.url = 'https://example.com'
 
@@ -20,7 +21,7 @@ const mockEvent = {
   start: day.toISOString(),
   end: day.toISOString(),
   status: 'PUBLIC',
-  organizer: { cn: 'test', cal_address: 'test@test.com' },
+  organizer: new userOrganiser({ cn: 'test', cal_address: 'test@test.com' }),
   attendee: [
     new userAttendee({
       cn: 'test',
@@ -271,7 +272,10 @@ describe('makeSeriesJCal', () => {
       veventsWithOrganizer,
       {
         ...mockEvent,
-        organizer: { cn: 'Bob', cal_address: 'bob@example.com' }
+        organizer: new userOrganiser({
+          cn: 'Bob',
+          cal_address: 'bob@example.com'
+        })
       } as any,
       { removeOverrides: false }
     )

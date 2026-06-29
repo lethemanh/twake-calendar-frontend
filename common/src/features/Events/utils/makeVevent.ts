@@ -52,12 +52,7 @@ export function makeVevent(
     ])
   }
   if (event.organizer) {
-    vevent[1].push([
-      'organizer',
-      { cn: event.organizer.cn },
-      'cal-address',
-      `mailto:${event.organizer.cal_address}`
-    ])
+    vevent[1].push(event.organizer.asJcal())
   }
   if (event.location) {
     vevent[1].push(['location', {}, 'text', event.location])
