@@ -246,34 +246,60 @@ function processEventUid(
   }
 }
 
-function parseAlarms(valarms?: VCalComponent[]): Valarms | undefined {
-  if (!valarms?.length) {
-    return undefined
+type AlarmPropertyHandler = (alarm: Partial<AlarmData>, value: unknown) => void
+
+const ALARM_PROPERTY_HANDLERS: Record<string, AlarmPropertyHandler> = {
+  action: (alarm, value) => {
+    alarm.action = safeString(value)
+  },
+  trigger: (alarm, value) => {
+    alarm.trigger = safeString(value)
+  },
+  description: (alarm, value) => {
+    alarm.description = safeString(value)
+  },
+  summary: (alarm, value) => {
+    alarm.summary = safeString(value)
   }
-  const alarms: VAlarm[] = []
-  for (const valarm of valarms) {
-    const alarm: Partial<AlarmData> = {}
-    for (const [key, , , value] of valarm[1]) {
-      switch (key.toLowerCase()) {
-        case 'action':
-          alarm.action = safeString(value)
-          break
-        case 'trigger':
-          alarm.trigger = safeString(value)
-          break
-        case 'description':
-          alarm.description = safeString(value)
-          break
-        case 'attendee':
-          alarm.attendee = userAttendee.fromEmailField(safeString(value))
-          break
-        case 'summary':
-          alarm.summary = safeString(value)
-          break
-      }
+}
+
+function parseAlarmAttendees(
+  valarmProps: [string, unknown, unknown, unknown][]
+): userAttendee[] {
+  const attendees: userAttendee[] = []
+  for (const [key, , , value] of valarmProps) {
+    if (key.toLowerCase() === 'attendee') {
+      const attendee = userAttendee.fromEmailField(safeString(value))
+      if (attendee) attendees.push(attendee)
     }
-    alarms.push(new VAlarm(alarm as AlarmData))
   }
+  return attendees
+}
+
+function parseSingleAlarm(
+  valarm: [string, [string, unknown, unknown, unknown][], unknown[]]
+): VAlarm {
+  const alarm: Partial<AlarmData> = {}
+  const valarmProps = valarm[1]
+
+  for (const [key, , , value] of valarmProps) {
+    const handler = ALARM_PROPERTY_HANDLERS[key.toLowerCase()]
+    if (handler) handler(alarm, value)
+  }
+
+  const attendees = parseAlarmAttendees(valarmProps)
+  if (attendees.length > 0) alarm.attendees = attendees
+
+  return new VAlarm(alarm as AlarmData)
+}
+
+function parseAlarms(valarms: unknown): Valarms | undefined {
+  if (!Array.isArray(valarms) || !valarms.length) return undefined
+
+  const alarms = (
+    valarms as Array<[string, [string, unknown, unknown, unknown][], unknown[]]>
+  ).map(parseSingleAlarm)
+
   return Valarms.fromList(alarms)
 }
 

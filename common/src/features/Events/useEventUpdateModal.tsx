@@ -86,8 +86,26 @@ export function useEventUpdateModal(
   const handleExpandToggle = (): void => setShowMore(s => !s)
 
   const handleSave = useCallback(async () => {
-    await formRef.current?.submit()
-  }, [])
+    // Get form values
+    const values = formRef.current?.getValues()
+    if (!values) return
+
+    // Get the original event to preserve personal alarms
+    const originalEvent = effectiveEvent || event
+    const originalAlarms = originalEvent?.alarms
+
+    // Merge global alarms from form with personal alarms from original event
+    const mergedAlarms = originalAlarms
+      ? values.alarms.withPersonalAlarmsFrom(originalAlarms)
+      : values.alarms
+
+    const valuesWithMergedAlarms = {
+      ...values,
+      alarms: mergedAlarms
+    }
+
+    await handleSubmit(valuesWithMergedAlarms)
+  }, [formRef, handleSubmit, effectiveEvent, event])
 
   return {
     userPersonalCalendars,
