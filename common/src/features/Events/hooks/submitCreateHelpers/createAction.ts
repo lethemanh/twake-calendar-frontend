@@ -18,24 +18,36 @@ import {
 import { getAlarmAttendees } from '../submitUpdateHelpers/utils'
 import { userOrganiser } from '@common/features/User/userDataTypes'
 
-export async function handleCreateEvent({
-  dispatch,
+function buildAttendees({
+  organizer,
+  resources,
+  attendees
+}: {
+  organizer?: userOrganiser
+  resources: Resource[]
+  attendees: CalendarEvent['attendee']
+}): CalendarEvent['attendee'] {
+  return [
+    userAttendee.fromOrganizer(organizer),
+    ...resources.map(resource => userAttendee.fromResource(resource)),
+    ...(attendees ?? [])
+  ]
+}
+
+function buildNewEvent({
   values,
   targetCalendar,
   showMore,
   organizer,
-  onClose
+  newEventUID
 }: {
-  dispatch: AppDispatch
   values: EventFormValues
   targetCalendar: Calendar
   showMore: boolean
   organizer?: userOrganiser
-  onClose: (refresh?: boolean) => void
-}): Promise<void> {
-  const newEventUID = crypto.randomUUID()
+  newEventUID: string
+}): CalendarEvent {
   const newEventURL = `/calendars/${targetCalendar.id}/${newEventUID}.ics`
-
   const { startISO, endISO } = resolveEventISORange({
     start: values.start,
     end: values.end,
@@ -45,7 +57,7 @@ export async function handleCreateEvent({
     hasEndDateChanged: values.hasEndDateChanged
   })
 
-  const newEvent: CalendarEvent = {
+  return {
     calId: targetCalendar.id,
     title: values.title,
     URL: targetCalendar.delegated
@@ -64,7 +76,11 @@ export async function handleCreateEvent({
     }),
     organizer,
     timezone: values.timezone,
-    attendee: [userAttendee.fromOrganizer(organizer)],
+    attendee: buildAttendees({
+      organizer,
+      resources: values.selectedResources,
+      attendees: values.attendees
+    }),
     transp: values.busy,
     sequence: 1,
     color: targetCalendar?.color,
@@ -74,18 +90,45 @@ export async function handleCreateEvent({
     }),
     x_openpass_videoconference: values.meetingLink || undefined
   }
+}
 
-  // Append resources as attendees
-  values.selectedResources.forEach((resource: Resource) => {
-    if (!newEvent.attendee) newEvent.attendee = []
-    newEvent.attendee.push(userAttendee.fromResource(resource))
+function handleCreateEventError(values: EventFormValues, error: unknown): void {
+  const errorObj = error as { message?: string }
+  saveEventFormDataToTemp('create', {
+    ...values,
+    resources: values.selectedResources,
+    fromError: true
   })
+  showErrorNotification(
+    errorObj.message || 'Failed to create event. Please try again.'
+  )
+  window.dispatchEvent(
+    new CustomEvent('eventModalError', { detail: { type: 'create' } })
+  )
+}
 
-  // Append human attendees
-  if (values.attendees.length > 0) {
-    if (!newEvent.attendee) newEvent.attendee = []
-    newEvent.attendee = newEvent.attendee.concat(values.attendees)
-  }
+export async function handleCreateEvent({
+  dispatch,
+  values,
+  targetCalendar,
+  showMore,
+  organizer,
+  onClose
+}: {
+  dispatch: AppDispatch
+  values: EventFormValues
+  targetCalendar: Calendar
+  showMore: boolean
+  organizer?: userOrganiser
+  onClose: (refresh?: boolean) => void
+}): Promise<void> {
+  const newEvent = buildNewEvent({
+    values,
+    targetCalendar,
+    showMore,
+    organizer,
+    newEventUID: crypto.randomUUID()
+  })
 
   onClose(true)
 
@@ -94,17 +137,6 @@ export async function handleCreateEvent({
     await assertThunkSuccess(result)
     clearEventFormTempData('create')
   } catch (error) {
-    const errorObj = error as { message?: string }
-    saveEventFormDataToTemp('create', {
-      ...values,
-      resources: values.selectedResources,
-      fromError: true
-    })
-    showErrorNotification(
-      errorObj.message || 'Failed to create event. Please try again.'
-    )
-    window.dispatchEvent(
-      new CustomEvent('eventModalError', { detail: { type: 'create' } })
-    )
+    handleCreateEventError(values, error)
   }
 }
