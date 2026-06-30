@@ -6,6 +6,7 @@ import { Valarms } from '@common/types/Valarms'
 import { userAttendee } from '@common/features/User/models/attendee'
 import { Resource } from '@common/components/Attendees/ResourceSearch'
 import { EventFormContext } from '@common/utils/eventFormTempStorage'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 // ---------------------------------------------------------------------------
 // Core value bag — mirrors EventFormState but is the single source of truth
@@ -98,7 +99,7 @@ export interface EventFormFieldsProps {
   // Save / cancel delegation
   onSubmit: (
     values: EventFormValues,
-    organizer?: { cn: string; cal_address: string }
+    organizer?: userOrganiser
   ) => Promise<void>
   onCancel: () => void
 

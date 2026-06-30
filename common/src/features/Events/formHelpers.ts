@@ -151,7 +151,7 @@ export function populateFormFromEvent(
       byday: repetitionSource.byday || null,
       wkst: repetitionSource.wkst || null,
       allday: isAllDay,
-      timezone: eventTimezone
+      timezone: event.timezone ? eventTimezone : undefined
     })
     setRepetition(repetitionData)
     setShowRepeat(true)

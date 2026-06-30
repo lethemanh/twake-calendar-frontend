@@ -32,7 +32,7 @@ function baseEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
     ? new RepetitionObject({
         ...overrides.repetition,
         allday: overrides.allday ?? false,
-        timezone: overrides.timezone ?? 'Europe/Paris'
+        timezone: overrides.timezone ?? TZID
       })
     : undefined
   return {
@@ -43,7 +43,6 @@ function baseEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
     timezone: TZID,
     allday: false,
     attendee: [],
-    timezone: 'Europe/Paris',
     ...overrides,
     repetition
   } as CalendarEvent

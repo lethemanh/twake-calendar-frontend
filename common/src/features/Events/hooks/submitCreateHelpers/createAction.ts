@@ -16,6 +16,7 @@ import {
   showErrorNotification
 } from '@common/utils/eventFormTempStorage'
 import { getAlarmAttendees } from '../submitUpdateHelpers/utils'
+import { userOrganiser } from '@common/features/User/userDataTypes'
 
 export async function handleCreateEvent({
   dispatch,
@@ -29,7 +30,7 @@ export async function handleCreateEvent({
   values: EventFormValues
   targetCalendar: Calendar
   showMore: boolean
-  organizer?: { cn: string; cal_address: string }
+  organizer?: userOrganiser
   onClose: (refresh?: boolean) => void
 }): Promise<void> {
   const newEventUID = crypto.randomUUID()
