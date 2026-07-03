@@ -141,7 +141,7 @@ export const DateTimeSummary: React.FC<DateTimeSummaryProps> = ({
     <SectionPreviewRow
       icon={
         <Box sx={{ color: 'text.secondary' }}>
-          <AccessTimeIcon fontSize="inherit" color="inherit" />
+          <AccessTimeIcon sx={{ color: 'inherit' }} />
         </Box>
       }
       onClick={onClick}
