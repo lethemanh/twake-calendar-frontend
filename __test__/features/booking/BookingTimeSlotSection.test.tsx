@@ -25,6 +25,7 @@ describe('BookingTimeSlotSection', () => {
         slots={[]}
         selectedSlot={null}
         onSelectSlot={jest.fn()}
+        selectedTimezone="UTC"
       />
     )
 
@@ -38,6 +39,7 @@ describe('BookingTimeSlotSection', () => {
         slots={[]}
         selectedSlot={null}
         onSelectSlot={jest.fn()}
+        selectedTimezone="UTC"
       />
     )
 
@@ -55,14 +57,34 @@ describe('BookingTimeSlotSection', () => {
         slots={[firstSlot, secondSlot]}
         selectedSlot={secondSlot}
         onSelectSlot={onSelectSlot}
+        selectedTimezone="UTC"
       />
     )
 
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(2)
+    // 09:00:00 in UTC
+    expect(screen.getByText('09:00')).toBeInTheDocument()
 
     fireEvent.click(buttons[0])
 
     expect(onSelectSlot).toHaveBeenCalledWith(firstSlot)
+  })
+
+  it('renders available slots in the selected timezone', async () => {
+    const firstSlot = { start: '2036-01-26T09:00:00.000Z' } // 09:00 UTC
+    // UTC+9 for Asia/Tokyo = 18:00
+
+    render(
+      <BookingTimeSlotSection
+        selectedDay={dayjs('2036-01-26T00:00:00.000Z')}
+        slots={[firstSlot]}
+        selectedSlot={null}
+        onSelectSlot={jest.fn()}
+        selectedTimezone="Asia/Tokyo"
+      />
+    )
+
+    expect(screen.getByText('18:00')).toBeInTheDocument()
   })
 })

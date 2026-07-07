@@ -9,10 +9,15 @@ import {
   useTheme
 } from '@linagora/twake-mui'
 import dayjs, { Dayjs } from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { useEffect, useState } from 'react'
 import { useI18n } from 'twake-i18n'
 import { getLayoutConstants } from './LayoutConstants'
 import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const DAY_BADGE_ROW_HEIGHT = 48
 const SLOT_LIST_GAP = 16
@@ -60,13 +65,15 @@ interface SlotListProps {
   selectedSlot: Slot | null
   onSelectSlot: (slot: Slot) => void
   lang: string
+  selectedTimezone: string
 }
 
 const SlotList: React.FC<SlotListProps> = ({
   slots,
   selectedSlot,
   onSelectSlot,
-  lang
+  lang,
+  selectedTimezone
 }) => {
   const theme = useTheme()
   const { isTooSmall: isMobile } = useScreenSizeDetection()
@@ -80,7 +87,8 @@ const SlotList: React.FC<SlotListProps> = ({
         const time = new Date(slot.start).toLocaleTimeString(lang, {
           hour: '2-digit',
           minute: '2-digit',
-          hour12: false
+          hour12: false,
+          timeZone: selectedTimezone
         })
         const isSelected = selectedSlot?.start === slot.start
 
@@ -105,18 +113,23 @@ interface BookingTimeSlotSectionProps {
   slots: Slot[]
   selectedSlot: Slot | null
   onSelectSlot: (slot: Slot) => void
+  selectedTimezone: string
 }
 
 export const BookingTimeSlotSection: React.FC<BookingTimeSlotSectionProps> = ({
   selectedDay,
   slots,
   selectedSlot,
-  onSelectSlot
+  onSelectSlot,
+  selectedTimezone
 }) => {
   const { t, lang } = useI18n()
 
   const [now, setNow] = useState(() => Date.now())
-  const isSelectedDayToday = selectedDay?.isSame(dayjs(), 'day')
+
+  const todayInTimezone = dayjs().tz(selectedTimezone)
+  const isSelectedDayToday =
+    selectedDay?.format('YYYY-MM-DD') === todayInTimezone.format('YYYY-MM-DD')
   const visibleSlots = isSelectedDayToday
     ? slots.filter(slot => new Date(slot.start).getTime() >= now)
     : slots
@@ -142,7 +155,7 @@ export const BookingTimeSlotSection: React.FC<BookingTimeSlotSectionProps> = ({
           dayName={selectedDay.toDate().toLocaleDateString(lang, {
             weekday: 'short'
           })}
-          isToday
+          isToday={isSelectedDayToday}
         />
       </Box>
       <SlotList
@@ -150,6 +163,7 @@ export const BookingTimeSlotSection: React.FC<BookingTimeSlotSectionProps> = ({
         selectedSlot={selectedSlot}
         onSelectSlot={onSelectSlot}
         lang={lang}
+        selectedTimezone={selectedTimezone}
       />
     </Box>
   )

@@ -12,6 +12,7 @@ import { BookingTimeSlotSection } from '../../components/Booking/BookingTimeSlot
 import { useI18n } from 'twake-i18n'
 import { useBookingData } from './hooks/useBookingData'
 import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
+import { browserDefaultTimeZone } from '@common/utils/timezone'
 
 export const BookingPage: React.FC = () => {
   const { t } = useI18n()
@@ -25,10 +26,14 @@ export const BookingPage: React.FC = () => {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1)
   })
+  const [selectedTimezone, setSelectedTimezone] = useState<string>(
+    browserDefaultTimeZone
+  )
   const { slots, bookingInfo, initialLoading, monthLoading, error, refetch } =
     useBookingData({
       bookingLinkPublicId,
       visibleMonth,
+      timezone: selectedTimezone,
       loadErrorMessage: t('booking.error.loadFailed')
     })
 
@@ -40,18 +45,27 @@ export const BookingPage: React.FC = () => {
     string | null
   >(null)
 
+  const tzFormatter = useMemo(
+    () => new Intl.DateTimeFormat('en-CA', { timeZone: selectedTimezone }),
+    [selectedTimezone]
+  )
+
+  const [nowMs] = useState(Date.now)
+
   // Group slots by calendar day for quick lookup when rendering the grid
   const slotsByDay = useMemo(() => {
     const map = new Map<string, Slot[]>()
     slots.forEach(slot => {
-      const date = new Date(slot.start)
-      const key = date.toDateString()
+      if (new Date(slot.start).getTime() < nowMs) {
+        return
+      }
+      const key = tzFormatter.format(new Date(slot.start))
       const existing = map.get(key) ?? []
       existing.push(slot)
       map.set(key, existing)
     })
     return map
-  }, [slots])
+  }, [slots, tzFormatter, nowMs])
 
   const availableDays = useMemo(() => new Set(slotsByDay.keys()), [slotsByDay])
 
@@ -59,7 +73,7 @@ export const BookingPage: React.FC = () => {
     if (!selectedDay) {
       return []
     }
-    return slotsByDay.get(selectedDay.toDate().toDateString()) ?? []
+    return slotsByDay.get(selectedDay.format('YYYY-MM-DD')) ?? []
   }, [selectedDay, slotsByDay])
 
   const handleMonthChange = (month: Dayjs): void => {
@@ -122,6 +136,12 @@ export const BookingPage: React.FC = () => {
     }
   }
 
+  const handleTimezoneChange = (timezone: string): void => {
+    setSelectedTimezone(timezone)
+    setSelectedDay(null)
+    setSelectedSlot(null)
+  }
+
   const showPanel = !initialLoading && !(error && !bookingInfo)
 
   return (
@@ -150,7 +170,14 @@ export const BookingPage: React.FC = () => {
         </Typography>
       )}
 
-      {showPanel && bookingInfo && <BookingHeader bookingInfo={bookingInfo} />}
+      {showPanel && bookingInfo && (
+        <BookingHeader
+          bookingInfo={bookingInfo}
+          selectedTimezone={selectedTimezone}
+          onTimezoneChange={handleTimezoneChange}
+          referenceDate={visibleMonth}
+        />
+      )}
       {showPanel && !isMobile && <Divider />}
 
       {showPanel && (
@@ -188,6 +215,7 @@ export const BookingPage: React.FC = () => {
               availableDays={availableDays}
               onSelectDay={handleSelectDay}
               onMonthChange={handleMonthChange}
+              selectedTimezone={selectedTimezone}
             />
             {showPanel && isMobile && <Divider />}
             <BookingTimeSlotSection
@@ -195,6 +223,7 @@ export const BookingPage: React.FC = () => {
               slots={slotsForSelectedDay}
               selectedSlot={selectedSlot}
               onSelectSlot={handleSelectSlot}
+              selectedTimezone={selectedTimezone}
             />
           </Box>
         </Box>
@@ -206,6 +235,7 @@ export const BookingPage: React.FC = () => {
         selectedSlot={selectedSlot}
         bookingInfo={bookingInfo}
         onConfirm={handleConfirmBooking}
+        selectedTimezone={selectedTimezone}
       />
       <BookingSuccessDialog
         open={successOpen}
@@ -213,7 +243,7 @@ export const BookingPage: React.FC = () => {
         selectedSlot={selectedSlot}
         bookingInfo={bookingInfo}
         eventLink={`${window.location.origin}/booking/confirmed/${bookingConfirmationToken}`}
-        onCancelMeeting={handleCancelMeeting}
+        onCancelMeeting={() => void handleCancelMeeting()}
       />
     </Box>
   )
