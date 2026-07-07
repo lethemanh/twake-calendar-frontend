@@ -4,7 +4,6 @@ import {
   Slot
 } from '@common/features/booking/types/BookingTypes'
 import { isValidEmail } from '@common/utils/isValidEmail'
-import { browserDefaultTimeZone } from '@common/utils/timezone'
 import {
   Avatar,
   Box,
@@ -18,7 +17,6 @@ import {
   Typography
 } from '@linagora/twake-mui'
 import CloseIcon from '@mui/icons-material/Close'
-import dayjs from 'dayjs'
 import React, { useState } from 'react'
 import { useI18n } from 'twake-i18n'
 import { StaticDateTimeSummary } from './StaticDateTimeSummary'
@@ -29,6 +27,7 @@ interface BookingConfirmDialogProps {
   selectedSlot: Slot | null
   bookingInfo: BookingSlotsResponse | null
   onConfirm: (name: string, email: string) => Promise<void>
+  selectedTimezone: string
 }
 
 interface DialogHeaderProps {
@@ -65,18 +64,40 @@ const DialogHeader: React.FC<DialogHeaderProps> = ({ owner, onClose }) => {
 interface BookingDetailsProps {
   bookingInfo: BookingSlotsResponse | null
   selectedSlot: Slot | null
+  selectedTimezone: string
 }
 
 const BookingDetails: React.FC<BookingDetailsProps> = ({
   bookingInfo,
-  selectedSlot
+  selectedSlot,
+  selectedTimezone
 }) => {
-  const endDateTime = selectedSlot
-    ? dayjs(selectedSlot.start).add(
-        bookingInfo?.durationMinutes ?? 30,
-        'minute'
-      )
-    : null
+  let startDateStr = ''
+  let startTimeStr = ''
+  let endDateStr = ''
+  let endTimeStr = ''
+
+  if (selectedSlot) {
+    const start = new Date(selectedSlot.start)
+    const end = new Date(
+      start.getTime() + (bookingInfo?.durationMinutes ?? 30) * 60000
+    )
+
+    const dateFmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: selectedTimezone
+    })
+    const timeFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: selectedTimezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+
+    startDateStr = dateFmt.format(start)
+    startTimeStr = timeFmt.format(start)
+    endDateStr = dateFmt.format(end)
+    endTimeStr = timeFmt.format(end)
+  }
 
   return (
     <>
@@ -85,13 +106,13 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({
           {bookingInfo.name}
         </Typography>
       )}
-      {selectedSlot && endDateTime && (
+      {selectedSlot && (
         <StaticDateTimeSummary
-          startDate={dayjs(selectedSlot.start).format('YYYY-MM-DD')}
-          startTime={dayjs(selectedSlot.start).format('HH:mm')}
-          endDate={endDateTime.format('YYYY-MM-DD')}
-          endTime={endDateTime.format('HH:mm')}
-          timezone={browserDefaultTimeZone}
+          startDate={startDateStr}
+          startTime={startTimeStr}
+          endDate={endDateStr}
+          endTime={endTimeStr}
+          timezone={selectedTimezone}
         />
       )}
     </>
@@ -152,7 +173,8 @@ export const BookingConfirmDialog: React.FC<BookingConfirmDialogProps> = ({
   onClose,
   selectedSlot,
   bookingInfo,
-  onConfirm
+  onConfirm,
+  selectedTimezone
 }) => {
   const { t } = useI18n()
   const [name, setName] = useState<string>('')
@@ -207,7 +229,11 @@ export const BookingConfirmDialog: React.FC<BookingConfirmDialogProps> = ({
     <Dialog open={open} onClose={handleClose}>
       <DialogHeader owner={bookingInfo?.owner} onClose={handleClose} />
       <DialogContent>
-        <BookingDetails bookingInfo={bookingInfo} selectedSlot={selectedSlot} />
+        <BookingDetails
+          bookingInfo={bookingInfo}
+          selectedSlot={selectedSlot}
+          selectedTimezone={selectedTimezone}
+        />
         <BookingForm
           name={name}
           email={email}
@@ -226,7 +252,7 @@ export const BookingConfirmDialog: React.FC<BookingConfirmDialogProps> = ({
           {t('common.cancel')}
         </Button>
         <Button
-          onClick={handleConfirm}
+          onClick={() => void handleConfirm()}
           variant="contained"
           disabled={bookingInProgress}
         >

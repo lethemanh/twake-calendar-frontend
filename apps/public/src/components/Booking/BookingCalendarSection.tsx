@@ -8,6 +8,8 @@ import {
 } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs, { Dayjs } from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import 'dayjs/locale/en'
 import 'dayjs/locale/fr'
 import 'dayjs/locale/ru'
@@ -17,17 +19,28 @@ import { useI18n } from 'twake-i18n'
 import { getLayoutConstants } from './LayoutConstants'
 import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
 
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 interface AvailableDayProps extends PickerDayProps {
   availableDays?: Set<string>
+  selectedTimezone?: string
 }
 interface BookingCalendarSectionProps {
   selectedDay: Dayjs | null
   availableDays: Set<string>
   onSelectDay: (date: Dayjs | null) => void
   onMonthChange: (month: Dayjs) => void
+  selectedTimezone: string
 }
 const AvailableDay = (props: AvailableDayProps): React.ReactElement => {
-  const { availableDays, day, outsideCurrentMonth, ...other } = props
+  const {
+    availableDays,
+    selectedTimezone,
+    day,
+    outsideCurrentMonth,
+    ...other
+  } = props
   const theme = useTheme()
   const { isTooSmall: isMobile } = useScreenSizeDetection()
   const { CELL_SIZE } = getLayoutConstants(isMobile)
@@ -47,8 +60,13 @@ const AvailableDay = (props: AvailableDayProps): React.ReactElement => {
       />
     )
   }
-  const isSlot = availableDays?.has(day.toDate().toDateString()) ?? false
-  const isBeforeToday = day.isBefore(dayjs(), 'day')
+  const isSlot = availableDays?.has(day.format('YYYY-MM-DD')) ?? false
+
+  const todayInTimezone = selectedTimezone
+    ? dayjs().tz(selectedTimezone).startOf('day')
+    : dayjs().startOf('day')
+
+  const isBeforeToday = (day as Dayjs).isBefore(todayInTimezone, 'day')
 
   return (
     <PickerDay
@@ -84,7 +102,8 @@ export const BookingCalendarSection: React.FC<BookingCalendarSectionProps> = ({
   selectedDay,
   availableDays,
   onSelectDay,
-  onMonthChange
+  onMonthChange,
+  selectedTimezone
 }) => {
   const { t } = useI18n()
   const { isTooSmall: isMobile } = useScreenSizeDetection()
@@ -120,7 +139,7 @@ export const BookingCalendarSection: React.FC<BookingCalendarSectionProps> = ({
           views={['day', 'month']}
           fixedWeekNumber={6}
           slotProps={{
-            day: { availableDays } as AvailableDayProps
+            day: { availableDays, selectedTimezone } as AvailableDayProps
           }}
           sx={{
             width: '100%',

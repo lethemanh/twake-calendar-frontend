@@ -39,6 +39,7 @@ describe('useBookingData', () => {
       useBookingData({
         bookingLinkPublicId: 'public-booking-link-id',
         visibleMonth,
+        timezone: 'UTC',
         loadErrorMessage: 'Unable to load slots'
       })
     )
@@ -74,6 +75,7 @@ describe('useBookingData', () => {
         useBookingData({
           bookingLinkPublicId: 'public-booking-link-id',
           visibleMonth,
+          timezone: 'UTC',
           loadErrorMessage: 'Unable to load slots'
         }),
       { initialProps: { visibleMonth: new Date(2036, 0, 1) } }
@@ -123,6 +125,7 @@ describe('useBookingData', () => {
       useBookingData({
         bookingLinkPublicId: 'public-booking-link-id',
         visibleMonth,
+        timezone: 'UTC',
         loadErrorMessage: 'Translated load error'
       })
     )
@@ -142,6 +145,7 @@ describe('useBookingData', () => {
       useBookingData({
         bookingLinkPublicId: undefined,
         visibleMonth,
+        timezone: 'UTC',
         loadErrorMessage: 'Unable to load slots'
       })
     )
