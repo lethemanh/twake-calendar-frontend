@@ -19,6 +19,8 @@ import TempSearchDialog from '@common/components/Calendar/TempSearchDialog'
 import { setIsMobileSearchOpen } from '@common/features/Calendars/CalendarSlice'
 import { useManageCalendarSelection } from './hooks/useManageCalendarSelection'
 
+import { CreateAppointmentModal } from '../../features/booking/CreateAppointmentModal'
+
 export default function CalendarLayout(): JSX.Element {
   const calendarRef = useRef<CalendarApi | null>(null)
   const controllerRef = useRef<CalendarControllerRef | null>(null)
@@ -54,6 +56,22 @@ export default function CalendarLayout(): JSX.Element {
 
     setViewMode()
   }, [isTablet, isMobile])
+
+  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] =
+    useState(false)
+
+  useEffect(() => {
+    const handleOpenModal = (): void => {
+      setIsCreateAppointmentModalOpen(true)
+    }
+    window.addEventListener('open-create-appointment-modal', handleOpenModal)
+    return () => {
+      window.removeEventListener(
+        'open-create-appointment-modal',
+        handleOpenModal
+      )
+    }
+  }, [])
 
   const isInIframe = useMemo(() => new CozyBridge().isInIframe(), [])
 
@@ -188,6 +206,10 @@ export default function CalendarLayout(): JSX.Element {
         <SettingsPage menubarProps={menubarProps} isInIframe={isInIframe} />
       )}
       <ErrorSnackbar error={error} type="calendar" />
+      <CreateAppointmentModal
+        open={isCreateAppointmentModalOpen}
+        onClose={() => setIsCreateAppointmentModalOpen(false)}
+      />
     </div>
   )
 }

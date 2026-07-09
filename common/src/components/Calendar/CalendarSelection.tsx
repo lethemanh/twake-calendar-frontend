@@ -451,6 +451,23 @@ const CalendarSelection: React.FC<{
         />
 
         <CalendarAccordion
+          title={t('calendar.appointments', { defaultValue: 'Appointments' })}
+          calendars={[]}
+          selectedCalendars={selectedCalendars}
+          handleToggle={() => {}}
+          showAddButton={window.ENABLE_CREATE_BOOKING}
+          onAddClick={() => {
+            window.dispatchEvent(
+              new CustomEvent('open-create-appointment-modal')
+            )
+          }}
+          setOpen={() => {}}
+          defaultExpanded
+          addBtnTooltip={t('tooltip.createAppointment', {
+            defaultValue: 'Create appointment schedule'
+          })}
+        />
+        <CalendarAccordion
           title={t('calendar.personal')}
           calendars={personalCalendars}
           selectedCalendars={selectedCalendars}
