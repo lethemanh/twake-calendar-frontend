@@ -3,12 +3,12 @@ import { dialogPaddingStyles } from '@common/theme/dialogPaddingStyles'
 import { ResponsiveDialog } from '@common/components/Dialog'
 import EventFormFields from '@common/components/Event/EventFormFields'
 import { CalendarEvent } from '@common/types/EventsTypes'
-import { Valarms } from '@common/types/Valarms'
 import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useI18n } from 'twake-i18n'
 import { EventActions } from './EventActions'
 import { useEventUpdateModal } from './useEventUpdateModal'
+import { useEditableInitialValues } from './hooks/useEditableInitialValues'
 
 export interface EventUpdateModalProps {
   eventId: string
@@ -41,14 +41,7 @@ const EventUpdateModalInternal: React.FC<
     tempContext
   } = useEventUpdateModal(props)
 
-  // Filter initial values to only include global alarms (alarms with multiple attendees or no attendees)
-  const globalInitialValues = useMemo(() => {
-    if (!initialValues.alarms) return initialValues
-    return {
-      ...initialValues,
-      alarms: Valarms.fromList(initialValues.alarms.getGlobalAlarms())
-    }
-  }, [initialValues])
+  const editableInitialValues = useEditableInitialValues(initialValues)
 
   const actions = (
     <EventActions
@@ -73,7 +66,7 @@ const EventUpdateModalInternal: React.FC<
       <EventFormFields
         key={effectiveEvent?.uid || 'no-event'}
         ref={formRef}
-        initialValues={globalInitialValues}
+        initialValues={editableInitialValues}
         showMore={showMore}
         isOpen={open}
         isSpecific={false}

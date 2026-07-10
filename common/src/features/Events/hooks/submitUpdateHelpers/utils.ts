@@ -4,6 +4,7 @@ import { resolveEventISORange } from '@common/components/Event/utils/dateRangeUt
 import { updateAttendeesAfterTimeChange } from '@common/features/Events/updateEventHelpers/updateAttendeesAfterTimeChange'
 import { userAttendee } from '@common/features/User/models/attendee'
 import { Calendar } from '@common/types/CalendarTypes'
+import { VAlarm } from '@common/types/VAlarm'
 import { Valarms } from '@common/types/Valarms'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { RepetitionObject } from '@common/types/Repetition'
@@ -85,10 +86,27 @@ export function prepareUpdatedEvent({
     transp: values.busy,
     sequence: nextSequence,
     color: targetCalendar?.color,
-    alarms: Valarms.fromFormValues(values.alarms, {
-      attendees: getAlarmAttendees(values, targetCalendar),
-      summary: values.title
-    }),
+    alarms: (() => {
+      const alarmAttendees = getAlarmAttendees(values, targetCalendar)
+
+      // If alarms already have attendees (from handleSave merge), preserve them.
+      // Only use fromFormValues for alarms without attendees (new alarms from UI).
+      return Valarms.fromList(
+        values.alarms.getAlarms().map(alarm => {
+          if (alarm.attendees && alarm.attendees.length > 0) {
+            return alarm // Preserve existing attendees from merge
+          }
+          // New alarm without attendees - add defaults
+          return new VAlarm({
+            trigger: alarm.trigger,
+            action: alarm.action,
+            attendees: alarmAttendees,
+            summary: values.title,
+            description: alarm.description
+          })
+        })
+      )
+    })(),
     x_openpass_videoconference: values.meetingLink || undefined,
     attach: values.attachments?.length ? values.attachments : undefined
   }

@@ -74,12 +74,12 @@ export class Valarms {
 
   getAllAlarmsForAttendee(attendee: userAttendee | undefined): VAlarm[] {
     if (!attendee) return []
-    const attendeeEmail = attendee.cal_address.toLowerCase()
+    const attendeeEmail = this.normalizeEmail(attendee.cal_address)
     return this._alarms.filter(
       alarm =>
         alarm?.attendees?.length &&
         alarm.attendees.some(
-          attendee => attendee.cal_address.toLowerCase() === attendeeEmail
+          a => this.normalizeEmail(a.cal_address) === attendeeEmail
         )
     )
   }
@@ -97,6 +97,25 @@ export class Valarms {
   }
 
   /**
+   * Get alarms that should be shown in the edit form for a specific attendee.
+   * Includes global alarms (no attendees or multiple attendees) AND
+   * the attendee's personal alarms (single attendee matching the user).
+   */
+  getEditableAlarms(attendee: userAttendee | undefined): VAlarm[] {
+    if (!attendee) return this.getGlobalAlarms()
+    const attendeeEmail = this.normalizeEmail(attendee.cal_address)
+
+    const globalAlarms = this.getGlobalAlarms()
+    const personalAlarms = this._alarms.filter(
+      alarm =>
+        alarm.attendees?.length === 1 &&
+        this.normalizeEmail(alarm.attendees[0].cal_address) === attendeeEmail
+    )
+
+    return [...globalAlarms, ...personalAlarms]
+  }
+
+  /**
    * Merge personal alarms from newPersonalAlarms with this Valarms.
    * Replaces existing personal alarms for the given attendee with new ones.
    * Keeps all other alarms (global alarms and other attendees' personal alarms).
@@ -107,14 +126,14 @@ export class Valarms {
   ): Valarms {
     if (!attendee) return newPersonalAlarms
 
-    const attendeeEmail = attendee.cal_address.toLowerCase()
+    const attendeeEmail = this.normalizeEmail(attendee.cal_address)
 
     // Keep all alarms that are NOT for this attendee (global + other personal)
     const otherAlarms = this._alarms.filter(alarm => {
       // Keep global alarms (no attendees or multiple attendees)
       if (!alarm.attendees || alarm.attendees.length !== 1) return true
       // Keep other attendees' personal alarms
-      const alarmEmail = alarm.attendees[0].cal_address.toLowerCase()
+      const alarmEmail = this.normalizeEmail(alarm.attendees[0].cal_address)
       return alarmEmail !== attendeeEmail
     })
 
@@ -142,7 +161,7 @@ export class Valarms {
     attendeeEmail: string
   ): VAlarm | null {
     const remaining = (alarm.attendees ?? []).filter(
-      a => a.cal_address.toLowerCase() !== attendeeEmail
+      a => a.cal_address.toLowerCase().replace('mailto:', '') !== attendeeEmail
     )
     if (!remaining.length) return null
     return new VAlarm({
@@ -156,8 +175,8 @@ export class Valarms {
 
   /**
    * Merge form alarms back with original event alarms for a personal settings update.
-   * - Keeps form alarms (user's current selections)
-   * - For global alarms the user deselected: removes user from attendees
+   * - For selected alarms: uses the original alarm data (preserving attendees)
+   * - For deselected global alarms: removes user from attendees
    * - If a global alarm has no attendees left after removal, drops it
    * - Preserves other attendees' personal alarms and global alarms the user was never part of
    */
@@ -167,37 +186,76 @@ export class Valarms {
   ): Valarms {
     if (!attendee) return formAlarms
 
-    const attendeeEmail = attendee.cal_address.toLowerCase()
+    const attendeeEmail = this.normalizeEmail(attendee.cal_address)
     const selectedTriggers = new Set(formAlarms.getAlarms().map(a => a.trigger))
-    const result: VAlarm[] = [...formAlarms.getAlarms()]
+
+    const selectedAlarms = this.processSelectedAlarms(formAlarms)
+    const deselectedAlarms = this.processDeselectedAlarms(
+      selectedTriggers,
+      attendeeEmail
+    )
+
+    return Valarms.fromList([...selectedAlarms, ...deselectedAlarms])
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.toLowerCase().replace('mailto:', '')
+  }
+
+  private alarmHasAttendee(
+    alarmAttendees: userAttendee[] | undefined,
+    targetEmail: string
+  ): boolean {
+    if (!alarmAttendees) return false
+    return alarmAttendees.some(
+      a => this.normalizeEmail(a.cal_address) === targetEmail
+    )
+  }
+
+  private processSelectedAlarms(formAlarms: Valarms): VAlarm[] {
+    return formAlarms.getAlarms().map(formAlarm => {
+      const originalAlarm = this._alarms.find(
+        a => a.trigger === formAlarm.trigger
+      )
+      return originalAlarm ?? formAlarm
+    })
+  }
+
+  private processDeselectedAlarms(
+    selectedTriggers: Set<string>,
+    attendeeEmail: string
+  ): VAlarm[] {
+    const result: VAlarm[] = []
 
     for (const alarm of this._alarms) {
-      // Already in result (same trigger) — skip
       if (selectedTriggers.has(alarm.trigger)) continue
 
-      const isPersonalForAttendee =
-        alarm.attendees?.length === 1 &&
-        alarm.attendees[0].cal_address.toLowerCase() === attendeeEmail
-      if (isPersonalForAttendee) continue
-
-      const isGlobalWithAttendee =
-        alarm.attendees &&
-        alarm.attendees.length > 1 &&
-        alarm.attendees.some(a => a.cal_address.toLowerCase() === attendeeEmail)
-
-      if (isGlobalWithAttendee) {
-        const stripped = this.withUserRemovedFromGlobalAlarm(
-          alarm,
-          attendeeEmail
-        )
-        if (stripped) result.push(stripped)
-        continue
+      const processedAlarm = this.processDeselectedAlarm(alarm, attendeeEmail)
+      if (processedAlarm) {
+        result.push(processedAlarm)
       }
-
-      result.push(alarm)
     }
 
-    return Valarms.fromList(result)
+    return result
+  }
+
+  private processDeselectedAlarm(
+    alarm: VAlarm,
+    attendeeEmail: string
+  ): VAlarm | null {
+    const hasAttendee = this.alarmHasAttendee(alarm.attendees, attendeeEmail)
+
+    const isPersonalForAttendee = alarm.attendees?.length === 1 && hasAttendee
+    if (isPersonalForAttendee) return null
+
+    const isGlobalWithAttendee =
+      alarm.attendees && alarm.attendees.length > 1 && hasAttendee
+
+    if (isGlobalWithAttendee) {
+      return this.withUserRemovedFromGlobalAlarm(alarm, attendeeEmail)
+    }
+
+    return alarm
   }
 
   firstAlarmTrigger(): string {
