@@ -3,6 +3,7 @@ import {
   fetchSecretLink
 } from '@common/features/Calendars/CalendarDAO'
 import { Calendar } from '@common/types/CalendarTypes'
+import { handleCopyLink } from '@common/utils/handleCopyLink'
 import {
   Box,
   Button,
@@ -65,11 +66,6 @@ export function AccessTab({
     fetchSecret()
   }, [calendar.link])
 
-  const handleCopy = (content: string) => {
-    navigator.clipboard.writeText(content)
-    setOpen(true)
-  }
-
   const handleResetSecretLink = async () => {
     try {
       const newSecret = await fetchSecretLink(
@@ -129,7 +125,12 @@ export function AccessTab({
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => handleCopy(calDAVLink)}
+                        onClick={() =>
+                          handleCopyLink(
+                            new URL(calDAVLink, window.location.origin),
+                            setOpen
+                          )
+                        }
                         edge="end"
                       >
                         <ContentCopyIcon fontSize="small" />
@@ -157,7 +158,12 @@ export function AccessTab({
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => handleCopy(secretLink)}
+                      onClick={() =>
+                        handleCopyLink(
+                          new URL(secretLink, window.location.origin),
+                          setOpen
+                        )
+                      }
                       edge="end"
                     >
                       <ContentCopyIcon fontSize="small" />

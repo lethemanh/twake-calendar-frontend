@@ -1,4 +1,12 @@
 import { useAppDispatch, useAppSelector } from '@common/app/hooks'
+import { BookingLinkSelectorMenu } from '@common/components/Calendar/BookingLinkSelectorMenu'
+import CalendarPopover from '@common/components/Calendar/CalendarModal'
+import { CalendarSelectorMenu } from '@common/components/Calendar/CalendarSelectorMenu'
+import { DeleteCalendarDialog } from '@common/components/Calendar/DeleteCalendarDialog'
+import { OwnerCaption } from '@common/components/Calendar/OwnerCaption'
+import RegisterCalendars from '@common/components/Calendar/RegisterCalendars'
+import type { ResourceCal } from '@common/components/Calendar/RegisterCalendars/index.types'
+import { SnackbarAlert } from '@common/components/Loading/SnackBarAlert'
 import {
   deleteBookingLink,
   listBookingLinks
@@ -17,6 +25,7 @@ import { defaultColors } from '@common/utils/defaultColors'
 import { extractEventBaseUuid } from '@common/utils/extractEventBaseUuid'
 import { makeDisplayName } from '@common/utils/makeDisplayName'
 import { renameDefault } from '@common/utils/renameDefault'
+import { setVisibleBookingLinks } from '@common/utils/storage/setVisibleBookingLinks'
 import { trimLongTextWithoutSpace } from '@common/utils/textUtils'
 import {
   Accordion,
@@ -45,16 +54,15 @@ import {
   useState
 } from 'react'
 import { useI18n } from 'twake-i18n'
-import { SnackbarAlert } from '@common/components/Loading/SnackBarAlert'
-import CalendarPopover from '@common/components/Calendar/CalendarModal'
-import { BookingLinkSelectorMenu } from '@common/components/Calendar/BookingLinkSelectorMenu'
-import { CalendarSelectorMenu } from '@common/components/Calendar/CalendarSelectorMenu'
-import { DeleteCalendarDialog } from '@common/components/Calendar/DeleteCalendarDialog'
-import { OwnerCaption } from '@common/components/Calendar/OwnerCaption'
-import RegisterCalendars from '@common/components/Calendar/RegisterCalendars'
-import type { ResourceCal } from '@common/components/Calendar/RegisterCalendars/index.types'
 import { CreateAppointmentModal } from '../../features/booking/CreateAppointmentModal'
 import { EditAppointmentModal } from '../../features/booking/EditAppointmentModal'
+import { handleCopyLink } from '@calendar/common/src/utils/handleCopyLink'
+import { useVisibleBookingLinks } from './hooks/useVisibleBookingLinks'
+
+type SectionHeader = {
+  title: string
+  addBtnTooltip?: string
+}
 
 /**
  * Keeps a section's expanded state in sync whenever the caller's
@@ -79,18 +87,16 @@ const useSyncedExpanded = (
  * supply their own list content as children.
  */
 const CollapsibleSection: React.FC<{
-  title: string
+  header: SectionHeader
   itemCount: number
   defaultExpanded?: boolean
   onAddClick?: () => void
-  addBtnTooltip?: string
   children: ReactNode
 }> = ({
-  title,
+  header: { title, addBtnTooltip },
   itemCount,
   defaultExpanded = false,
   onAddClick,
-  addBtnTooltip,
   children
 }) => {
   const { t } = useI18n()
@@ -164,7 +170,7 @@ const CollapsibleSection: React.FC<{
 }
 
 const CalendarAccordion: React.FC<{
-  title: string
+  header: SectionHeader
   calendars: string[]
   selectedCalendars: string[]
   handleToggle: (id: string) => void
@@ -173,9 +179,8 @@ const CalendarAccordion: React.FC<{
   defaultExpanded?: boolean
   setOpen: (id: string) => void
   hideOwner?: boolean
-  addBtnTooltip?: string
 }> = ({
-  title,
+  header,
   calendars,
   selectedCalendars,
   handleToggle,
@@ -183,26 +188,24 @@ const CalendarAccordion: React.FC<{
   onAddClick,
   defaultExpanded = false,
   setOpen,
-  hideOwner,
-  addBtnTooltip
+  hideOwner
 }) => {
   const allCalendars = useAppSelector(state => state.calendars.list)
   const { t } = useI18n()
 
   return (
     <CollapsibleSection
-      title={title}
+      header={header}
       itemCount={calendars.length}
       defaultExpanded={defaultExpanded}
       onAddClick={showAddButton ? onAddClick : undefined}
-      addBtnTooltip={addBtnTooltip}
     >
       {calendars.map(id => (
         <CalendarSelector
           key={id}
           calendars={allCalendars}
           id={id}
-          isPersonal={title === t('calendar.personal')}
+          isPersonal={header.title === t('calendar.personal')}
           selectedCalendars={selectedCalendars}
           handleCalendarToggle={handleToggle}
           setOpen={() => setOpen(id)}
@@ -213,11 +216,21 @@ const CalendarAccordion: React.FC<{
   )
 }
 
+const getBookingLinkUrl = (publicId: string): URL => {
+  if (!window.PUBLIC_PAGE_BASE) {
+    throw new Error('No public base page setup')
+  }
+  const prefix = `${window.PUBLIC_PAGE_BASE}/booking`
+  return new URL(`${prefix}/${publicId}`)
+}
+
 const BookingLinkChip: React.FC<{
   link: BookingLink
-  onDelete: (publicId: string) => void
+  onDelete: (link: BookingLink) => void
   onEdit: (link: BookingLink) => void
-}> = ({ link, onDelete, onEdit }) => {
+  isVisible: boolean
+  onToggleVisibility: () => void
+}> = ({ link, onDelete, onEdit, isVisible, onToggleVisibility }) => {
   const theme = useTheme()
   const { t } = useI18n()
   const [copySnackbarOpen, setCopySnackbarOpen] = useState(false)
@@ -226,32 +239,18 @@ const BookingLinkChip: React.FC<{
   const calendars = useAppSelector(state => state.calendars.list)
   const calendarId = calendarIdFromEventHref(link.calendarUrl)
   const calendarColor = calendars?.[calendarId]?.color?.light
-  const getBookingLinkUrl = (publicId: string): string => {
-    const prefix = window.PUBLIC_PAGE_BASE
-      ? `${window.PUBLIC_PAGE_BASE}/booking`
-      : `${window.location.origin}/booking`
-    return `${prefix}/${publicId}`
-  }
-
-  const handleCopyLink = async (publicId: string): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(getBookingLinkUrl(publicId))
-      setCopySnackbarOpen(true)
-    } catch (err) {
-      console.error('Failed to copy booking link:', err)
-    }
-  }
+  const iconColor = isVisible
+    ? (calendarColor ?? defaultColors[4].dark)
+    : theme.palette.grey[400]
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>): void => {
     setMenuAnchorEl(event.currentTarget)
   }
 
-  const handleMenuClose = (): void => {
-    setMenuAnchorEl(null)
-  }
+  const handleMenuClose = (): void => setMenuAnchorEl(null)
 
   const handleDelete = (): void => {
-    onDelete(link.publicId)
+    onDelete(link)
     handleMenuClose()
   }
 
@@ -283,17 +282,8 @@ const BookingLinkChip: React.FC<{
             overflow: 'hidden'
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              padding: '9px',
-              marginRight: '4px'
-            }}
-          >
-            <EventIcon
-              sx={{ color: calendarColor ?? defaultColors[4].dark }}
-              fontSize="small"
-            />
+          <div style={{ display: 'flex', padding: '9px', marginRight: '4px' }}>
+            <EventIcon sx={{ color: iconColor }} fontSize="small" />
           </div>
 
           <div
@@ -319,7 +309,12 @@ const BookingLinkChip: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Tooltip title={t('tooltip.copyBookingLink')}>
             <IconButton
-              onClick={() => void handleCopyLink(link.publicId)}
+              onClick={() =>
+                handleCopyLink(
+                  getBookingLinkUrl(link.publicId),
+                  setCopySnackbarOpen
+                )
+              }
               size="small"
             >
               <LinkIcon fontSize="small" />
@@ -336,6 +331,8 @@ const BookingLinkChip: React.FC<{
         onClose={handleMenuClose}
         onDelete={handleDelete}
         onEdit={handleEdit}
+        onToggleVisibility={onToggleVisibility}
+        isVisible={isVisible}
       />
       <SnackbarAlert
         open={copySnackbarOpen}
@@ -347,29 +344,30 @@ const BookingLinkChip: React.FC<{
 }
 
 const BookingLinksAccordion: React.FC<{
-  title: string
+  header: SectionHeader
   bookingLinks: BookingLink[]
   defaultExpanded?: boolean
-  onDelete: (publicId: string) => void
+  onDelete: (link: BookingLink) => void
   onEdit: (link: BookingLink) => void
   onAddClick?: () => void
-  addBtnTooltip?: string
+  visibleBookingLinks: string[]
+  onToggleVisibility: (publicId: string) => void
 }> = ({
-  title,
+  header,
   bookingLinks,
   defaultExpanded = false,
   onDelete,
   onEdit,
   onAddClick,
-  addBtnTooltip
+  visibleBookingLinks,
+  onToggleVisibility
 }) => {
   return (
     <CollapsibleSection
-      title={title}
+      header={header}
       itemCount={bookingLinks.length}
       defaultExpanded={defaultExpanded}
       onAddClick={onAddClick}
-      addBtnTooltip={addBtnTooltip}
     >
       {bookingLinks.map(link => (
         <BookingLinkChip
@@ -377,6 +375,8 @@ const BookingLinksAccordion: React.FC<{
           link={link}
           onDelete={onDelete}
           onEdit={onEdit}
+          isVisible={visibleBookingLinks.includes(link.publicId)}
+          onToggleVisibility={() => onToggleVisibility(link.publicId)}
         />
       ))}
     </CollapsibleSection>
@@ -468,18 +468,26 @@ const CalendarSelection: React.FC<{
     }
   }, [dispatch, bookingLinkEnabled])
 
-  const handleDeleteBookingLink = (publicId: string): void => {
-    dispatch(deleteBookingLink(publicId))
+  const handleDeleteBookingLink = (link: BookingLink): void => {
+    dispatch(deleteBookingLink(link.publicId))
   }
 
   const handleEditBookingLink = (link: BookingLink): void => {
     setEditingBookingLink(link)
     setIsEditAppointmentModalOpen(true)
   }
-
   const handleCloseEditModal = (): void => {
     setIsEditAppointmentModalOpen(false)
     setEditingBookingLink(null)
+  }
+
+  const visibleBookingLinks = useVisibleBookingLinks()
+  const handleToggleBookingLinkVisibility = (publicId: string): void => {
+    setVisibleBookingLinks(
+      visibleBookingLinks.includes(publicId)
+        ? visibleBookingLinks.filter(id => id !== publicId)
+        : [...visibleBookingLinks, publicId]
+    )
   }
 
   return (
@@ -487,18 +495,25 @@ const CalendarSelection: React.FC<{
       <div>
         {bookingLinkEnabled && (
           <BookingLinksAccordion
-            title={t('calendar.bookingLinks')}
+            header={{
+              title: t('calendar.bookingLinks'),
+              addBtnTooltip: t('tooltip.createAppointment')
+            }}
             bookingLinks={bookingLinks}
             defaultExpanded
             onDelete={handleDeleteBookingLink}
             onEdit={handleEditBookingLink}
             onAddClick={() => setIsCreateAppointmentModalOpen(true)}
-            addBtnTooltip={t('tooltip.createAppointment')}
+            visibleBookingLinks={visibleBookingLinks}
+            onToggleVisibility={handleToggleBookingLinkVisibility}
           />
         )}
 
         <CalendarAccordion
-          title={t('calendar.personal')}
+          header={{
+            title: t('calendar.personal'),
+            addBtnTooltip: t('tooltip.addPersonalCalendar')
+          }}
           calendars={personalCalendars}
           selectedCalendars={selectedCalendars}
           handleToggle={handleCalendarToggle}
@@ -509,11 +524,10 @@ const CalendarSelection: React.FC<{
             setSelectedCalId(id)
           }}
           defaultExpanded
-          addBtnTooltip={t('tooltip.addPersonalCalendar')}
         />
 
         <CalendarAccordion
-          title={t('calendar.delegated')}
+          header={{ title: t('calendar.delegated') }}
           calendars={delegatedCalendars}
           selectedCalendars={selectedCalendars}
           handleToggle={handleCalendarToggle}
@@ -525,7 +539,10 @@ const CalendarSelection: React.FC<{
         />
 
         <CalendarAccordion
-          title={t('calendar.other')}
+          header={{
+            title: t('calendar.other'),
+            addBtnTooltip: t('tooltip.registerOtherCalendars')
+          }}
           calendars={sharedCalendars}
           selectedCalendars={selectedCalendars}
           showAddButton
@@ -538,12 +555,14 @@ const CalendarSelection: React.FC<{
             setSelectedCalId(id)
           }}
           defaultExpanded
-          addBtnTooltip={t('tooltip.registerOtherCalendars')}
         />
 
         {!window.HIDE_RESOURCES && (
           <CalendarAccordion
-            title={t('calendar.resources')}
+            header={{
+              title: t('calendar.resources'),
+              addBtnTooltip: t('tooltip.registerResources')
+            }}
             calendars={resourceCalendars}
             selectedCalendars={selectedCalendars}
             onAddClick={() => {
@@ -557,7 +576,6 @@ const CalendarSelection: React.FC<{
             }}
             defaultExpanded
             hideOwner={true}
-            addBtnTooltip={t('tooltip.registerResources')}
           />
         )}
       </div>
@@ -788,8 +806,10 @@ const CalendarSelector: React.FC<{
         onClose={handleClose}
         onModify={setOpen}
         onDelete={() => setDeletePopupOpen(true)}
+        onToggleVisibility={() => handleCalendarToggle(id)}
         isDefault={isDefault}
         isPersonal={isPersonal}
+        isVisible={selectedCalendars.includes(id)}
       />
 
       <DeleteCalendarDialog

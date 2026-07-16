@@ -41,7 +41,9 @@
     "add": "Add",
     "reset": "Reset",
     "export": "Export",
-    "exporting": "Exporting..."
+    "exporting": "Exporting...",
+    "hide": "Hide",
+    "show": "Show"
   },
   "common": {
     "cancel": "Cancel",
@@ -509,6 +511,7 @@
     },
     "cancelSuccess": "Reservation cancelled. You can book a new slot if you wish to.",
     "createAppointmentTitle": "Create appointment schedule",
+    "editAppointmentTitle": "Edit appointment schedule",
     "scheduleName": "Schedule name",
     "chooseTimeSlot": "Choose time slot",
     "15minutes": "15 minutes",
