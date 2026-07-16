@@ -464,6 +464,9 @@
     "createAppointment": "Create appointment schedule"
   },
   "booking": {
+    "addSlot": "Add slot",
+    "removeSlot": "Remove slot",
+    "copySlot": "Copy to all",
     "fillRequiredFields": "Please fill all required fields.",
     "durationMinutes": "%{count} min",
     "confirm": {
@@ -519,7 +522,18 @@
     "45minutes": "45 minutes",
     "1hour": "1 hour",
     "2hours": "2 hours",
-    "save": "Save"
+    "save": "Save",
+    "setRegularHours": "Set regular hours",
+    "unavailable": "Unavailable",
+    "days": {
+      "MON": "Mon",
+      "TUE": "Tue",
+      "WED": "Wed",
+      "THU": "Thu",
+      "FRI": "Fri",
+      "SAT": "Sat",
+      "SUN": "Sun"
+    }
   },
   "publicLayout": {
     "logoAlt": "Twake Calendar",

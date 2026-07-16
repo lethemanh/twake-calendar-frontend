@@ -29,7 +29,8 @@ export const DesktopTimePickerField: React.FC<TimePickerFieldProps> = ({
     slotProps={{
       openPickerButton: { sx: { display: 'none' } },
       popper: { sx: timePickerPopperSx },
-      field: getTimeFieldSlotProps(testId, hasError, label)
+      field: getTimeFieldSlotProps(testId, hasError, label),
+      textField: { disabled }
     }}
   />
 )

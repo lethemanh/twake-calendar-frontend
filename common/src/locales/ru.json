@@ -464,6 +464,9 @@
     "createAppointment": "Создать расписание встреч"
   },
   "booking": {
+    "addSlot": "Добавить слот",
+    "removeSlot": "Удалить слот",
+    "copySlot": "Копировать для всех",
     "fillRequiredFields": "Пожалуйста, заполните все обязательные поля.",
     "durationMinutes": "%{count} мин",
     "confirm": {
@@ -519,7 +522,18 @@
     "45minutes": "45 минут",
     "1hour": "1 час",
     "2hours": "2 часа",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "setRegularHours": "Установить регулярные часы",
+    "unavailable": "Недоступно",
+    "days": {
+      "MON": "Пн",
+      "TUE": "Вт",
+      "WED": "Ср",
+      "THU": "Чт",
+      "FRI": "Пт",
+      "SAT": "Сб",
+      "SUN": "Вс"
+    }
   },
   "publicLayout": {
     "logoAlt": "Twake Calendar",
