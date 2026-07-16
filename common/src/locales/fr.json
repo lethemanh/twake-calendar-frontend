@@ -464,6 +464,9 @@
     "createAppointment": "Créer un planning de rendez-vous"
   },
   "booking": {
+    "addSlot": "Ajouter un créneau",
+    "removeSlot": "Supprimer le créneau",
+    "copySlot": "Copier pour tous",
     "fillRequiredFields": "Veuillez remplir tous les champs obligatoires.",
     "durationMinutes": "%{count} min",
     "confirm": {
@@ -519,7 +522,18 @@
     "45minutes": "45 minutes",
     "1hour": "1 heure",
     "2hours": "2 heures",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "setRegularHours": "Définir les horaires réguliers",
+    "unavailable": "Indisponible",
+    "days": {
+      "MON": "Lun",
+      "TUE": "Mar",
+      "WED": "Mer",
+      "THU": "Jeu",
+      "FRI": "Ven",
+      "SAT": "Sam",
+      "SUN": "Dim"
+    }
   },
   "publicLayout": {
     "logoAlt": "Twake Calendar",

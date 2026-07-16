@@ -464,6 +464,9 @@
     "createAppointment": "Create appointment schedule"
   },
   "booking": {
+    "addSlot": "Thêm khung giờ",
+    "removeSlot": "Xóa khung giờ",
+    "copySlot": "Sao chép cho tất cả",
     "fillRequiredFields": "Vui lòng điền tất cả các trường bắt buộc.",
     "durationMinutes": "%{count} phút",
     "confirm": {
@@ -519,7 +522,18 @@
     "45minutes": "45 phút",
     "1hour": "1 giờ",
     "2hours": "2 giờ",
-    "save": "Lưu"
+    "save": "Lưu",
+    "setRegularHours": "Thiết lập giờ thường xuyên",
+    "unavailable": "Không có sẵn",
+    "days": {
+      "MON": "T2",
+      "TUE": "T3",
+      "WED": "T4",
+      "THU": "T5",
+      "FRI": "T6",
+      "SAT": "T7",
+      "SUN": "CN"
+    }
   },
   "publicLayout": {
     "logoAlt": "Twake Calendar",

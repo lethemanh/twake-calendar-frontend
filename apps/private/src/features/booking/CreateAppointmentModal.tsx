@@ -34,14 +34,16 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     loading,
     setLoading,
     isFormValid,
-    userPersonalCalendars
+    userPersonalCalendars,
+    availabilityRules,
+    setAvailabilityRules
   } = useAppointmentForm({ isOpen: open })
 
   useEffect(() => {
     if (!calendarid && userPersonalCalendars.length > 0) {
       setCalendarid(userPersonalCalendars[0].id)
     }
-  }, [userPersonalCalendars, calendarid])
+  }, [userPersonalCalendars, calendarid, setCalendarid])
 
   const handleSave = async (): Promise<void> => {
     if (!isFormValid) {
@@ -58,15 +60,17 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
         calendarUrl: `/calendars/${calendarid}`,
         active: true,
         autoAccept: false,
-        availabilityRules: (['MON', 'TUE', 'WED', 'THU', 'FRI'] as const).map(
-          day => ({
-            type: 'weekly',
-            dayOfWeek: day,
-            start: '09:00',
-            end: '18:00',
-            timeZone: timezone
-          })
-        ),
+        availabilityRules: availabilityRules
+          .filter(rule => rule.enabled)
+          .flatMap(rule =>
+            rule.slots.map(slot => ({
+              type: 'weekly' as const,
+              dayOfWeek: rule.dayOfWeek,
+              start: slot.start,
+              end: slot.end,
+              timeZone: timezone
+            }))
+          ),
         description
       })
       const currentLinks = getVisibleBookingLinks()
@@ -86,9 +90,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     <AppointmentModalForm
       open={open}
       onClose={onClose}
-      title={t('booking.createAppointmentTitle', {
-        defaultValue: 'Create appointment schedule'
-      })}
+      title={t('booking.createAppointmentTitle')}
       name={name}
       setName={setName}
       duration={duration}
@@ -102,11 +104,13 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       calendarid={calendarid}
       setCalendarid={setCalendarid}
       userPersonalCalendars={userPersonalCalendars}
+      availabilityRules={availabilityRules}
+      setAvailabilityRules={setAvailabilityRules}
       error={error}
       loading={loading}
       isFormValid={isFormValid}
-      onSave={handleSave}
-      saveButtonText={t('booking.save', { defaultValue: 'Save' })}
+      onSave={() => void handleSave()}
+      saveButtonText={t('booking.save')}
     />
   )
 }

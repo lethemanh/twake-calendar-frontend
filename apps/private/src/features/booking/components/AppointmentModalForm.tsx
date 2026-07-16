@@ -1,11 +1,5 @@
 import React from 'react'
-import {
-  Button,
-  TextField,
-  Box,
-  Divider,
-  Typography
-} from '@linagora/twake-mui'
+import { Button, TextField, Typography } from '@linagora/twake-mui'
 import { ResponsiveDialog } from '@common/components/Dialog'
 import { useI18n } from 'twake-i18n'
 import { AddDescButton } from '@common/components/Event/AddDescButton'
@@ -13,6 +7,10 @@ import { TimeSlotSelectField } from './TimeSlotSelectField'
 import { TimezoneSelectField } from './TimezoneSelectField'
 import { CalendarSelectField } from '@common/components/Event/fields/CalendarSelectField'
 import type { Calendar } from '@common/types/CalendarTypes'
+import { useScreenSizeDetection } from '@common/useScreenSizeDetection'
+import { RegularHoursField } from './RegularHoursField'
+import { DayAvailability } from './RegularHoursField/RegularHoursTypes'
+import { useAppSelector } from '@common/app/hooks'
 
 interface AppointmentModalFormProps {
   open: boolean
@@ -31,6 +29,8 @@ interface AppointmentModalFormProps {
   calendarid: string
   setCalendarid: (value: string) => void
   userPersonalCalendars: Calendar[]
+  availabilityRules?: DayAvailability[]
+  setAvailabilityRules?: React.Dispatch<React.SetStateAction<DayAvailability[]>>
   error: string | null
   loading: boolean
   isFormValid: boolean
@@ -55,6 +55,8 @@ export const AppointmentModalForm: React.FC<AppointmentModalFormProps> = ({
   calendarid,
   setCalendarid,
   userPersonalCalendars,
+  availabilityRules,
+  setAvailabilityRules,
   error,
   loading,
   isFormValid,
@@ -62,6 +64,10 @@ export const AppointmentModalForm: React.FC<AppointmentModalFormProps> = ({
   saveButtonText
 }) => {
   const { t } = useI18n()
+  const { isTooSmall: isMobile } = useScreenSizeDetection()
+
+  const businessHours = useAppSelector(state => state.settings.businessHours)
+  const workingDays = businessHours?.daysOfWeek
 
   return (
     <ResponsiveDialog
@@ -84,20 +90,22 @@ export const AppointmentModalForm: React.FC<AppointmentModalFormProps> = ({
         </Typography>
       )}
       <TextField
-        autoFocus
+        size={isMobile ? 'medium' : 'small'}
         margin="dense"
-        id="name"
         placeholder={t('booking.scheduleName')}
         type="text"
         fullWidth
         value={name}
         onChange={e => setName(e.target.value)}
       />
+
       <TimeSlotSelectField duration={duration} setDuration={setDuration} />
 
-      <Box sx={{ mb: 2, mt: 3 }}>
-        <Divider />
-      </Box>
+      <RegularHoursField
+        availabilityRules={availabilityRules}
+        setAvailabilityRules={setAvailabilityRules}
+        workingDays={workingDays}
+      />
 
       <AddDescButton
         showDescription={showDescription}
