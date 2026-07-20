@@ -1,4 +1,5 @@
 import React from 'react'
+import cx from 'classnames'
 import type { MutableRefObject, RefObject } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -37,6 +38,7 @@ import { useI18n } from 'twake-i18n'
 import { useSwipeNavigation } from './hooks/useSwipeNavigation'
 import { useAutoScrollToUpcommingEvent } from '../Event/hooks/useAutoScrollToUpcommingEvent'
 import { usePreserveScrollPositionInScheduleView } from './hooks/usePreserveScrollPositionInScheduleView'
+import { useDraftEvent } from './hooks/useDraftEvent'
 
 const localeMap: Record<string, LocaleInput | undefined> = {
   fr: frLocale,
@@ -69,6 +71,8 @@ export interface CalendarGridProps {
   datesSet: (arg: DatesSetArg) => void
   openEventDisplay: boolean
   visibleBookingLinks?: string[]
+  selectedRange?: DateSelectArg | null
+  draftCalendarId?: string | null
 }
 
 const CALENDAR_PLUGINS = [
@@ -83,6 +87,7 @@ const CALENDAR_DEFAULT_PROPS = {
   firstDay: 1,
   editable: true,
   selectable: true,
+  selectMirror: true,
   height: '100%',
   nowIndicator: true,
   noEventsText: '',
@@ -110,21 +115,7 @@ const CALENDAR_DEFAULT_PROPS = {
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
   calendarRef,
   calendarWrapperRef,
-  hiddenDays,
-  currentView,
-  selectedDate,
-  timezone,
-  selectedCalendars,
-  setSelectedDate,
-  setSelectedMiniDate,
-  onViewChange,
-  errorHandler,
-  eventHandlers,
-  displayWeekNumbers,
-  handleMoreLinkClick,
-  datesSet,
-  openEventDisplay,
-  visibleBookingLinks
+  ...otherProps
 }) => {
   const { lang } = useI18n()
   const { isTooSmall: isMobile, isTablet } = useScreenSizeDetection()
@@ -134,15 +125,21 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     useCalendarGridState({
       calendarRef,
       calendarWrapperRef,
-      currentView,
-      timezone,
-      selectedCalendars,
-      setSelectedDate,
-      setSelectedMiniDate,
-      onViewChange,
-      errorHandler,
-      visibleBookingLinks
+      currentView: otherProps.currentView,
+      timezone: otherProps.timezone,
+      selectedCalendars: otherProps.selectedCalendars,
+      setSelectedDate: otherProps.setSelectedDate,
+      setSelectedMiniDate: otherProps.setSelectedMiniDate,
+      onViewChange: otherProps.onViewChange,
+      errorHandler: otherProps.errorHandler,
+      visibleBookingLinks: otherProps.visibleBookingLinks
     })
+
+  const { events } = useDraftEvent({
+    selectedRange: otherProps.selectedRange,
+    draftCalendarId: otherProps.draftCalendarId,
+    filteredCalendarEvents
+  })
 
   const { handlers: swipeHandlers } = useSwipeNavigation(
     calendarRef,
@@ -151,13 +148,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   useAutoScrollToUpcommingEvent(upcomingEventId)
 
-  usePreserveScrollPositionInScheduleView(openEventDisplay, currentView)
+  usePreserveScrollPositionInScheduleView(
+    otherProps.openEventDisplay,
+    otherProps.currentView
+  )
 
   return (
     <>
       <div
         ref={calendarWrapperRef}
-        className={isNotDesktop ? 'calendar-swipe-container' : ''}
+        className={cx({
+          'calendar-swipe-container': isNotDesktop,
+          'hide-selection-highlight': !!otherProps.selectedRange
+        })}
         style={{
           height: '100%',
           ...(isNotDesktop ? { touchAction: 'pan-y' } : {})
@@ -166,36 +169,36 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       >
         <FullCalendar
           {...CALENDAR_DEFAULT_PROPS}
-          key={hiddenDays.join(',')}
+          key={otherProps.hiddenDays.join(',')}
           ref={ref => {
             calendarRef.current = ref ? ref.getApi() : null
           }}
-          initialView={getInitialCalendarView(currentView, isTablet)}
-          initialDate={selectedDate}
+          initialView={getInitialCalendarView(otherProps.currentView, isTablet)}
+          initialDate={otherProps.selectedDate}
           locale={localeMap[lang]}
-          hiddenDays={hiddenDays}
-          timeZone={timezone}
-          select={eventHandlers.handleDateSelect}
+          hiddenDays={otherProps.hiddenDays}
+          timeZone={otherProps.timezone}
+          select={otherProps.eventHandlers.handleDateSelect}
           slotLabelClassNames={arg => [
-            updateSlotLabelVisibility(new Date(), arg, timezone)
+            updateSlotLabelVisibility(new Date(), arg, otherProps.timezone)
           ]}
           nowIndicatorContent={viewHandlers.handleNowIndicatorContent}
           noEventsContent={() => <NoEventsContent isPending={isPending} />}
-          moreLinkClick={handleMoreLinkClick}
-          events={filteredCalendarEvents}
+          moreLinkClick={otherProps.handleMoreLinkClick}
+          events={events}
           eventOrder={(a: unknown, b: unknown) =>
             sortEventsByDateTime(a as EventApi, b as EventApi)
           }
           weekNumbers={
-            currentView === CALENDAR_VIEWS.timeGridWeek ||
-            currentView === CALENDAR_VIEWS.timeGridDay
+            otherProps.currentView === CALENDAR_VIEWS.timeGridWeek ||
+            otherProps.currentView === CALENDAR_VIEWS.timeGridDay
           }
           weekNumberContent={arg => (
             <WeekNumberContent
               num={arg.num}
-              displayWeekNumbers={displayWeekNumbers}
-              timezone={timezone}
-              selectedDate={selectedDate}
+              displayWeekNumbers={otherProps.displayWeekNumbers}
+              timezone={otherProps.timezone}
+              selectedDate={otherProps.selectedDate}
             />
           )}
           dayCellContent={arg => (
@@ -204,22 +207,22 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               view={arg.view}
               isToday={arg.isToday}
               dayNumberText={arg.dayNumberText}
-              timezone={timezone}
+              timezone={otherProps.timezone}
             />
           )}
-          datesSet={datesSet}
+          datesSet={otherProps.datesSet}
           dayHeaderContent={viewHandlers.handleDayHeaderContent}
           dayHeaderDidMount={viewHandlers.handleDayHeaderDidMount}
           dayHeaderWillUnmount={viewHandlers.handleDayHeaderWillUnmount}
           viewDidMount={viewHandlers.handleViewDidMount}
           viewWillUnmount={viewHandlers.handleViewWillUnmount}
-          eventClick={eventHandlers.handleEventClick}
-          eventAllow={eventHandlers.handleEventAllow}
+          eventClick={otherProps.eventHandlers.handleEventClick}
+          eventAllow={otherProps.eventHandlers.handleEventAllow}
           eventDrop={arg => {
-            void eventHandlers.handleEventDrop(arg)
+            void otherProps.eventHandlers.handleEventDrop(arg)
           }}
           eventResize={arg => {
-            void eventHandlers.handleEventResize(arg)
+            void otherProps.eventHandlers.handleEventResize(arg)
           }}
           eventContent={viewHandlers.handleEventContent}
           eventDidMount={viewHandlers.handleEventDidMount}

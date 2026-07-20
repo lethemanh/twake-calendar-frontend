@@ -116,6 +116,8 @@ export interface EventFormFieldsProps {
     newEnd: string
   ) => void
 
+  onCalendarChange?: (calId: string) => void
+
   // Validation notification for parent (e.g. to disable Save button)
   onValidationChange?: (isValid: boolean) => void
 }

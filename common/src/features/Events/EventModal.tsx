@@ -18,6 +18,7 @@ const EventPopover: React.FC<{
   onClose: (refresh?: boolean) => void
   selectedRange: DateSelectArg | null
   setSelectedRange: React.Dispatch<React.SetStateAction<DateSelectArg | null>>
+  setDraftCalendarId: (id: string) => void
   calendarRef: React.RefObject<CalendarApi | null>
   event?: CalendarEvent
 }> = ({
@@ -25,6 +26,7 @@ const EventPopover: React.FC<{
   onClose,
   selectedRange,
   setSelectedRange,
+  setDraftCalendarId,
   calendarRef,
   event
 }) => {
@@ -110,6 +112,7 @@ const EventPopover: React.FC<{
         onStartChange={handleStartChange}
         onEndChange={handleEndChange}
         onAllDayChange={handleAllDayChange}
+        onCalendarChange={setDraftCalendarId}
       />
     </ResponsiveDialog>
   )
