@@ -177,6 +177,7 @@ const CalendarController: React.FC<CalendarControllerProps> = ({
   >()
   const [, setSelectedEvent] = useState<CalendarEvent>({} as CalendarEvent)
   const [selectedRange, setSelectedRange] = useState<DateSelectArg | null>(null)
+  const [draftCalendarId, setDraftCalendarId] = useState<string | null>(null)
 
   const [tempEvent, setTempEvent] = useState<CalendarEvent>({} as CalendarEvent)
 
@@ -336,6 +337,8 @@ const CalendarController: React.FC<CalendarControllerProps> = ({
           datesSet={datesSet}
           openEventDisplay={openEventDisplay}
           visibleBookingLinks={visibleBookingLinks}
+          selectedRange={selectedRange}
+          draftCalendarId={draftCalendarId}
         />
       )}
       {view === 'search' && <SearchResultsPage />}
@@ -344,6 +347,7 @@ const CalendarController: React.FC<CalendarControllerProps> = ({
         onClose={eventHandlers.handleClosePopover}
         selectedRange={selectedRange}
         setSelectedRange={setSelectedRange}
+        setDraftCalendarId={setDraftCalendarId}
         calendarRef={calendarRef}
         event={tempEvent}
       />

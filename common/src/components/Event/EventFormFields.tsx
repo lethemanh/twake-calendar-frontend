@@ -57,6 +57,7 @@ const EventFormFields = forwardRef<EventFormHandle, EventFormFieldsProps>(
       onStartChange,
       onEndChange,
       onAllDayChange,
+      onCalendarChange,
       onValidationChange
     } = props
 
@@ -124,6 +125,10 @@ const EventFormFields = forwardRef<EventFormHandle, EventFormFieldsProps>(
       calList,
       userOrganizer
     })
+
+    useEffect(() => {
+      onCalendarChange?.(formValues.calendarid)
+    }, [formValues.calendarid, onCalendarChange])
 
     // Keep organizer in a ref so submit() can read it synchronously
     const organizerRef = useRef(organizer)
