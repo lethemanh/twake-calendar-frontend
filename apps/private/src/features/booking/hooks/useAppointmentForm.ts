@@ -12,6 +12,9 @@ import {
   DayAvailability,
   DAYS
 } from '../components/RegularHoursField/RegularHoursTypes'
+import { userAttendee } from '@common/features/User/models/attendee'
+import type { Resource } from '@common/components/Attendees/ResourceSearch'
+import { Valarms } from '@common/types/Valarms'
 
 interface UseAppointmentFormOptions {
   bookingLink?: BookingLink
@@ -26,6 +29,12 @@ interface FormState {
   timezone: string
   calendarid: string
   availabilityRules: DayAvailability[]
+  attendees: userAttendee[]
+  location: string
+  alarms: Valarms
+  busy: string
+  eventClass: 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL'
+  selectedResources: Resource[]
 }
 
 interface UseAppointmentFormReturn extends FormState {
@@ -36,6 +45,12 @@ interface UseAppointmentFormReturn extends FormState {
   setTimezone: (value: string) => void
   setCalendarid: (value: string) => void
   setAvailabilityRules: React.Dispatch<React.SetStateAction<DayAvailability[]>>
+  setAttendees: (value: userAttendee[]) => void
+  setLocation: (value: string) => void
+  setAlarms: (value: Valarms) => void
+  setBusy: (value: string) => void
+  setEventClass: (value: 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL') => void
+  setSelectedResources: (value: Resource[]) => void
   error: string | null
   setError: (value: string | null) => void
   loading: boolean
@@ -73,7 +88,13 @@ const formStateFromBookingLink = (bookingLink: BookingLink): FormState => ({
           end: r.end
         })) || []
     }
-  })
+  }),
+  attendees: [],
+  location: '',
+  alarms: new Valarms(),
+  busy: 'BUSY',
+  eventClass: 'PUBLIC',
+  selectedResources: []
 })
 
 const defaultFormState = (
@@ -95,7 +116,13 @@ const defaultFormState = (
       enabled: isWorkingDay,
       slots: [{ start: '09:00', end: '18:00' }]
     }
-  })
+  }),
+  attendees: [],
+  location: '',
+  alarms: new Valarms(),
+  busy: 'BUSY',
+  eventClass: 'PUBLIC',
+  selectedResources: []
 })
 
 interface FormSetters {
@@ -106,6 +133,12 @@ interface FormSetters {
   setTimezone: (value: string) => void
   setCalendarid: (value: string) => void
   setAvailabilityRules: React.Dispatch<React.SetStateAction<DayAvailability[]>>
+  setAttendees: (value: userAttendee[]) => void
+  setLocation: (value: string) => void
+  setAlarms: (value: Valarms) => void
+  setBusy: (value: string) => void
+  setEventClass: (value: 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL') => void
+  setSelectedResources: (value: Resource[]) => void
 }
 
 const makeSetters = (
@@ -129,7 +162,18 @@ const makeSetters = (
       ...prev,
       availabilityRules:
         typeof value === 'function' ? value(prev.availabilityRules) : value
-    }))
+    })),
+  setAttendees: (value: userAttendee[]): void =>
+    setForm(prev => ({ ...prev, attendees: value })),
+  setLocation: (value: string): void =>
+    setForm(prev => ({ ...prev, location: value })),
+  setAlarms: (value: Valarms): void =>
+    setForm(prev => ({ ...prev, alarms: value })),
+  setBusy: (value: string): void => setForm(prev => ({ ...prev, busy: value })),
+  setEventClass: (value: 'PUBLIC' | 'PRIVATE' | 'CONFIDENTIAL'): void =>
+    setForm(prev => ({ ...prev, eventClass: value })),
+  setSelectedResources: (value: Resource[]): void =>
+    setForm(prev => ({ ...prev, selectedResources: value }))
 })
 
 const computeInitialFormState = (

@@ -39,7 +39,19 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
     isFormValid,
     userPersonalCalendars,
     availabilityRules,
-    setAvailabilityRules
+    setAvailabilityRules,
+    attendees,
+    setAttendees,
+    location,
+    setLocation,
+    alarms,
+    setAlarms,
+    busy,
+    setBusy,
+    eventClass,
+    setEventClass,
+    selectedResources,
+    setSelectedResources
   } = useAppointmentForm({ bookingLink, isOpen: open })
 
   const handleSave = async (): Promise<void> => {
@@ -104,6 +116,18 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
       userPersonalCalendars={userPersonalCalendars}
       availabilityRules={availabilityRules}
       setAvailabilityRules={setAvailabilityRules}
+      attendees={attendees}
+      setAttendees={setAttendees}
+      location={location}
+      setLocation={setLocation}
+      alarms={alarms}
+      setAlarms={setAlarms}
+      busy={busy}
+      setBusy={setBusy}
+      eventClass={eventClass}
+      setEventClass={setEventClass}
+      selectedResources={selectedResources}
+      setSelectedResources={setSelectedResources}
       error={error}
       loading={loading}
       isFormValid={isFormValid}

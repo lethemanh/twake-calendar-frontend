@@ -36,7 +36,19 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     isFormValid,
     userPersonalCalendars,
     availabilityRules,
-    setAvailabilityRules
+    setAvailabilityRules,
+    attendees,
+    setAttendees,
+    location,
+    setLocation,
+    alarms,
+    setAlarms,
+    busy,
+    setBusy,
+    eventClass,
+    setEventClass,
+    selectedResources,
+    setSelectedResources
   } = useAppointmentForm({ isOpen: open })
 
   useEffect(() => {
@@ -106,6 +118,18 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       userPersonalCalendars={userPersonalCalendars}
       availabilityRules={availabilityRules}
       setAvailabilityRules={setAvailabilityRules}
+      attendees={attendees}
+      setAttendees={setAttendees}
+      location={location}
+      setLocation={setLocation}
+      alarms={alarms}
+      setAlarms={setAlarms}
+      busy={busy}
+      setBusy={setBusy}
+      eventClass={eventClass}
+      setEventClass={setEventClass}
+      selectedResources={selectedResources}
+      setSelectedResources={setSelectedResources}
       error={error}
       loading={loading}
       isFormValid={isFormValid}
