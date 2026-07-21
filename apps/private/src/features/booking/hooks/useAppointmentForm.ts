@@ -4,6 +4,7 @@ import type {
   BookingLink,
   WeeklyAvailabilityRule
 } from '@common/features/booking/types/BookingTypes'
+import type { Calendar } from '@common/types/CalendarTypes'
 import { calendarIdFromEventHref } from '@common/features/Calendars/CalendarDAO'
 import { useUserPersonalCalendars } from '@common/features/Calendars/hooks/useUserPersonalCalendars'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -12,6 +13,7 @@ import {
   DayAvailability,
   DAYS
 } from '../components/RegularHoursField/RegularHoursTypes'
+import { defaultColors } from '@common/utils/defaultColors'
 
 interface UseAppointmentFormOptions {
   bookingLink?: BookingLink
@@ -26,6 +28,7 @@ interface FormState {
   timezone: string
   calendarid: string
   availabilityRules: DayAvailability[]
+  color: string
 }
 
 interface UseAppointmentFormReturn extends FormState {
@@ -36,6 +39,7 @@ interface UseAppointmentFormReturn extends FormState {
   setTimezone: (value: string) => void
   setCalendarid: (value: string) => void
   setAvailabilityRules: React.Dispatch<React.SetStateAction<DayAvailability[]>>
+  setColor: (value: string) => void
   error: string | null
   setError: (value: string | null) => void
   loading: boolean
@@ -52,7 +56,10 @@ const bookingTimezone = (bookingLink: BookingLink): string =>
     (rule: AvailabilityRule) => rule.type === 'weekly'
   )?.timeZone ?? localTimezone()
 
-const formStateFromBookingLink = (bookingLink: BookingLink): FormState => ({
+const formStateFromBookingLink = (
+  bookingLink: BookingLink,
+  calendarColor?: string
+): FormState => ({
   name: bookingLink.name ?? '',
   duration: bookingLink.durationMinutes,
   description: bookingLink.description ?? '',
@@ -73,12 +80,14 @@ const formStateFromBookingLink = (bookingLink: BookingLink): FormState => ({
           end: r.end
         })) || []
     }
-  })
+  }),
+  color: bookingLink.color ?? calendarColor ?? defaultColors[4].dark
 })
 
 const defaultFormState = (
   defaultCalendarId: string,
-  workingDays?: number[]
+  workingDays?: number[],
+  defaultCalendarColor?: string
 ): FormState => ({
   name: '',
   duration: 30,
@@ -95,7 +104,8 @@ const defaultFormState = (
       enabled: isWorkingDay,
       slots: [{ start: '09:00', end: '18:00' }]
     }
-  })
+  }),
+  color: defaultCalendarColor ?? defaultColors[4].dark
 })
 
 interface FormSetters {
@@ -106,10 +116,12 @@ interface FormSetters {
   setTimezone: (value: string) => void
   setCalendarid: (value: string) => void
   setAvailabilityRules: React.Dispatch<React.SetStateAction<DayAvailability[]>>
+  setColor: (value: string) => void
 }
 
 const makeSetters = (
-  setForm: React.Dispatch<React.SetStateAction<FormState>>
+  setForm: React.Dispatch<React.SetStateAction<FormState>>,
+  calendars: Calendar[]
 ): FormSetters => ({
   setName: (value: string): void => setForm(prev => ({ ...prev, name: value })),
   setDuration: (value: number): void =>
@@ -121,7 +133,14 @@ const makeSetters = (
   setTimezone: (value: string): void =>
     setForm(prev => ({ ...prev, timezone: value })),
   setCalendarid: (value: string): void =>
-    setForm(prev => ({ ...prev, calendarid: value })),
+    setForm(prev => {
+      const calendar = calendars.find(c => c.id === value)
+      return {
+        ...prev,
+        calendarid: value,
+        color: calendar?.color?.light ?? prev.color
+      }
+    }),
   setAvailabilityRules: (
     value: React.SetStateAction<DayAvailability[]>
   ): void =>
@@ -129,19 +148,22 @@ const makeSetters = (
       ...prev,
       availabilityRules:
         typeof value === 'function' ? value(prev.availabilityRules) : value
-    }))
+    })),
+  setColor: (value: string): void =>
+    setForm(prev => ({ ...prev, color: value }))
 })
 
 const computeInitialFormState = (
   isOpen: boolean,
   bookingLink: BookingLink | undefined,
   workingDays: number[] | undefined,
-  firstCalendarId?: string
+  firstCalendarId?: string,
+  firstCalendarColor?: string
 ): FormState => {
-  if (!isOpen) return defaultFormState('', workingDays)
+  if (!isOpen) return defaultFormState('', workingDays, firstCalendarColor)
   return bookingLink
-    ? formStateFromBookingLink(bookingLink)
-    : defaultFormState(firstCalendarId ?? '', workingDays)
+    ? formStateFromBookingLink(bookingLink, firstCalendarColor)
+    : defaultFormState(firstCalendarId ?? '', workingDays, firstCalendarColor)
 }
 
 const checkFormValid = (form: FormState): boolean =>
@@ -164,7 +186,8 @@ export const useAppointmentForm = ({
         isOpen,
         bookingLink,
         workingDays,
-        userPersonalCalendars[0]?.id
+        userPersonalCalendars[0]?.id,
+        userPersonalCalendars[0]?.color?.light
       ),
     [isOpen, bookingLink, userPersonalCalendars, workingDays]
   )
@@ -187,7 +210,7 @@ export const useAppointmentForm = ({
 
   return {
     ...form,
-    ...makeSetters(setForm),
+    ...makeSetters(setForm, userPersonalCalendars),
     error,
     setError,
     loading,
