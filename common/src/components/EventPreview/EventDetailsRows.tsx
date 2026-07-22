@@ -4,6 +4,7 @@ import { userAttendee } from '@common/features/User/models/attendee'
 import { Attachment } from '@common/types/Attachment'
 import { RepetitionObject } from '@common/types/Repetition'
 import { Valarms } from '@common/types/Valarms'
+import { removeVideoConferenceFromDescription } from '@common/utils/videoConferenceUtils'
 import { Box, Typography, useTheme } from '@linagora/twake-mui'
 import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined'
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined'
@@ -140,13 +141,17 @@ export const EventDescriptionRow: React.FC<{
   description?: string
   attach?: Attachment[]
 }> = ({ description, attach }) => {
-  if (!(description || !!attach?.length)) return null
+  const displayedDescription = removeVideoConferenceFromDescription(
+    description ?? ''
+  )
+  if (!(displayedDescription || !!attach?.length)) return null
+
   return (
     <BaseEventRow
       alignItems="flex-start"
       alignSelf="flex-start"
       icon={<SubjectIcon />}
-      text={description}
+      text={displayedDescription}
       content={
         attach &&
         attach.length > 0 && <AttachementPreview attachments={attach} />

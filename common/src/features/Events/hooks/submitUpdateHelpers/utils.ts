@@ -9,6 +9,7 @@ import { Valarms } from '@common/types/Valarms'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { RepetitionObject } from '@common/types/Repetition'
 import { extractEventBaseUuid } from '@common/utils/extractEventBaseUuid'
+import { addVideoConferenceToDescription } from '@common/utils/videoConferenceUtils'
 import { PrepareUpdateDataParams, PrepareUpdateDataResult } from './types'
 
 export function getAlarmAttendees(
@@ -42,6 +43,54 @@ export function getSeriesInstances(
   return instances
 }
 
+export function buildUpdatedAlarms(
+  values: EventFormValues,
+  targetCalendar: Calendar
+): Valarms {
+  const alarmAttendees = getAlarmAttendees(values, targetCalendar)
+
+  return Valarms.fromList(
+    values.alarms.getAlarms().map(alarm => {
+      if (alarm.attendees && alarm.attendees.length > 0) {
+        return alarm // Preserve existing attendees from merge
+      }
+      // New alarm without attendees - add defaults
+      return new VAlarm({
+        trigger: alarm.trigger,
+        action: alarm.action,
+        attendees: alarmAttendees,
+        summary: values.title,
+        description: alarm.description
+      })
+    })
+  )
+}
+
+function getUpdatedDescription(
+  values: EventFormValues,
+  t?: (key: string) => string
+): string {
+  return values.meetingLink
+    ? addVideoConferenceToDescription(values.description, values.meetingLink, t)
+    : values.description
+}
+
+function getNextSequence(sequence?: number): number {
+  return (sequence ?? 1) + 1
+}
+
+function getEventURL(
+  url: string | undefined,
+  calId: string,
+  uid: string
+): string {
+  return url ?? `/calendars/${calId}/${uid}.ics`
+}
+
+function getEventAttachments<T>(attachments?: T[]): T[] | undefined {
+  return attachments && attachments.length > 0 ? attachments : undefined
+}
+
 export function prepareUpdatedEvent({
   event,
   values,
@@ -50,7 +99,8 @@ export function prepareUpdatedEvent({
   timeChanged,
   targetCalendar,
   calId,
-  newCalId
+  newCalId,
+  t
 }: {
   event: CalendarEvent
   values: EventFormValues
@@ -60,21 +110,20 @@ export function prepareUpdatedEvent({
   targetCalendar: Calendar
   calId: string
   newCalId: string
+  t?: (key: string) => string
 }): CalendarEvent {
   const currentCalId = newCalId || calId
-  const nextSequence = (event.sequence ?? 1) + 1
-  const fallbackURL = `/calendars/${currentCalId}/${event.uid}.ics`
 
   const newEvent: CalendarEvent = {
     ...updateAttendeesAfterTimeChange(event, timeChanged, values.attendees),
     calId: currentCalId,
     title: values.title,
-    URL: event.URL ?? fallbackURL,
+    URL: getEventURL(event.URL, currentCalId, event.uid),
     start: startISO,
     end: endISO,
     allday: values.allday,
     uid: event.uid,
-    description: values.description,
+    description: getUpdatedDescription(values, t),
     location: values.location,
     repetition: RepetitionObject.fromFormValues(values.repetition, {
       allday: values.allday,
@@ -84,34 +133,14 @@ export function prepareUpdatedEvent({
     organizer: event.organizer,
     timezone: values.timezone,
     transp: values.busy,
-    sequence: nextSequence,
+    sequence: getNextSequence(event.sequence),
     color: targetCalendar?.color,
-    alarms: (() => {
-      const alarmAttendees = getAlarmAttendees(values, targetCalendar)
-
-      // If alarms already have attendees (from handleSave merge), preserve them.
-      // Only use fromFormValues for alarms without attendees (new alarms from UI).
-      return Valarms.fromList(
-        values.alarms.getAlarms().map(alarm => {
-          if (alarm.attendees && alarm.attendees.length > 0) {
-            return alarm // Preserve existing attendees from merge
-          }
-          // New alarm without attendees - add defaults
-          return new VAlarm({
-            trigger: alarm.trigger,
-            action: alarm.action,
-            attendees: alarmAttendees,
-            summary: values.title,
-            description: alarm.description
-          })
-        })
-      )
-    })(),
+    alarms: buildUpdatedAlarms(values, targetCalendar),
     x_openpass_videoconference: values.meetingLink || undefined,
-    attach: values.attachments?.length ? values.attachments : undefined
+    attach: getEventAttachments(values.attachments)
   }
 
-  if (values.selectedResources?.length) {
+  if (values.selectedResources && values.selectedResources.length > 0) {
     const resourceAttendees = mapResourcesToAttendees(
       values.selectedResources,
       event.attendee || []
@@ -145,7 +174,8 @@ export function prepareUpdateData({
   calId,
   eventId,
   typeOfAction,
-  masterEvent
+  masterEvent,
+  t
 }: PrepareUpdateDataParams): PrepareUpdateDataResult | null {
   const targetCalendar = calList[values.calendarid]
   if (!targetCalendar) return null
@@ -174,7 +204,8 @@ export function prepareUpdateData({
     timeChanged,
     targetCalendar,
     calId,
-    newCalId
+    newCalId,
+    t
   })
 
   return {

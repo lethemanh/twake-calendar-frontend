@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@common/app/hooks'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { EventFormValues } from '@common/components/Event/EventFormFields.types'
 import { handleUpdateSubmit } from './submitUpdateHelpers/performUpdateAction'
+import { useI18n } from 'twake-i18n'
 
 export interface UseSubmitUpdateEventProps {
   event: CalendarEvent
@@ -25,6 +26,7 @@ export const useSubmitUpdateEvent = ({
 }: UseSubmitUpdateEventProps): {
   handleSubmit: (values: EventFormValues) => Promise<void>
 } => {
+  const { t } = useI18n()
   const dispatch = useAppDispatch()
   const calList = useAppSelector(state => state.calendars.list)
 
@@ -40,7 +42,8 @@ export const useSubmitUpdateEvent = ({
         typeOfAction,
         onClose,
         dispatch,
-        masterEvent
+        masterEvent,
+        t
       })
     },
     [
@@ -52,7 +55,8 @@ export const useSubmitUpdateEvent = ({
       showMore,
       onClose,
       dispatch,
-      calList
+      calList,
+      t
     ]
   )
 

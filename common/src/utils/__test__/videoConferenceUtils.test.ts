@@ -1,4 +1,5 @@
 import {
+  VISIO_BLOCK_SEPARATOR,
   addVideoConferenceToDescription,
   extractVideoConferenceFromDescription,
   generateMeetingId,
@@ -133,7 +134,9 @@ describe('videoConferenceUtils', () => {
       const description = ''
       const meetingLink = 'https://meet.linagora.com/abc-defg-hij'
       const result = addVideoConferenceToDescription(description, meetingLink)
-      expect(result).toBe('Visio: https://meet.linagora.com/abc-defg-hij')
+      expect(result).toBe(
+        `${VISIO_BLOCK_SEPARATOR}\nJoin Visio : ${meetingLink}\n\nPlease do not edit this section.\n${VISIO_BLOCK_SEPARATOR}`
+      )
     })
 
     it('should add video conference footer to existing description', () => {
@@ -141,7 +144,7 @@ describe('videoConferenceUtils', () => {
       const meetingLink = 'https://meet.linagora.com/abc-defg-hij'
       const result = addVideoConferenceToDescription(description, meetingLink)
       expect(result).toBe(
-        'This is a meeting description.\nVisio: https://meet.linagora.com/abc-defg-hij'
+        `This is a meeting description.\n\n${VISIO_BLOCK_SEPARATOR}\nJoin Visio : ${meetingLink}\n\nPlease do not edit this section.\n${VISIO_BLOCK_SEPARATOR}`
       )
     })
   })
