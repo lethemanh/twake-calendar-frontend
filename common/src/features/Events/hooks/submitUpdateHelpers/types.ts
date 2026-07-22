@@ -50,6 +50,7 @@ export interface PrepareUpdateDataParams {
   eventId: string
   typeOfAction?: 'all' | 'solo'
   masterEvent?: CalendarEvent | null
+  t?: (key: string) => string
 }
 
 export interface HandleUpdateSubmitParams extends PrepareUpdateDataParams {
@@ -67,6 +68,7 @@ export interface PrepareUpdatedEventParams {
   targetCalendar: Calendar
   calId: string
   newCalId: string
+  t?: (key: string) => string
 }
 
 export interface HandleUpdateErrorParams {

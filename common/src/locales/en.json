@@ -181,6 +181,8 @@
       "meetCopied": "Meeting link copied!",
       "addVisioConference": "Add Visio conference",
       "joinVisioConference": "Join Visio conference",
+      "joinVisio": "Join Visio",
+      "doNotEditSection": "Please do not edit this section.",
       "copyMeetingLink": "Copy meeting link",
       "removeVideoConference": "Remove video conference",
       "location": "Location",

@@ -1,9 +1,5 @@
 import { useAppSelector } from '@common/app/hooks'
-import {
-  addVideoConferenceToDescription,
-  generateMeetingLink,
-  removeVideoConferenceFromDescription
-} from '@common/utils/videoConferenceUtils'
+import { generateMeetingLink } from '@common/utils/videoConferenceUtils'
 
 interface UseVideoConferenceProps {
   description: string
@@ -20,8 +16,6 @@ interface UseVideoConferenceReturn {
 }
 
 export const useVideoConference = ({
-  description,
-  setDescription,
   setHasVideoConference,
   setMeetingLink,
   showMore,
@@ -37,11 +31,6 @@ export const useVideoConference = ({
       localpart: email?.split('@')[0],
       workplaceFqdn
     })
-    const updatedDescription = addVideoConferenceToDescription(
-      description,
-      newMeetingLink
-    )
-    setDescription(updatedDescription)
     setHasVideoConference(true)
     setMeetingLink(newMeetingLink)
     if (showMore) {
@@ -50,7 +39,6 @@ export const useVideoConference = ({
   }
 
   const handleDeleteVideoConference = (): void => {
-    setDescription(removeVideoConferenceFromDescription(description))
     setHasVideoConference(false)
     setMeetingLink(null)
   }

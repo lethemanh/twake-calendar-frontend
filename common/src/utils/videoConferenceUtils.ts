@@ -55,17 +55,25 @@ export function generateMeetingLink(
   return `${base}/${meetingId}`
 }
 
+export const VISIO_BLOCK_SEPARATOR =
+  '-::~:~::~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~:~::~:~::-'
+
 /**
  * Add video conference footer to event description.
  * If description is empty, adds on first line; otherwise adds on the line below existing content.
  */
 export function addVideoConferenceToDescription(
   description: string,
-  meetingLink: string
+  meetingLink: string,
+  t?: (key: string) => string
 ): string {
-  const line = `Visio: ${meetingLink}`
+  const joinText = t ? t('event.form.joinVisio') : 'Join Visio'
+  const doNotEditText = t
+    ? t('event.form.doNotEditSection')
+    : 'Please do not edit this section.'
+  const line = `${VISIO_BLOCK_SEPARATOR}\n${joinText} : ${meetingLink}\n\n${doNotEditText}\n${VISIO_BLOCK_SEPARATOR}`
   const trimmed = description.trimEnd()
-  return trimmed ? `${trimmed}\n${line}` : line
+  return trimmed ? `${trimmed}\n\n${line}` : line
 }
 
 /**
@@ -74,6 +82,18 @@ export function addVideoConferenceToDescription(
 export function extractVideoConferenceFromDescription(
   description: string
 ): string | null {
+  if (description.includes(VISIO_BLOCK_SEPARATOR)) {
+    const escapedSeparator = VISIO_BLOCK_SEPARATOR.replace(
+      /[-/\\^$*+?.()|[\]{}]/g,
+      '\\$&'
+    )
+    const blockRegex = new RegExp(
+      `${escapedSeparator}[\\s\\S]*?(https?:\\/\\/[^\\s]+)[\\s\\S]*?${escapedSeparator}`
+    )
+    const match = description.match(blockRegex)
+    if (match) return match[1]
+  }
+
   const match = description.match(/Visio:\s*(https?:\/\/[^\s]+)/)
   return match ? match[1] : null
 }
@@ -87,7 +107,23 @@ const VISIO_LINE_REGEX = /^Visio:\s*https?:\/\/\S+$/
 export function removeVideoConferenceFromDescription(
   description: string
 ): string {
-  const lines = description.split('\n')
-  const filtered = lines.filter(line => !VISIO_LINE_REGEX.test(line.trim()))
-  return filtered.join('\n').trimEnd()
+  if (description.includes(VISIO_BLOCK_SEPARATOR)) {
+    const escapedSeparator = VISIO_BLOCK_SEPARATOR.replace(
+      /[-/\\^$*+?.()|[\]{}]/g,
+      '\\$&'
+    )
+    const regex = new RegExp(
+      `\\n*${escapedSeparator}[\\s\\S]*?${escapedSeparator}\\n*`,
+      'g'
+    )
+    const result = description.replace(regex, '\n').trimEnd()
+    // Fallback old format just in case
+    const lines = result.split('\n')
+    const filtered = lines.filter(line => !VISIO_LINE_REGEX.test(line.trim()))
+    return filtered.join('\n').trimEnd()
+  } else {
+    const lines = description.split('\n')
+    const filtered = lines.filter(line => !VISIO_LINE_REGEX.test(line.trim()))
+    return filtered.join('\n').trimEnd()
+  }
 }

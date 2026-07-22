@@ -3,7 +3,7 @@ import { formatDateTimeInTimezone } from '@common/components/Event/utils/dateTim
 import { extractEventBaseUuid } from '@common/utils/extractEventBaseUuid'
 import { browserDefaultTimeZone } from '@common/utils/timezone'
 import { TIMEZONES } from '@common/utils/timezone-data'
-import { addVideoConferenceToDescription } from '@common/utils/videoConferenceUtils'
+import { removeVideoConferenceFromDescription } from '@common/utils/videoConferenceUtils'
 import { userAttendee } from '@common/features/User/models/attendee'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { RepetitionObject } from '@common/types/Repetition'
@@ -178,18 +178,10 @@ export function populateFormFromEvent(
   setHasVideoConference(event.x_openpass_videoconference ? true : false)
   setMeetingLink(event.x_openpass_videoconference || null)
 
-  // Update description to include video conference footer if exists
-  if (event.x_openpass_videoconference && event.description) {
-    const hasVideoFooter = event.description.includes('Visio:')
-    if (!hasVideoFooter) {
-      setDescription(
-        addVideoConferenceToDescription(
-          event.description,
-          event.x_openpass_videoconference
-        )
-      )
-    } else {
-      setDescription(event.description)
-    }
+  // Always strip video conference footer from description for UI form
+  if (event.description) {
+    setDescription(removeVideoConferenceFromDescription(event.description))
+  } else {
+    setDescription('')
   }
 }

@@ -4,6 +4,7 @@ import { Calendar } from '@common/types/CalendarTypes'
 import { EventFormValues } from '@common/components/Event/EventFormFields.types'
 import { handleCreateEvent } from './submitCreateHelpers/createAction'
 import { userOrganiser } from '@common/features/User/userDataTypes'
+import { useI18n } from 'twake-i18n'
 
 export interface UseSubmitCreateEventProps {
   showMore: boolean
@@ -21,6 +22,7 @@ export function useSubmitCreateEvent({
     organizer?: userOrganiser
   ) => Promise<void>
 } {
+  const { t } = useI18n()
   const dispatch = useAppDispatch()
   const calList = useAppSelector(state => state.calendars.list)
 
@@ -45,10 +47,11 @@ export function useSubmitCreateEvent({
         targetCalendar,
         showMore,
         organizer,
-        onClose
+        onClose,
+        t
       })
     },
-    [showMore, onClose, userPersonalCalendars, dispatch, calList]
+    [showMore, onClose, userPersonalCalendars, dispatch, calList, t]
   )
 
   return { handleSubmit }

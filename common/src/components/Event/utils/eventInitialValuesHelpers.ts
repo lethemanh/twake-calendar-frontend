@@ -5,7 +5,7 @@ import { Calendar } from '@common/types/CalendarTypes'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { Valarms } from '@common/types/Valarms'
 import { resolveTimezone } from '@common/utils/timezone'
-import { addVideoConferenceToDescription } from '@common/utils/videoConferenceUtils'
+import { removeVideoConferenceFromDescription } from '@common/utils/videoConferenceUtils'
 
 import {
   resolveAttendeesAndResources,
@@ -23,17 +23,7 @@ export { buildDefaultNewEvent, buildFromSelectedRange }
 
 function resolveDescription(event: CalendarEvent): string {
   const description = event.description ?? ''
-  const meetingLink = event.x_openpass_videoconference
-
-  if (!meetingLink || !description) {
-    return description
-  }
-
-  if (description.includes('Visio:')) {
-    return description
-  }
-
-  return addVideoConferenceToDescription(description, meetingLink)
+  return removeVideoConferenceFromDescription(description)
 }
 
 export interface BuildFromExistingEventParams {

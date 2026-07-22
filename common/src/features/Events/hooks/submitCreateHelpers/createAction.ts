@@ -15,6 +15,7 @@ import {
   saveEventFormDataToTemp,
   showErrorNotification
 } from '@common/utils/eventFormTempStorage'
+import { addVideoConferenceToDescription } from '@common/utils/videoConferenceUtils'
 import { getAlarmAttendees } from '../submitUpdateHelpers/utils'
 import { userOrganiser } from '@common/features/User/userDataTypes'
 
@@ -39,13 +40,15 @@ function buildNewEvent({
   targetCalendar,
   showMore,
   organizer,
-  newEventUID
+  newEventUID,
+  t
 }: {
   values: EventFormValues
   targetCalendar: Calendar
   showMore: boolean
   organizer?: userOrganiser
   newEventUID: string
+  t?: (key: string) => string
 }): CalendarEvent {
   const newEventURL = `/calendars/${targetCalendar.id}/${newEventUID}.ics`
   const { startISO, endISO } = resolveEventISORange({
@@ -67,7 +70,13 @@ function buildNewEvent({
     end: endISO,
     allday: values.allday,
     uid: newEventUID,
-    description: values.description,
+    description: values.meetingLink
+      ? addVideoConferenceToDescription(
+          values.description,
+          values.meetingLink,
+          t
+        )
+      : values.description,
     location: values.location,
     class: values.eventClass,
     repetition: RepetitionObject.fromFormValues(values.repetition, {
@@ -113,7 +122,8 @@ export async function handleCreateEvent({
   targetCalendar,
   showMore,
   organizer,
-  onClose
+  onClose,
+  t
 }: {
   dispatch: AppDispatch
   values: EventFormValues
@@ -121,13 +131,15 @@ export async function handleCreateEvent({
   showMore: boolean
   organizer?: userOrganiser
   onClose: (refresh?: boolean) => void
+  t?: (key: string) => string
 }): Promise<void> {
   const newEvent = buildNewEvent({
     values,
     targetCalendar,
     showMore,
     organizer,
-    newEventUID: crypto.randomUUID()
+    newEventUID: crypto.randomUUID(),
+    t
   })
 
   onClose(true)
