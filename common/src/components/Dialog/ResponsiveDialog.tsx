@@ -8,6 +8,8 @@ import {
   DialogTitle,
   DialogTitleProps,
   IconButton,
+  Paper,
+  PaperProps,
   Stack,
   SxProps,
   Theme,
@@ -19,7 +21,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
 import OpenInFullIcon from '@mui/icons-material/OpenInFull'
 import CozyBridge from 'cozy-external-bridge'
-import React, { ReactNode, useMemo } from 'react'
+import React, { ReactNode, useContext, useId, useMemo } from 'react'
 
 /**
  * ResponsiveDialog - A reusable dialog component that can switch between normal and expanded modes
@@ -88,9 +90,80 @@ interface ResponsiveDialogProps extends Omit<
   actionsBorderTop?: boolean
   /** Justify content alignment for DialogActions */
   actionsJustifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between'
-
   expandText?: string
+  draggable?: boolean
 }
+
+// Context is the only channel that works here: @linagora/twake-mui's Dialog
+// does not forward PaperProps to PaperComponent, and the linter forbids
+// writing/passing refs during render. Context is set by ResponsiveDialog and
+// read by DraggablePaper without any of those constraints.
+interface DragContextValue {
+  isDraggable: boolean
+  isExpanded: boolean
+}
+
+const DragContext = React.createContext<DragContextValue>({
+  isDraggable: false,
+  isExpanded: false
+})
+
+// Stable module-level component — never recreated, so MUI never unmounts the Paper.
+const DraggablePaper = React.forwardRef<HTMLDivElement, PaperProps>(
+  function DraggablePaper(props, forwardedRef) {
+    const { isDraggable, isExpanded } = useContext(DragContext)
+    const pos = React.useRef({ x: 0, y: 0 })
+    const origin = React.useRef<{ mx: number; my: number } | null>(null)
+    const el = React.useRef<HTMLDivElement>(null)
+
+    // Merge MUI's forwarded ref (needed for Dialog transitions) with local ref.
+    React.useImperativeHandle(forwardedRef, () => el.current as HTMLDivElement)
+
+    // Reset transform when entering expanded mode so the dialog re-centres.
+    React.useEffect(() => {
+      if (isExpanded) {
+        pos.current = { x: 0, y: 0 }
+        origin.current = null
+        if (el.current) el.current.style.transform = ''
+      }
+    }, [isExpanded])
+
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
+      if (!isDraggable) return
+      const target = e.target as HTMLElement
+      if (!target.closest('.draggable-dialog-title')) return
+      if (target.closest('button')) return
+      origin.current = {
+        mx: e.clientX - pos.current.x,
+        my: e.clientY - pos.current.y
+      }
+      el.current?.setPointerCapture(e.pointerId)
+    }
+
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>): void => {
+      if (!origin.current || !el.current) return
+      pos.current = {
+        x: e.clientX - origin.current.mx,
+        y: e.clientY - origin.current.my
+      }
+      el.current.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px)`
+    }
+
+    const onPointerUp = (): void => {
+      origin.current = null
+    }
+
+    return (
+      <Paper
+        {...props}
+        ref={el}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+      />
+    )
+  }
+)
 
 function ResponsiveDialog({
   open,
@@ -115,12 +188,22 @@ function ResponsiveDialog({
   actionsJustifyContent = 'flex-end',
   sx,
   expandText,
+  draggable = false,
   ...otherDialogProps
 }: ResponsiveDialogProps): JSX.Element {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-
   const isInIframe = useMemo(() => new CozyBridge().isInIframe(), [])
+
+  const uid = useId()
+  const titleId = `responsive-dialog-title-${uid}`
+
+  const isDraggable = draggable && !isMobile && !isExpanded
+
+  const dragContextValue = useMemo<DragContextValue>(
+    () => ({ isDraggable, isExpanded }),
+    [isDraggable, isExpanded]
+  )
 
   const baseSx: SxProps<Theme> | undefined = isMobile
     ? undefined
@@ -131,6 +214,7 @@ function ResponsiveDialog({
           pointerEvents: isExpanded ? 'none' : undefined
         },
         '& .MuiDialog-paper': {
+          overflowY: 'hidden',
           maxWidth: isExpanded ? '100%' : normalMaxWidth,
           width: '100%',
           height: isExpanded
@@ -184,99 +268,109 @@ function ResponsiveDialog({
   const currentSpacing = isExpanded ? expandedSpacing : normalSpacing
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth={false}
-      fullScreen={isMobile}
-      fullWidth
-      transitionDuration={isExpanded ? 0 : 300}
-      sx={
-        [
-          { '& .MuiDialog-paper': { overflowY: 'hidden' } },
-          ...(baseSx ? [baseSx] : []),
-          ...(Array.isArray(sx) ? (sx as SxProps<Theme>[]) : sx ? [sx] : [])
-        ] as SxProps<Theme>
-      }
-      style={isExpanded ? { zIndex: 1200 } : undefined}
-      {...otherDialogProps}
-    >
-      <DialogTitle sx={titleSx} {...dialogTitleProps}>
-        {isExpanded && onExpandToggle && !isMobile ? (
-          <IconButton
-            onClick={onExpandToggle}
-            aria-label="show less"
-            sx={{ marginLeft: '-8px' }}
-          >
-            <ArrowBackIcon sx={{ fontSize: 30 }} />
-          </IconButton>
-        ) : showHeaderActions ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%'
-            }}
-          >
-            <Box>{title}</Box>
-            <Box>
-              {onExpandToggle && !isMobile && (
-                <Tooltip title={expandText}>
-                  <IconButton
-                    onClick={onExpandToggle}
-                    aria-label="expand"
-                    size="small"
-                    sx={{ marginRight: 1 }}
-                  >
-                    <OpenInFullIcon sx={{ padding: '2px' }} />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <IconButton onClick={onClose} aria-label="close" size="small">
-                <CloseIcon />
-              </IconButton>
-            </Box>
-          </Box>
-        ) : (
-          title
-        )}
-      </DialogTitle>
-      <DialogContent
-        dividers={dividers}
+    <DragContext.Provider value={dragContextValue}>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth={false}
+        fullScreen={isMobile}
+        fullWidth
+        transitionDuration={isExpanded ? 0 : 300}
+        {...otherDialogProps}
         sx={
           [
-            baseContentSx,
-            ...(Array.isArray(contentSx)
-              ? (contentSx as SxProps<Theme>[])
-              : contentSx
-                ? [contentSx]
-                : [])
+            ...(baseSx ? [baseSx] : []),
+            ...(Array.isArray(sx) ? (sx as SxProps<Theme>[]) : sx ? [sx] : [])
           ] as SxProps<Theme>
         }
-        {...dialogContentProps}
+        style={isExpanded ? { zIndex: 1200 } : undefined}
+        PaperComponent={DraggablePaper}
+        aria-labelledby={titleId}
       >
-        {isExpanded ? (
-          <Stack spacing={currentSpacing} sx={contentWrapperSx}>
-            {children}
-          </Stack>
-        ) : (
-          <Stack spacing={currentSpacing}>{children}</Stack>
-        )}
-      </DialogContent>
-      {actions && (
-        <DialogActions
-          sx={{
-            borderTop: actionsBorderTop
-              ? (theme: Theme): string => `1px solid ${theme.palette.divider}`
-              : undefined,
-            justifyContent: actionsJustifyContent
-          }}
+        <DialogTitle
+          {...dialogTitleProps}
+          id={titleId}
+          className="draggable-dialog-title"
+          sx={
+            [titleSx, isDraggable ? { cursor: 'move' } : {}] as SxProps<Theme>
+          }
         >
-          {actions}
-        </DialogActions>
-      )}
-    </Dialog>
+          {isExpanded && onExpandToggle && !isMobile ? (
+            <IconButton
+              onClick={onExpandToggle}
+              aria-label="show less"
+              sx={{ marginLeft: '-8px' }}
+            >
+              <ArrowBackIcon sx={{ fontSize: 30 }} />
+            </IconButton>
+          ) : showHeaderActions ? (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%'
+              }}
+            >
+              <Box>{title}</Box>
+              <Box>
+                {onExpandToggle && !isMobile && (
+                  <Tooltip title={expandText}>
+                    <IconButton
+                      onClick={onExpandToggle}
+                      aria-label="expand"
+                      size="small"
+                      sx={{ marginRight: 1 }}
+                    >
+                      <OpenInFullIcon sx={{ padding: '2px' }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <IconButton onClick={onClose} aria-label="close" size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          ) : (
+            title
+          )}
+        </DialogTitle>
+        <DialogContent
+          dividers={dividers}
+          sx={
+            [
+              baseContentSx,
+              ...(Array.isArray(contentSx)
+                ? (contentSx as SxProps<Theme>[])
+                : contentSx
+                  ? [contentSx]
+                  : [])
+            ] as SxProps<Theme>
+          }
+          {...dialogContentProps}
+        >
+          {isExpanded ? (
+            <Stack spacing={currentSpacing} sx={contentWrapperSx}>
+              {children}
+            </Stack>
+          ) : (
+            <Stack spacing={currentSpacing}>{children}</Stack>
+          )}
+        </DialogContent>
+        {actions && (
+          <DialogActions
+            sx={{
+              borderTop: actionsBorderTop
+                ? (theme: Theme): string => `1px solid ${theme.palette.divider}`
+                : undefined,
+              justifyContent: actionsJustifyContent
+            }}
+          >
+            {actions}
+          </DialogActions>
+        )}
+      </Dialog>
+    </DragContext.Provider>
   )
 }
 
