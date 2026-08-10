@@ -1,4 +1,30 @@
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin'
+import fs from 'fs'
+import path from 'path'
+import vm from 'vm'
+
+function loadPublicEnvVars(): Record<string, string | undefined> {
+  const candidatePaths = [
+    path.resolve(process.cwd(), 'public/.env.js'),
+    path.resolve(process.cwd(), '../../public/.env.js'),
+    path.resolve(__dirname, '../public/.env.js')
+  ]
+
+  for (const envPath of candidatePaths) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf-8')
+        const context: Record<string, string | undefined> = {}
+        vm.runInNewContext(content, context)
+        return context
+      }
+    } catch (error) {
+      console.error(`Error while parsing env:`, error)
+    }
+  }
+
+  return {}
+}
 
 /**
  * Utility function to configure and attach the Sentry Webpack/Rspack plugin to Rsbuild.
@@ -11,12 +37,14 @@ export function setupSentryPlugin(
   appendPlugins: (plugin: any) => void,
   outputDir: string = 'dist'
 ): void {
-  const sentryUrl = process.env.SENTRY_URL
-  const org = process.env.SENTRY_ORG
-  const project = process.env.SENTRY_PROJECT
-  const authToken = process.env.SENTRY_AUTH_TOKEN
+  const publicEnv = loadPublicEnvVars()
 
-  const hasSentryConfig = Boolean(sentryUrl && authToken && org && project)
+  const authToken = process.env.SENTRY_AUTH_TOKEN
+  const org = publicEnv.SENTRY_ORG
+  const project = publicEnv.SENTRY_PROJECT
+  const sentryUrl = publicEnv.SENTRY_URL
+
+  const hasSentryConfig = Boolean(authToken && org && project)
   // Early return if Sentry is not configured at all
   if (!hasSentryConfig) {
     return

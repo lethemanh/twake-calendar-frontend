@@ -97,7 +97,7 @@ pipeline {
             env.DOCKER_TAG = dockerTag
             echo "Docker tag: ${dockerTag}"
             def shortSha = env.GIT_COMMIT ? env.GIT_COMMIT.take(8) : 'dev'
-            sh 'npm run build'
+            buildWithOptionalSentry()
             sh "docker build -f apps/private/Dockerfile --build-arg BUILD_VERSION=${shortSha} -t linagora/twake-calendar-web-pr:\$DOCKER_TAG ."
             sh "docker build -f apps/public/Dockerfile --build-arg BUILD_VERSION=${shortSha} -t linagora/twake-calendar-public-pr:\$DOCKER_TAG ."
             sh 'echo $DOCKER_HUB_CREDENTIAL_PSW | docker login -u $DOCKER_HUB_CREDENTIAL_USR --password-stdin'
@@ -135,7 +135,7 @@ pipeline {
             }
 
             echo "Docker tag: ${env.DOCKER_TAG}"
-            sh 'npm run build'
+            buildWithOptionalSentry()
             sh 'docker build -f apps/private/Dockerfile --build-arg BUILD_VERSION=$BUILD_VERSION -t linagora/twake-calendar-web:$DOCKER_TAG .'
             sh 'docker build -f apps/public/Dockerfile --build-arg BUILD_VERSION=$BUILD_VERSION -t linagora/twake-calendar-public:$DOCKER_TAG .'
             sh 'docker login -u $DOCKER_HUB_CREDENTIAL_USR -p $DOCKER_HUB_CREDENTIAL_PSW'
@@ -151,3 +151,15 @@ pipeline {
         }
     }
 }
+
+def buildWithOptionalSentry() {
+    try {
+        withCredentials([string(credentialsId: 'sentryAuthToken', variable: 'SENTRY_AUTH_TOKEN')]) {
+            sh 'npm run build'
+        }
+    } catch (err) {
+        echo "SENTRY_AUTH_TOKEN credential not found or unavailable. Building without Sentry."
+        sh 'npm run build'
+    }
+}
+

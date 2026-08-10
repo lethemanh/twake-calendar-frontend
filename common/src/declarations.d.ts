@@ -46,8 +46,8 @@ declare module '@linagora/twake-mui' {
   >
 }
 
-declare const process: {
-  env: {
+declare namespace NodeJS {
+  interface ProcessEnv {
     [key: string]: string | undefined
   }
 }
