@@ -14,6 +14,7 @@ export interface UserAttendeeData {
   cutype: CuType
   rsvp: 'TRUE' | 'FALSE'
   cn: string
+  openpaasId?: string
 }
 
 export type UserAttendeeOptions = Partial<UserAttendeeData>
@@ -25,6 +26,7 @@ export class userAttendee implements UserAttendeeData {
   cutype: CuType
   rsvp: 'TRUE' | 'FALSE'
   cn: string
+  openpaasId?: string
 
   constructor({
     cal_address,
@@ -32,7 +34,8 @@ export class userAttendee implements UserAttendeeData {
     role,
     cutype,
     rsvp,
-    cn
+    cn,
+    openpaasId
   }: UserAttendeeOptions = {}) {
     this.cal_address = cal_address ?? ''
     this.partstat = partstat ?? 'NEEDS-ACTION'
@@ -40,6 +43,7 @@ export class userAttendee implements UserAttendeeData {
     this.cutype = cutype ?? 'INDIVIDUAL'
     this.rsvp = rsvp ?? 'FALSE'
     this.cn = cn ?? ''
+    this.openpaasId = openpaasId
   }
 
   static fromOrganizer(organizer: userOrganiser | undefined): userAttendee {
@@ -56,7 +60,8 @@ export class userAttendee implements UserAttendeeData {
   static fromUser(user: User): userAttendee {
     return new userAttendee({
       cal_address: user.email,
-      cn: user.displayName
+      cn: user.displayName,
+      openpaasId: user.openpaasId
     })
   }
 
