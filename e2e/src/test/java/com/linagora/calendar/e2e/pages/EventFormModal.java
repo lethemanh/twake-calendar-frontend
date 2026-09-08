@@ -339,7 +339,7 @@ public class EventFormModal {
      */
     public EventFormModal addGuest(String email) {
         for (int attempt = 1; attempt <= 3; attempt++) {
-            Locator guests = page.getByPlaceholder("Add guests");
+            Locator guests = page.getByPlaceholder("Add participants");
             guests.click();
             guests.fill("");
             guests.pressSequentially(email, new Locator.PressSequentiallyOptions().setDelay(30));
@@ -460,7 +460,7 @@ public class EventFormModal {
 
     /** Types a guest without validating, to cover what happens when the field loses focus. */
     public EventFormModal typeGuest(String email) {
-        Locator guests = page.getByPlaceholder("Add guests");
+        Locator guests = page.getByPlaceholder("Add participants");
         guests.click();
         guests.pressSequentially(email, new Locator.PressSequentiallyOptions().setDelay(30));
         return this;
