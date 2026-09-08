@@ -60,6 +60,7 @@ export interface PeopleSearchProps {
   inputStyles?: SxProps
   enableEmailAutocompleteAndCommit?: boolean
   autoHighlight?: boolean
+  showWarningOnDuplicate?: boolean
 }
 
 const autocompleteSx = {
@@ -202,7 +203,8 @@ export const PeopleSearch: React.FC<PeopleSearchProps> = ({
   inputValue,
   inputStyles,
   enableEmailAutocompleteAndCommit,
-  autoHighlight = true
+  autoHighlight = true,
+  showWarningOnDuplicate
 }) => {
   const { t } = useI18n()
   const searchPlaceholder = placeholder ?? t('peopleSearch.placeholder')
@@ -216,7 +218,8 @@ export const PeopleSearch: React.FC<PeopleSearchProps> = ({
     selectedUsers,
     onChange,
     freeSolo,
-    enableEmailAutocompleteAndCommit
+    enableEmailAutocompleteAndCommit,
+    showWarningOnDuplicate
   })
 
   const highlightedOptionRef = useRef<User | null>(null)

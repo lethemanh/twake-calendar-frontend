@@ -250,6 +250,7 @@
   "peopleSearch": {
     "label": "Start typing a name or email",
     "placeholder": "Start typing a name or email",
+    "emailAlreadyAdded": "This email has already been added",
     "availabilityPlaceholder": "Check availability",
     "invalidEmail": "%{email} is not a valid email address",
     "searchError": "Unable to fetch contacts right now. Please try again.",
