@@ -414,7 +414,8 @@
     "days": "дни",
     "months": "месяцы",
     "years": "годы",
-    "alarmText": "%{trigger} через %{action}"
+    "alarmText": "%{trigger} через %{action}",
+    "replySentTo": "Ваш ответ был отправлен %{organizerName}"
   },
   "dateTimeFields": {
     "date": "Дата",

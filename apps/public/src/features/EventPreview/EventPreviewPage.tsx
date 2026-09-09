@@ -2,17 +2,18 @@ import { EventPreviewDetails } from '@/components/EventPreview/EventPreviewDetai
 import { EventPreviewTitleRow } from '@common/components/EventPreview/EventPreviewTitleRow'
 import { AttendanceValidation } from './components/AttendanceValidation'
 import { Box, useTheme } from '@linagora/twake-mui'
-import React from 'react'
 import { useI18n } from 'twake-i18n'
 import { useParseToken } from './hooks/useParseToken'
 import { useFetchEventDetail } from './hooks/useFetchEventDetail'
 import { Loading } from '@common/components/Loading/Loading'
 import { useSearchParams } from 'react-router-dom'
-import { fetchEvent } from './EventDao'
 import { PreviewContainer } from './components/EventPreviewShared'
 import { PublicLoadError } from '@/components/PublicLoadError'
 import { CalendarEvent } from '@common/types/EventsTypes'
 import { EventStatus } from '@/components/EventPreview/EventStatus'
+import { SnackbarAlert } from '@common/components/Loading/SnackBarAlert'
+import { useRsvpAction } from './hooks/useRsvpAction'
+import React, { useMemo } from 'react'
 
 const isUnableToLoad = (
   error: boolean,
@@ -35,20 +36,13 @@ export const EventPreviewPage: React.FC = () => {
     calId
   )
 
-  const handleRsvpChoice = async (url: string): Promise<void> => {
-    try {
-      const urlObj = new URL(url)
-      const newJwt = urlObj.searchParams.get('jwt')
-      if (newJwt) {
-        await fetchEvent(newJwt)
-        setSearchParams({ jwt: newJwt })
-      }
-    } catch (e) {
-      console.error('Failed to process RSVP choice:', e)
-    }
-  }
+  const { toastOpen, setToastOpen, handleRsvpChoice } = useRsvpAction(
+    action,
+    event,
+    setSearchParams
+  )
 
-  const detailMessage = React.useMemo(() => {
+  const detailMessage = useMemo(() => {
     return (
       errorDetail ||
       (!decodedClaims ? t('error.invalidOrExpiredToken') : undefined)
@@ -99,6 +93,13 @@ export const EventPreviewPage: React.FC = () => {
           onChoice={handleRsvpChoice}
         />
       </Box>
+      <SnackbarAlert
+        open={toastOpen}
+        setOpen={setToastOpen}
+        message={t('eventPreview.replySentTo', {
+          organizerName: event?.organizer?.cn
+        })}
+      />
     </PreviewContainer>
   )
 }
