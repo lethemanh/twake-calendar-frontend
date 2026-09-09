@@ -414,7 +414,8 @@
     "days": "days",
     "months": "months",
     "years": "years",
-    "alarmText": "%{trigger} by %{action}"
+    "alarmText": "%{trigger} by %{action}",
+    "replySentTo": "Your reply has been sent to %{organizerName}"
   },
   "dateTimeFields": {
     "date": "Date",
