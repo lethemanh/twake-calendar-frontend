@@ -195,6 +195,7 @@ export const AttendeeSearch: React.FC<{
       onChange={handleOnChange}
       freeSolo
       enableEmailAutocompleteAndCommit={enableEmailAutocompleteAndCommit}
+      showWarningOnDuplicate
     />
   )
 }

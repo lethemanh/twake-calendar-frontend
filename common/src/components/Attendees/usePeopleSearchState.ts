@@ -23,6 +23,7 @@ interface UsePeopleSearchStateProps {
   onChange: (event: SyntheticEvent, users: User[]) => void
   freeSolo?: boolean
   enableEmailAutocompleteAndCommit?: boolean
+  showWarningOnDuplicate?: boolean
 }
 
 interface UsePeopleSearchStateReturn {
@@ -102,8 +103,15 @@ const useHandleBlurCommit = (
 ): ((event: SyntheticEvent) => void) => {
   return useCallback(
     (event: SyntheticEvent) => {
-      const result = validateAndAddUser(query.trim(), selectedUsers, t)
+      const trimmed = query.trim()
+      if (!trimmed) return
+      const result = validateAndAddUser(trimmed, selectedUsers, t)
       if (result.error !== null) {
+        if (!trimmed.includes('@')) {
+          setQuery('')
+          setInputError(null)
+          return
+        }
         setInputError(result.error)
         return
       }
@@ -122,6 +130,7 @@ const useHandleBlurCommit = (
 const useHandleAutocompleteChange = (
   onChange: (event: SyntheticEvent, users: User[]) => void,
   setInputError: (val: string | null) => void,
+  setQuery: (val: string) => void,
   t: (key: string) => string
 ): ((event: SyntheticEvent, value: (string | User)[]) => void) => {
   return useCallback(
@@ -133,8 +142,9 @@ const useHandleAutocompleteChange = (
       }
       setInputError(null)
       onChange(event, dedupeByEmail(value.map(normaliseUser)))
+      setQuery('')
     },
-    [onChange, setInputError, t]
+    [onChange, setInputError, setQuery, t]
   )
 }
 
@@ -315,6 +325,7 @@ const usePeopleSearchHandlers = ({
   const handleAutocompleteChange = useHandleAutocompleteChange(
     onChange,
     setInputError,
+    setQuery,
     t
   )
 
@@ -359,6 +370,52 @@ const usePeopleSearchHandlers = ({
   }
 }
 
+interface UseDisplayOptionsProps {
+  options: User[]
+  query: string
+  selectedUsers: User[]
+  enableEmailAutocompleteAndCommit?: boolean
+  showWarningOnDuplicate?: boolean
+}
+
+const useDisplayOptions = ({
+  options,
+  query,
+  selectedUsers,
+  enableEmailAutocompleteAndCommit,
+  showWarningOnDuplicate
+}: UseDisplayOptionsProps): User[] => {
+  return useMemo(() => {
+    let baseOptions = options
+
+    const shouldAddEmailOption =
+      baseOptions.length === 0 &&
+      Boolean(query) &&
+      enableEmailAutocompleteAndCommit
+
+    if (shouldAddEmailOption) {
+      const email = EmailAddress.parse(query.trim())
+      if (email) {
+        baseOptions = [{ email: email.value, displayName: email.value } as User]
+      }
+    }
+
+    if (!showWarningOnDuplicate) {
+      baseOptions = baseOptions.filter(
+        opt => !selectedUsers.find(u => u.email === opt.email)
+      )
+    }
+
+    return baseOptions
+  }, [
+    options,
+    query,
+    enableEmailAutocompleteAndCommit,
+    showWarningOnDuplicate,
+    selectedUsers
+  ])
+}
+
 export const usePeopleSearchState = ({
   objectTypes,
   showCurrentUser,
@@ -368,7 +425,8 @@ export const usePeopleSearchState = ({
   selectedUsers,
   onChange,
   freeSolo,
-  enableEmailAutocompleteAndCommit
+  enableEmailAutocompleteAndCommit,
+  showWarningOnDuplicate = false
 }: UsePeopleSearchStateProps): UsePeopleSearchStateReturn => {
   const { t } = useI18n()
   const currentUser = useAppSelector(state => state.user?.userData)
@@ -410,23 +468,13 @@ export const usePeopleSearchState = ({
     enableEmailAutocompleteAndCommit
   })
 
-  const displayOptions = useMemo(() => {
-    if (!enableEmailAutocompleteAndCommit) {
-      return userSearch.options
-    }
-    if (userSearch.options.length === 0 && userSearch.query) {
-      const email = EmailAddress.parse(userSearch.query.trim())
-      if (email && !selectedUsers.some(u => u.email === email.value)) {
-        return [{ email: email.value, displayName: email.value } as User]
-      }
-    }
-    return userSearch.options
-  }, [
-    userSearch.options,
-    userSearch.query,
+  const displayOptions = useDisplayOptions({
+    options: userSearch.options,
+    query: userSearch.query,
     selectedUsers,
-    enableEmailAutocompleteAndCommit
-  ])
+    enableEmailAutocompleteAndCommit,
+    showWarningOnDuplicate
+  })
 
   return {
     ...userSearch,
