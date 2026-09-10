@@ -3,7 +3,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { Box } from '@linagora/twake-mui'
 import twakeLogo from '@common/static/twake-workplace.svg'
 
-export function Loading() {
+export const Loading: React.FC = () => {
   return (
     <Box
       data-testid="loading"
@@ -22,7 +22,6 @@ export function Loading() {
     >
       <DotLottieReact
         src="/loadercalendar.lottie"
-        loop
         autoplay
         style={{ width: '175px' }}
       />
